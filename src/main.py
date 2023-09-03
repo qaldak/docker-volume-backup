@@ -1,51 +1,43 @@
-# main.py
-
-import argparse
-import logging
-import os
-
-import config
+from backup.validator import Validator
+from helper.argparser import ArgParser
+from helper.logger import Logger
 from volume_backup import *
-
-
-def parse_cli_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("container", help="Define Docker container whose volume should be backed up")
-    parser.add_argument("-p", "--path",
-                        help="Backup destination path (Default by ENV settings)")  # Todo: Default Path from ENV file
-    parser.add_argument("-r", "--restart", action="store_true", dest="restart",
-                        help="Stops Docker container for backup and restart when done")
-    parser.add_argument("--debug", action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.DEBUG,
-                        help="Set loglevel to DEBUG")
-    return parser.parse_args()
-
-
-def init_logger():
-    logdir = "log"
-    if not os.path.isdir(logdir):
-        os.makedirs(logdir)
-
-    # Todo: funcName vs name
-    logging.basicConfig(level=args.loglevel, filename=f"{logdir}/docker-volume-backup.log",
-                        format='%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
-
 
 logger = logging.getLogger(__name__)
 
 
 def foo():
-    config.x += 1
-    print(f"config.X = {config.x}")
+    print(f"config.X = {__name__}, {cfg.hasWarnings}")
+    cfg.hasWarnings = True
+
+    print(f"config.X = {cfg.hasWarnings}")
+
     print("Foo")
     bar()
+
+    print(f"config.X = {cfg.hasWarnings}")
 
 
 def main(container, path, restart):
     logger.info(f"Start volume backup for container '{args.container}'")
     logger.debug(f"Container: {container}, Backup path: {path}")
 
-    if path is None:
-        path = "/home/roger/temp"
+    # get directory for volume backup
+    backup_dir = Validator.set_backup_dir(path, container)
+
+    # create backup directory
+    print(f"Backup dir: {backup_dir}")
+
+    # check Docker volume is available
+
+    # check Docker container is running
+    # if restart: stop docker container
+
+    # run docker backup
+
+    # check docker backup
+
+    # send notification
 
     print(f"path: {path}, restart: {restart}")
 
@@ -61,7 +53,8 @@ def main(container, path, restart):
 
 
 if __name__ == "__main__":
-    args = parse_cli_args()
-    init_logger()
+    args = ArgParser.parse_cli_args()
+    Logger.init_logger(args.loglevel)
 
+    print(args)
     main(args.container, args.path, args.restart)
