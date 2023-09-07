@@ -2,7 +2,7 @@ import logging
 import sys
 from unittest import TestCase
 
-from src.helper.argparser import ArgParser
+from src.util.argparser import ArgParser
 
 
 class TestArgParser(TestCase):

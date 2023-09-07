@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from helper.logger import Logger
+from util.logger import Logger
 
 
 class TestLogger(unittest.TestCase):

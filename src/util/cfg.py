@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 # globals
 hasWarnings = False
 warningMsg = ""
+hasError = True
+errorMsg = ""
 
 # load .env settings
 load_dotenv()

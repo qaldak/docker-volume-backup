@@ -1,6 +1,7 @@
-from backup.validator import Validator
-from helper.argparser import ArgParser
-from helper.logger import Logger
+from docker.container import Container
+from util.accessor import set_backup_dir
+from util.argparser import ArgParser
+from util.logger import Logger
 from volume_backup import *
 
 logger = logging.getLogger(__name__)
@@ -22,10 +23,14 @@ def main(container, path, restart):
     logger.info(f"Start volume backup for container '{args.container}'")
     logger.debug(f"Container: {container}, Backup path: {path}")
 
-    # get directory for volume backup
-    backup_dir = Validator.set_backup_dir(path, container)
+    # check container exists
+    if not Container.validate_container_exists(container):
+        logger.debug(f"Container '{container}' not found on ''")  # Todo: get_hostname()
 
-    # create backup directory
+    # get directory for volume docker
+    backup_dir = set_backup_dir(path, container)
+
+    # create docker directory
     print(f"Backup dir: {backup_dir}")
 
     # check Docker volume is available
@@ -33,15 +38,15 @@ def main(container, path, restart):
     # check Docker container is running
     # if restart: stop docker container
 
-    # run docker backup
+    # run docker docker
 
-    # check docker backup
+    # check docker docker
 
     # send notification
 
     print(f"path: {path}, restart: {restart}")
 
-    foo()
+    # foo()
 
     if container == "a":
         return "Foo"
