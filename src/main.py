@@ -1,5 +1,5 @@
 from docker.container import Container
-from util.accessor import set_backup_dir
+from util.accessor import BackupDir
 from util.argparser import ArgParser
 from util.logger import Logger
 from volume_backup import *
@@ -19,19 +19,20 @@ def foo():
     print(f"config.X = {cfg.hasWarnings}")
 
 
-def main(container, path, restart):
-    logger.info(f"Start volume backup for container '{args.container}'")
-    logger.debug(f"Container: {container}, Backup path: {path}")
+def main(path, restart):
+    logger.info(f"Start volume backup for container '{container.name}'")
+    logger.debug(f"Container: {container.name}, Backup path: {path}")
 
     # check container exists
-    if not Container.validate_container_exists(container):
-        logger.debug(f"Container '{container}' not found on ''")  # Todo: get_hostname()
+    if not container.exists():
+        logger.debug(f"Container '{container.name}' not found on ''")  # Todo: get_hostname()
 
     # get directory for volume docker
-    backup_dir = set_backup_dir(path, container)
+    backup_dir = BackupDir(path, container.name)
 
     # create docker directory
-    print(f"Backup dir: {backup_dir}")
+    print(f"Backup dir: {backup_dir.path}")
+    backup_dir.create()
 
     # check Docker volume is available
 
@@ -48,7 +49,7 @@ def main(container, path, restart):
 
     # foo()
 
-    if container == "a":
+    if container.name == "a":
         return "Foo"
     else:
 
@@ -59,7 +60,11 @@ def main(container, path, restart):
 
 if __name__ == "__main__":
     args = ArgParser.parse_cli_args()
-    Logger.init_logger(args.loglevel)
 
-    print(args)
-    main(args.container, args.path, args.restart)
+    # initialize objects
+    Logger.init_logger(args.loglevel)
+    container = Container(args.container)
+
+    logger.debug(f"Start volume backup with args '{args}'")
+
+    main(args.path, args.restart)

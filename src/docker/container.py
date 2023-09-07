@@ -6,12 +6,15 @@ logger = logging.getLogger(__name__)
 
 
 class Container:
+    def __init__(self, name: str):
+        self.name = name
+        self.isRunning = False
+        self.hasVolume = False
 
-    @staticmethod
-    def validate_container_exists(container: str) -> bool:
-        if docker.container.exists(container):
-            logger.debug(f"Container '{container}' found")
+    def exists(self) -> bool:
+        if docker.container.exists(str(self.name)):
+            logger.debug(f"Container '{self.name}' found")
             return True
 
-        logger.debug(f"Container '{container}' not found")
+        logger.debug(f"Container '{self.name}' not found")
         return False

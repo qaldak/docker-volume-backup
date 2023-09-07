@@ -8,7 +8,9 @@ class TestContainer(TestCase):
 
     @patch("src.docker.container.docker.container.exists", return_value=True)
     def test_container_valid(self, mock_container_state):
-        self.assertTrue(Container.validate_container_exists('Container'), "Container not exist! Expected: 'True'")
+        container = Container("Foo")
+        self.assertTrue(container.exists(), "Container not exist! Expected: 'True'")
 
     def test_container_not_valid(self):
-        self.assertFalse(Container.validate_container_exists('Container'), "Container not exist! Expected: 'False'")
+        container = Container("Foo")
+        self.assertFalse(container.exists(), "Container not exist! Expected: 'False'")

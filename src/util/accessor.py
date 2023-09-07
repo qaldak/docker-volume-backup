@@ -1,22 +1,55 @@
 import logging
+import os
 
 from util import cfg
 
 logger = logging.getLogger(__name__)
 
 
-def set_backup_dir(path, container):
-    logger.debug(f"Backup path: {path}, Container: {container}")
-    if path is None:
-        path = cfg.backup_path
+class BackupDir:
 
-    if path is None or path == "":
-        raise ValueError(f"Invalid path defined: '{path}'")
+    def __init__(self, path, container: str):
+        """
+        initialize backup directory
 
-    if path[-1] != "/":
-        path = path + "/"
+        :param path:
+        :param container:
+        """
+        self.path = BackupDir.__set(path, container)
 
-    path = path + container
-    logger.debug(f"Backup directory set: {path}")
+    @staticmethod
+    def __set(path, container):
+        logger.debug(f"Backup path: {path}, Container: {container}")
+        if path is None:
+            path = cfg.backup_path
 
-    return path
+        if path is None or path == "":
+            raise ValueError(f"Invalid path defined: '{path}'")
+
+        if path[-1] != "/":
+            path = path + "/"
+
+        path = path + container
+        logger.debug(f"Backup directory set: {path}")
+
+        return path
+
+    def create(self):
+        if os.path.isdir(self.path):
+            logger.debug(f"Backup directory already exists: {self.path}")
+            return
+
+        try:
+            os.makedirs(self.path, 0o777)
+            logger.debug(f"Backup directory created: {self.path}")
+        except FileExistsError as err:
+            msg = f"Backup directory already exists. {err}"
+            logger.info(msg)
+            cfg.hasWarnings = True
+            cfg.warningMsg = msg
+        except Exception as err:
+            logger.error(f"Error creating backup directory: {self.path}, {err}")
+            # Todo: notify and exit
+            raise Exception(err)
+
+        return
