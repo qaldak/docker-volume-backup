@@ -1,4 +1,4 @@
-from docker.container import Container
+from container.container import Container
 from util.accessor import BackupDir
 from util.argparser import ArgParser
 from util.logger import Logger
@@ -27,21 +27,22 @@ def main(path, restart):
     if not container.exists():
         logger.debug(f"Container '{container.name}' not found on ''")  # Todo: get_hostname()
 
-    # get directory for volume docker
+    # get directory for volume container
     backup_dir = BackupDir(path, container.name)
 
-    # create docker directory
+    # create container directory
     print(f"Backup dir: {backup_dir.path}")
     backup_dir.create()
 
-    # check Docker volume is available
+    # determine Docker volume of container
+    container.determine_volume()
 
     # check Docker container is running
-    # if restart: stop docker container
+    # if restart: stop container container
 
-    # run docker docker
+    # run container container
 
-    # check docker docker
+    # check container container
 
     # send notification
 

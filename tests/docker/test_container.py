@@ -6,7 +6,7 @@ from docker.container import Container
 
 class TestContainer(TestCase):
 
-    @patch("src.docker.container.docker.container.exists", return_value=True)
+    @patch("src.container.container.container.container.exists", return_value=True)
     def test_container_valid(self, mock_container_state):
         container = Container("Foo")
         self.assertTrue(container.exists(), "Container not exist! Expected: 'True'")

@@ -41,12 +41,10 @@ class BackupDir:
 
         try:
             os.makedirs(self.path, 0o777)
-            logger.debug(f"Backup directory created: {self.path}")
+            logger.info(f"Backup directory created: {self.path}")
         except FileExistsError as err:
-            msg = f"Backup directory already exists. {err}"
+            msg = f"Backup directory '{self.path}' exists. {err}"
             logger.info(msg)
-            cfg.hasWarnings = True
-            cfg.warningMsg = msg
         except Exception as err:
             logger.error(f"Error creating backup directory: {self.path}, {err}")
             # Todo: notify and exit

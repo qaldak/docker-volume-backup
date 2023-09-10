@@ -7,7 +7,7 @@ from util.accessor import BackupDir
 class TestAccessor(TestCase):
     def test_backup_dir_success(self):
         backup_dir = BackupDir("/Foo", "Bar")
-        self.assertEqual(backup_dir.path, "/Foo/Bar", "Invalid docker directory")
+        self.assertEqual(backup_dir.path, "/Foo/Bar", "Invalid container directory")
 
     def test_backup_dir_path_not_set(self):
         with self.assertRaises(ValueError):
