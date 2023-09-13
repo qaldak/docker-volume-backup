@@ -35,7 +35,10 @@ def main(path, restart):
     backup_dir.create()
 
     # determine Docker volume of container
-    container.determine_volume()
+    has_volumes_to_backup = container.determine_volume
+    if not has_volumes_to_backup:
+        print("Nothing to do")
+        return
 
     # check Docker container is running
     # if restart: stop container container
@@ -46,14 +49,11 @@ def main(path, restart):
 
     # send notification
 
-    print(f"path: {path}, restart: {restart}")
-
     # foo()
 
     if container.name == "a":
         return "Foo"
     else:
-
         return "Bar"
 
     logger.info(f"Volume backup for container '{args.container}' completed successfully")
