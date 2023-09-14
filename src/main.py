@@ -23,6 +23,9 @@ def main(path, restart):
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
 
+    # Todo: check Docker daemon is running!
+    # Todo: concept: where notification should be triggered, centralised vs decentralised
+
     # check container exists
     if not container.exists():
         logger.debug(f"Container '{container.name}' not found on ''")  # Todo: get_hostname()

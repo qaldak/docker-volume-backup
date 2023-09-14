@@ -20,6 +20,7 @@ class Container:
         self.docker_bindings = []
 
     def exists(self) -> bool:
+        # Todo: try / except (DockerException: e.g. Docker daemon is not running
         if docker.container.exists(str(self.name)):
             self.id = str(docker.container.inspect(x=self.name))
             logger.debug(f"Container '{self.name}' found with id '{self.id}'")
@@ -34,15 +35,14 @@ class Container:
         try:
             mounts = json.loads(subprocess.check_output(["docker", "inspect", "-f", "{{json .Mounts}}", self.name],
                                                         stderr=subprocess.STDOUT))
-            # print("Mounts: ", mounts)
         except subprocess.CalledProcessError as err:
-            print(err)
+            logger.error(err)
             raise
         except TypeError as err:
-            print(err)
+            logger.error(err)
             raise
         except json.JSONDecodeError as err:
-            print(err)
+            logger.error(err)
             raise
 
         for mount in mounts:

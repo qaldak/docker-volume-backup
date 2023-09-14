@@ -51,3 +51,9 @@ class BackupDir:
             raise Exception(err)
 
         return
+
+
+class Host:
+
+    def get_hostname(self):
+        pass
