@@ -1,6 +1,9 @@
 import logging
 import os
 
+import docker
+from _socket import gethostname
+
 from util import cfg
 
 logger = logging.getLogger(__name__)
@@ -53,7 +56,17 @@ class BackupDir:
         return
 
 
-class Host:
+class LocalHost:
+    @staticmethod
+    def get_hostname():
+        return gethostname().lower()
 
-    def get_hostname(self):
-        pass
+    @staticmethod
+    def is_docker_daemon_running():
+        try:
+            client = docker.from_env()
+            client.ping()
+            return True
+        except docker.errors.DockerException as err:
+            print(err)
+            return False

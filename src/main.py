@@ -1,22 +1,10 @@
 from container.container import Container
-from util.accessor import BackupDir
+from util.accessor import BackupDir, LocalHost
 from util.argparser import ArgParser
 from util.logger import Logger
 from volume_backup import *
 
 logger = logging.getLogger(__name__)
-
-
-def foo():
-    print(f"config.X = {__name__}, {cfg.hasWarnings}")
-    cfg.hasWarnings = True
-
-    print(f"config.X = {cfg.hasWarnings}")
-
-    print("Foo")
-    bar()
-
-    print(f"config.X = {cfg.hasWarnings}")
 
 
 def main(path, restart):
@@ -26,9 +14,13 @@ def main(path, restart):
     # Todo: check Docker daemon is running!
     # Todo: concept: where notification should be triggered, centralised vs decentralised
 
+    print(LocalHost.is_docker_daemon_running())
+
     # check container exists
     if not container.exists():
         logger.debug(f"Container '{container.name}' not found on ''")  # Todo: get_hostname()
+
+    print(LocalHost.get_hostname())
 
     # get directory for volume container
     backup_dir = BackupDir(path, container.name)
@@ -51,8 +43,6 @@ def main(path, restart):
     # check container container
 
     # send notification
-
-    # foo()
 
     if container.name == "a":
         return "Foo"
