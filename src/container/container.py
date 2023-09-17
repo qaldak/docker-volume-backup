@@ -20,18 +20,15 @@ class Container:
         self.docker_bindings = []
 
     def exists(self) -> bool:
-        # Todo: try / except (DockerException: e.g. Docker daemon is not running
         if docker.container.exists(str(self.name)):
             self.id = str(docker.container.inspect(x=self.name))
             logger.debug(f"Container '{self.name}' found with id '{self.id}'")
             return True
-
         logger.debug(f"Container '{self.name}' not found")
         return False
 
-    @property
-    def determine_volume(self):
-
+    def determine_volume(self) -> bool:
+        logger.debug(f"determining volumes ...")
         try:
             mounts = json.loads(subprocess.check_output(["docker", "inspect", "-f", "{{json .Mounts}}", self.name],
                                                         stderr=subprocess.STDOUT))
@@ -45,7 +42,12 @@ class Container:
             logger.error(err)
             raise
 
+        if len(mounts) == 0:
+            logger.debug(f"No mounts defined in Docker container.")
+            return False
+
         for mount in mounts:
+
             if not mount["RW"]:
                 continue
 
@@ -68,6 +70,10 @@ class Container:
                 self.has_docker_bindings = True
 
         if self.has_docker_volume or self.has_docker_bindings:
+            logger.debug(f"Volumes found: {self.has_docker_volume}, Bindings found: {self.has_docker_bindings}")
             return True
 
         return False
+
+    def is_volume_available(self):
+        return self.determine_volume()

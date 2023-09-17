@@ -62,11 +62,14 @@ class LocalHost:
         return gethostname().lower()
 
     @staticmethod
-    def is_docker_daemon_running():
+    def is_docker_daemon_running() -> bool:  # Todo: unittest
         try:
             client = docker.from_env()
             client.ping()
-            return True
         except docker.errors.DockerException as err:
-            print(err)
+            print(err)  # Todo: logger
+            raise docker.errors.DockerException(f"Docker daemon not running on {LocalHost.get_hostname()}.", err)
+        except Exception as err:
+            print(err)  # Todo: logger
             return False
+        return True

@@ -1,3 +1,4 @@
+from container.backup import Volume
 from container.container import Container
 from util.accessor import BackupDir, LocalHost
 from util.argparser import ArgParser
@@ -11,10 +12,11 @@ def main(path, restart):
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
 
-    # Todo: check Docker daemon is running!
     # Todo: concept: where notification should be triggered, centralised vs decentralised
 
-    print(LocalHost.is_docker_daemon_running())
+    # check Docker daemon is running!
+    if not LocalHost.is_docker_daemon_running():
+        raise ValueError("Docker daemon not running as expected!")
 
     # check container exists
     if not container.exists():
@@ -30,17 +32,18 @@ def main(path, restart):
     backup_dir.create()
 
     # determine Docker volume of container
-    has_volumes_to_backup = container.determine_volume
-    if not has_volumes_to_backup:
-        print("Nothing to do")
-        return
+    if not container.is_volume_available():
+        logger.debug(f"No volumes to backup in container '{container.name}'")
+        # raise AssertionError("No volumes to backup")
+        # return
 
+    Volume().run_backup(container, backup_dir)
     # check Docker container is running
     # if restart: stop container container
 
-    # run container container
+    # run container
 
-    # check container container
+    # check container
 
     # send notification
 
