@@ -4,6 +4,7 @@ import os.path
 import re
 import subprocess
 
+import python_on_whales.exceptions
 from python_on_whales import docker
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,9 @@ class Container:
         self.docker_bindings = []
 
     def exists(self) -> bool:
+        """Checks whether Docker Container exists.
+        :return: boolean
+        """
         if docker.container.exists(str(self.name)):
             self.id = str(docker.container.inspect(x=self.name))
             logger.debug(f"Container '{self.name}' found with id '{self.id}'")
@@ -76,4 +80,20 @@ class Container:
         return False
 
     def is_volume_available(self):
+        # Todo: calculate boolean instead simple return determine_volume()
         return self.determine_volume()
+
+    def stop(self):
+        try:
+            docker.container.stop(str(self.name))
+        except python_on_whales.exceptions.NoSuchContainer as err:
+            logger.error(f"Error on stopping Container '{self.name}'. {err}")
+            raise
+
+    def start(self):
+        try:
+            print(docker.compose.ps)
+            docker.container.start(str(self.name))
+        except Exception as err:
+            logger.error(f"Error on restarting container '{self.name}'. {err}")
+            raise

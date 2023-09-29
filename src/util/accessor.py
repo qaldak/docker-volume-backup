@@ -1,8 +1,8 @@
 import logging
 import os
+from _socket import gethostname
 
 import docker
-from _socket import gethostname
 
 from util import cfg
 
@@ -67,9 +67,10 @@ class LocalHost:
             client = docker.from_env()
             client.ping()
         except docker.errors.DockerException as err:
-            print(err)  # Todo: logger
+            logger.error(f"Docker daemon not running on {LocalHost.get_hostname()}, {err}")
             raise docker.errors.DockerException(f"Docker daemon not running on {LocalHost.get_hostname()}.", err)
         except Exception as err:
-            print(err)  # Todo: logger
+            logger.error(f"Error while checking Docker daemon on {LocalHost.get_hostname()}, {err}")
             return False
+
         return True

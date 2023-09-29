@@ -20,15 +20,13 @@ def main(path, restart):
 
     # check container exists
     if not container.exists():
-        logger.debug(f"Container '{container.name}' not found on ''")  # Todo: get_hostname()
-
-    print(LocalHost.get_hostname())
+        logger.debug(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
+        # Todo: raise Exception
 
     # get directory for volume container
     backup_dir = BackupDir(path, container.name)
 
     # create container directory
-    print(f"Backup dir: {backup_dir.path}")
     backup_dir.create()
 
     # determine Docker volume of container
@@ -36,21 +34,20 @@ def main(path, restart):
         logger.debug(f"No volumes to backup in container '{container.name}'")
         # raise AssertionError("No volumes to backup")
         # return
+        # Todo: raise Exception
 
-    Volume().run_backup(container, backup_dir)
-    # check Docker container is running
-    # if restart: stop container container
+    if restart:
+        container.stop()
 
-    # run container
+    Volume.run_backup(container, backup_dir)
 
-    # check container
+    if restart:
+        container.start()
+        # Todo: check container
 
     # send notification
 
-    if container.name == "a":
-        return "Foo"
-    else:
-        return "Bar"
+    # Todo: check try / finally
 
     logger.info(f"Volume backup for container '{args.container}' completed successfully")
 
