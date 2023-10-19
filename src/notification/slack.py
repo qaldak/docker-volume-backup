@@ -1,6 +1,6 @@
-class Sender:
+class Slack:
     def __init__(self):
-        print("Foo")
+        print("Slack - Foo")
 
     def send_msg(self):
-        print("Foo")
+        print("Slack - Bar")

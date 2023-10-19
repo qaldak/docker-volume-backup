@@ -1,8 +1,8 @@
 import logging
 import os
-from _socket import gethostname
 
 import docker
+from _socket import gethostname
 
 from util import cfg
 
@@ -60,6 +60,10 @@ class LocalHost:
     @staticmethod
     def get_hostname():
         return gethostname().lower()
+
+    @staticmethod
+    def get_hostname_upper():
+        return gethostname().upper()
 
     @staticmethod
     def is_docker_daemon_running() -> bool:  # Todo: unittest

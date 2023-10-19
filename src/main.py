@@ -1,9 +1,12 @@
+import logging
+
 from container.backup import Volume
 from container.container import Container
+from notification.dispatcher import Dispatcher, Receiver
+from util import cfg
 from util.accessor import BackupDir, LocalHost
 from util.argparser import ArgParser
 from util.logger import Logger
-from volume_backup import *
 
 logger = logging.getLogger(__name__)
 
@@ -14,40 +17,45 @@ def main(path, restart):
 
     # Todo: concept: where notification should be triggered, centralised vs decentralised
 
-    # check Docker daemon is running!
-    if not LocalHost.is_docker_daemon_running():
-        raise ValueError("Docker daemon not running as expected!")
+    try:
+        # check Docker daemon is running!
+        if not LocalHost.is_docker_daemon_running():
+            raise ValueError("Docker daemon not running as expected!")
 
-    # check container exists
-    if not container.exists():
-        logger.debug(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
-        # Todo: raise Exception
+        # check container exists
+        if not container.exists():
+            logger.debug(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
+            # Todo: raise Exception
 
-    # get directory for volume container
-    backup_dir = BackupDir(path, container.name)
+        # get directory for volume container
+        backup_dir = BackupDir(path, container.name)
 
-    # create container directory
-    backup_dir.create()
+        # create container directory
+        backup_dir.create()
 
-    # determine Docker volume of container
-    if not container.is_volume_available():
-        logger.debug(f"No volumes to backup in container '{container.name}'")
-        # raise AssertionError("No volumes to backup")
-        # return
-        # Todo: raise Exception
+        # determine Docker volume of container
+        if not container.is_volume_available():
+            logger.debug(f"No volumes to backup in container '{container.name}'")
+            Dispatcher(Receiver.SLACK, "Error", "Mqtt-msg").notify_receiver()
+            # raise AssertionError("No volumes to backup")
+            # return
+            # Todo: raise Exception
 
-    if restart:
-        container.stop()
+        if restart:
+            container.stop()
 
-    Volume.run_backup(container, backup_dir)
+        Volume.run_backup(container, backup_dir)
 
-    if restart:
-        container.start()
-        # Todo: check container
+        if restart:
+            container.start()
+            # Todo: check container
 
-    # send notification
+        # send notification
 
-    # Todo: check try / finally
+        # Todo: check try / finally
+    finally:
+        if cfg.hasError:
+            print("Foo")
 
     logger.info(f"Volume backup for container '{args.container}' completed successfully")
 
