@@ -15,8 +15,6 @@ def main(path, restart):
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
 
-    # Todo: concept: where notification should be triggered, centralised vs decentralised
-
     try:
         # check Docker daemon is running!
         if not LocalHost.is_docker_daemon_running():
@@ -24,8 +22,7 @@ def main(path, restart):
 
         # check container exists
         if not container.exists():
-            logger.debug(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
-            # Todo: raise Exception
+            raise ValueError(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
 
         # get directory for volume container
         backup_dir = BackupDir(path, container.name)
@@ -35,11 +32,7 @@ def main(path, restart):
 
         # determine Docker volume of container
         if not container.is_volume_available():
-            logger.debug(f"No volumes to backup in container '{container.name}'")
-            Dispatcher(Receiver.SLACK, "Error", "Mqtt-msg").notify_receiver()
-            # raise AssertionError("No volumes to backup")
-            # return
-            # Todo: raise Exception
+            raise ValueError(f"No volumes to backup in container '{container.name}'")
 
         if restart:
             container.stop()
@@ -50,21 +43,32 @@ def main(path, restart):
             container.start()
             # Todo: check container
 
+    except Exception as err:
+        cfg.hasError = True
+        cfg.errorMsg = err
+
+        logger.exception(err)
+
+        Dispatcher(Receiver.SLACK, container.name, "Mqtt-msg").notify_receiver()
+
+    else:
+        logger.info(f"Volume backup for container '{args.container}' completed successfully")
+
+    finally:
+        # Todo:
         # send notification
 
-        # Todo: check try / finally
-    finally:
         if cfg.hasError:
-            print("Foo")
+            print(__name__, "Foo")
 
-    logger.info(f"Volume backup for container '{args.container}' completed successfully")
+        print(__name__, "Is this the end?")
 
 
 if __name__ == "__main__":
     args = ArgParser.parse_cli_args()
 
     # initialize objects
-    Logger.init_logger(args.loglevel)
+    Logger.init_logger(args.loglevel, args.container)
     container = Container(args.container)
 
     logger.debug(f"Start volume backup with args '{args}'")

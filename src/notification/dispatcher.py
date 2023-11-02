@@ -1,12 +1,16 @@
+import logging
 from enum import Enum
 
 from notification.builder import Builder
+from notification.chat import Slack
+
+logger = logging.getLogger(__name__)
 
 
 class Dispatcher:
-    def __init__(self, receiver: Enum, orig_msg: str, mqtt=True):
+    def __init__(self, receiver: Enum, container_name: str, mqtt=True):
         self.receiver = receiver
-        self.original_msg = orig_msg
+        self.container = container_name
         self.msg = ""
         self.mqtt_msg = ""
         self.send_mqtt = mqtt
@@ -14,20 +18,25 @@ class Dispatcher:
     def __send_message(self):
         match self.receiver:
             case Receiver.SLACK:
-                print("Foo")
+                print(__name__, "Foo")
             case _:
-                print("Foobar")
+                print(__name__, "Foobar")
 
-    def __send_mqtt_message(self):
-        print("Bar")
+    @staticmethod
+    def __send_mqtt_message():
+        print(__name__, "Bar")
 
     def notify_receiver(self):
+        logger.debug(f"ready to build the chat message")
 
-        self.msg = Builder.build_info_msg(self.original_msg)
+        self.msg = Builder.build_chat_message(self.container)
+        logger.debug(f"message to send: '{self.msg}'")
+
+        Slack().post_message(self.msg)
 
         if self.send_mqtt:
             self.__send_mqtt_message()
-        print("Baz")
+        print(__name__, "Baz")
 
 
 class Receiver(Enum):

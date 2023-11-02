@@ -1,20 +1,30 @@
 import json
+import logging
 from datetime import time
 
+from util import cfg
 from util.accessor import LocalHost
+
+logger = logging.getLogger(__name__)
 
 
 class Builder:
 
     @staticmethod
-    def build_info_msg(orig_err: str) -> str:
-        print(orig_err)
-        return "Info Msg: Foo"
+    def build_chat_message(container_name: str) -> str:
+        logger.debug(f"cfg error infos: cfg.hasError: {cfg.hasError}, cfg.errorMsg: {cfg.errorMsg}")
+
+        if cfg.hasError:
+            msg = (
+                f"[{LocalHost.get_hostname()}] An error occurred while backing up Container '{container_name}'"
+                f"\nError: {cfg.errorMsg}\nCheck log file for more details.")
+
+        return msg
 
     @staticmethod
     def build_mqtt_msg(orig_err: str):
-        print(orig_err)
-        print("Bar")
+        print(__name__, orig_err)
+        print(__name__, "Bar")
         value = {
             "time": int(time.time()),
             "container": "xyz",

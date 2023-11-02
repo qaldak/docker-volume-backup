@@ -12,6 +12,6 @@ class ArgParser:
         parser.add_argument("-r", "--restart", action="store_true", dest="restart",
                             help="Stops Docker container for backup and restart when done")
         parser.add_argument("--debug", action="store_const", dest="loglevel", const=logging.DEBUG,
-                            default=logging.DEBUG,
+                            default=logging.INFO,
                             help="Set loglevel to DEBUG")
         return parser.parse_args()

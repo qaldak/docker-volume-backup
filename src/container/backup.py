@@ -31,21 +31,21 @@ class Volume:
 
         if not container.has_docker_volume and not container.has_docker_bindings:
             raise AssertionError("No volumes to backup")
-        # Todo: to main or determine container volumes
 
         tar_cmd = create_tar_cmd(container)
-        print(tar_cmd)
+        logger.debug(f"tar command: {tar_cmd}")
 
         # Todo: check issue when running on windows?
         volume_mapping = [{
-            f'{backup_dir.path}:/backup'
+            f"{backup_dir.path}:/backup"
             # f'{backup_dir.path.replace("_", "_")}:/backup'
         }]
-        print(volume_mapping)
+        logger.debug(f"volume mapping for backup container: {volume_mapping}")
 
         try:
             tmp = docker.run("busybox:latest", tar_cmd, remove=True, volumes_from=container.name,
                              volumes=volume_mapping, detach=False)
+
         except Exception as err:
-            print(err)
-            print(tmp)
+            logger.info(tmp)
+            logger.error(err)
