@@ -50,8 +50,7 @@ class BackupDir:
             logger.info(msg)
         except Exception as err:
             logger.error(f"Error creating backup directory: {self.path}, {err}")
-            # Todo: notify and exit
-            raise Exception(err)
+            raise
 
         return
 
