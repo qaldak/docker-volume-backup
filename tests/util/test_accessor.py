@@ -1,11 +1,12 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-import util.accessor
-from util.accessor import BackupDir
+import docker.errors
+
+from util.accessor import BackupDir, LocalHost
 
 
-class TestAccessor(TestCase):
+class TestAccessorBackupDir(TestCase):
     def test_backup_dir_success(self):
         backup_dir = BackupDir("/Foo", "Bar")
         self.assertEqual(backup_dir.path, "/Foo/Bar", "Invalid container directory")
@@ -35,6 +36,32 @@ class TestAccessor(TestCase):
                 ["INFO:util.accessor:Backup directory '/Foo/Bar' exists. Directory already exists"],
                 log.output)
 
+
+class TestAccessorLocalhost(TestCase):
     def test_get_hostname(self):
-        hostname = util.accessor.LocalHost.get_hostname()
+        hostname = LocalHost.get_hostname()
         self.assertTrue(hostname.islower())
+
+    def test_get_hostname_upper(self):
+        hostname = LocalHost.get_hostname_upper()
+        self.assertTrue(hostname.isupper())
+
+    @patch("src.util.accessor.docker.from_env", side_effect=ConnectionError(
+        "('Connection aborted.', ConnectionRefusedError(111, 'Connection refused')"))
+    def test_is_docker_daemon_running_exception(self, client):
+        with self.assertLogs("util.accessor", level="ERROR") as log:
+            self.assertFalse(LocalHost.is_docker_daemon_running())
+            self.assertEqual([
+                f"ERROR:util.accessor:Error while checking Docker daemon on {LocalHost.get_hostname()}, "
+                "('Connection aborted.', ConnectionRefusedError(111, 'Connection refused')"],
+                log.output)
+
+    @patch("src.util.accessor.docker.from_env", return_value="<docker.client.Client object at 0xffff8713be90>")
+    def test_is_docker_daemon_running_docker_exception(self, client):
+        with self.assertLogs("util.accessor", level="ERROR") as log:
+            LocalHost.is_docker_daemon_running()
+            self.assertRaises(docker.errors.DockerException)
+
+    @patch("src.util.accessor.docker.client.Client.ping", return_value="OK")
+    def test_is_docker_daemon_running(self, ping):
+        self.assertTrue(LocalHost.is_docker_daemon_running())
