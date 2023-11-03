@@ -3,9 +3,11 @@ import logging
 import os.path
 import re
 import subprocess
+from json import JSONDecodeError
 
+import docker as docker_cli
 import python_on_whales.exceptions
-from python_on_whales import docker
+from python_on_whales import docker, DockerClient
 
 logger = logging.getLogger(__name__)
 
@@ -83,17 +85,49 @@ class Container:
         # Todo: calculate boolean instead simple return determine_volume()
         return self.determine_volume()
 
+    # Todo: implement stop and start again
     def stop(self):
         try:
-            docker.container.stop(str(self.name))
+            started_by_compose, compose_file_path = self.is_container_started_by_compose()
+            if started_by_compose:
+                docker_compose = DockerClient(compose_files=compose_file_path)
+                docker_compose.compose.down(quiet=True)
+            else:
+                docker.container.start(str(self.name))
         except python_on_whales.exceptions.NoSuchContainer as err:
             logger.error(f"Error on stopping Container '{self.name}'. {err}")
             raise
 
     def start(self):
         try:
-            print(docker.compose.ps)
-            docker.container.start(str(self.name))
+            started_by_compose, compose_file_path = self.is_container_started_by_compose()
+            if started_by_compose:
+                docker_compose = DockerClient(compose_files=compose_file_path)
+                docker_compose.compose.up(detach=True, quiet=True)
+            else:
+                docker.container.start(str(self.name))
         except Exception as err:
             logger.error(f"Error on restarting container '{self.name}'. {err}")
+            raise
+
+    def is_container_started_by_compose(self):
+        try:
+            client = docker_cli.from_env()
+            response = client.inspect_container(container=self.name)
+
+            response_json = json.loads(json.dumps(response))
+
+            compose_files = response_json.get("Config").get("Labels").get("com.docker.compose.project.config_files")
+
+            if compose_files is None:
+                return False
+
+            return True, compose_files
+
+        except JSONDecodeError as err:
+            logger.error(f"Error while decoding json: {err}")
+            raise
+
+        except Exception as err:
+            logger.error(f"Error while inspect container: {err}")
             raise

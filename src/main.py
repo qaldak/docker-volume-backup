@@ -24,6 +24,7 @@ def main(path, restart):
         if not container.exists():
             raise ValueError(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
 
+        print(container.start())
         # get directory for volume container
         backup_dir = BackupDir(path, container.name)
 
@@ -49,7 +50,7 @@ def main(path, restart):
 
         logger.exception(err)
 
-        Dispatcher(Receiver.SLACK, container.name, "Mqtt-msg").notify_receiver()
+        Dispatcher(Receiver.SLACK, container.name).notify_receiver()
 
     else:
         logger.info(f"Volume backup for container '{args.container}' completed successfully")

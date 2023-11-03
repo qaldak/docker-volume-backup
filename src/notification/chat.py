@@ -16,13 +16,13 @@ class Slack:
         self.auth_token = os.getenv("SLACK_AUTH_TOKEN")
         self.channel = os.getenv("SLACK_CHANNEL_ID")
         self.client = WebClient(token=self.auth_token)
-        self.emoji = ":exclamation: " if cfg.hasError else ""
+        self.emoji = ":exclamation:" if cfg.hasError else ""
 
     def post_message(self, msg):
         try:
             response = self.client.chat_postMessage(
                 channel=self.channel,
-                text=f"{self.emoji} {msg}"
+                text=f"{self.emoji}{msg}"
             )
 
             if response["ok"]:
