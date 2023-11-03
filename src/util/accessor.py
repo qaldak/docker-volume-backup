@@ -38,6 +38,9 @@ class BackupDir:
         return path
 
     def create(self):
+        """
+        Checks whether backup directory already exists. If not, create it.
+        """
         if os.path.isdir(self.path):
             logger.debug(f"Backup directory already exists: {self.path}")
             return
@@ -57,15 +60,29 @@ class BackupDir:
 
 class LocalHost:
     @staticmethod
-    def get_hostname():
+    def get_hostname() -> str:
+        """
+
+        :return: hostname in lowercase
+        """
         return gethostname().lower()
 
     @staticmethod
-    def get_hostname_upper():
+    def get_hostname_upper() -> str:
+        """
+
+        :return: hostname in uppercase
+        """
         return gethostname().upper()
 
     @staticmethod
-    def is_docker_daemon_running() -> bool:  # Todo: unittest
+    def is_docker_daemon_running() -> bool:
+        """
+        Determines whether Docker daemon is running on the local host.
+        Raises an exception on DockerException.
+
+        :return: True if running, False if error occurred
+        """
         try:
             client = docker.from_env()
             client.ping()
