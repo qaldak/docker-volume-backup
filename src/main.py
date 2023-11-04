@@ -2,7 +2,7 @@ import logging
 
 from container.backup import Volume
 from container.container import Container
-from notification.dispatcher import Dispatcher, Receiver
+from notification.dispatcher import Dispatcher
 from util import cfg
 from util.accessor import BackupDir, LocalHost
 from util.argparser import ArgParser
@@ -50,17 +50,12 @@ def main(path, restart):
 
         logger.exception(err)
 
-        Dispatcher(Receiver.SLACK, container.name).notify_receiver()
-
     else:
         logger.info(f"Volume backup for container '{args.container}' completed successfully")
 
     finally:
-        # Todo:
         # send notification
-
-        if cfg.hasError:
-            print(__name__, "Foo")
+        Dispatcher(container.name).notify_receiver()
 
         print(__name__, "Is this the end?")
 

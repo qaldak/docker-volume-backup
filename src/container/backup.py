@@ -1,6 +1,6 @@
 import logging
 
-from python_on_whales import docker
+from python_on_whales import docker, DockerException
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,6 @@ class Volume:
         # Todo: check issue when running on windows?
         volume_mapping = [{
             f"{backup_dir.path}:/backup"
-            # f'{backup_dir.path.replace("_", "_")}:/backup'
         }]
         logger.debug(f"volume mapping for backup container: {volume_mapping}")
 
@@ -59,8 +58,13 @@ class Volume:
             tmp = docker.run("busybox:latest", tar_cmd, remove=True, volumes_from=container.name,
                              volumes=volume_mapping, detach=False)
 
+            logger.debug(f"Return value running backup: {tmp}")
             logger.info(f"Volume backup for container '{container.name}' successful")
 
+        except DockerException as err:
+            logger.exception(err)
+            raise
+
         except Exception as err:
-            logger.info(tmp)
-            logger.error(err)
+            logger.exception(err)
+            raise

@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class Slack:
+    """
+    Initialize Slack to post message to a defined channel
+    """
+
     def __init__(self):
         load_dotenv()
         self.auth_token = os.getenv("SLACK_AUTH_TOKEN")
@@ -19,6 +23,11 @@ class Slack:
         self.emoji = ":exclamation:" if cfg.hasError else ""
 
     def post_message(self, msg):
+        """
+        Post message to defined Slack channel
+
+        :param msg: message to send
+        """
         try:
             response = self.client.chat_postMessage(
                 channel=self.channel,
@@ -28,7 +37,7 @@ class Slack:
             if response["ok"]:
                 logger.info(f"Message sent successfully")
 
-            logger.debug(response)
+            logger.debug(f"{str(response)[1:66]} ...")
 
         except SlackApiError as err:
             logger.error(err)

@@ -14,7 +14,7 @@ class TestArgParser(TestCase):
         self.assertEqual(args.container, "foo_bar", "Error: container param not matched")
         self.assertIsNone(args.path, "Error: path param not matched")
         self.assertFalse(args.restart, "Error: restart param not matched")
-        self.assertEqual(args.loglevel, logging.DEBUG, "Error: loglevel not matched")
+        self.assertEqual(args.loglevel, logging.INFO, "Error: loglevel not matched")
 
     def test_parse_all_args(self):
         sys.argv = ["main.py", "foo_bar", "-p", "/foo/bar", "--restart", "--debug"]

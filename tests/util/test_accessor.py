@@ -11,7 +11,8 @@ class TestAccessorBackupDir(TestCase):
         backup_dir = BackupDir("/Foo", "Bar")
         self.assertEqual(backup_dir.path, "/Foo/Bar", "Invalid container directory")
 
-    def test_backup_dir_path_not_set(self):
+    @patch("src.util.accessor.os.getenv", return_value="")
+    def test_backup_dir_path_not_set(self, dir):
         with self.assertRaises(ValueError):
             BackupDir("", "Bar")
 
@@ -62,6 +63,6 @@ class TestAccessorLocalhost(TestCase):
             LocalHost.is_docker_daemon_running()
             self.assertRaises(docker.errors.DockerException)
 
-    @patch("src.util.accessor.docker.client.Client.ping", return_value="OK")
+    @patch("src.util.accessor.docker.client.DockerClient.ping", return_value="OK")
     def test_is_docker_daemon_running(self, ping):
         self.assertTrue(LocalHost.is_docker_daemon_running())

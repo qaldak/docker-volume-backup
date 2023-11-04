@@ -12,13 +12,14 @@ class Builder:
 
     @staticmethod
     def build_chat_message(container_name: str) -> str:
-        logger.debug(f"cfg error infos: cfg.hasError: {cfg.hasError}, cfg.errorMsg: {cfg.errorMsg}")
+        logger.debug(f"start build chat message")
 
         if cfg.hasError:
             msg = (
                 f"[{LocalHost.get_hostname()}] An error occurred while backing up Container '{container_name}'"
                 f"\nError: {cfg.errorMsg}\nCheck log file for more details.")
 
+        logger.debug(f"chat message generated: {msg}")
         return msg
 
     @staticmethod

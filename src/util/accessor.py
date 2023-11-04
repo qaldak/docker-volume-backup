@@ -1,10 +1,8 @@
 import logging
 import os
-from _socket import gethostname
 
 import docker
-
-from util import cfg
+from _socket import gethostname
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +21,20 @@ class BackupDir:
     @staticmethod
     def __set(path, container):
         logger.debug(f"Backup path: {path}, Container: {container}")
-        if path is None:
-            path = cfg.backup_path
 
-        if path is None or path == "":
-            raise ValueError(f"Invalid path defined: '{path}'")
+        if not path:
+            path = os.getenv("BACKUP_DIR")
+
+        if not path:
+            raise ValueError(f"Invalid backup path defined: '{path}'")
 
         if path[-1] != "/":
             path = path + "/"
 
-        path = path + container
-        logger.debug(f"Backup directory set: {path}")
+        backup_dir = path + container
+        logger.debug(f"Backup directory set: {backup_dir}")
 
-        return path
+        return backup_dir
 
     def create(self):
         """
@@ -48,9 +47,11 @@ class BackupDir:
         try:
             os.makedirs(self.path, 0o777)
             logger.info(f"Backup directory created: {self.path}")
+
         except FileExistsError as err:
             msg = f"Backup directory '{self.path}' exists. {err}"
             logger.info(msg)
+
         except Exception as err:
             logger.error(f"Error creating backup directory: {self.path}, {err}")
             raise
@@ -62,7 +63,6 @@ class LocalHost:
     @staticmethod
     def get_hostname() -> str:
         """
-
         :return: hostname in lowercase
         """
         return gethostname().lower()
@@ -70,7 +70,6 @@ class LocalHost:
     @staticmethod
     def get_hostname_upper() -> str:
         """
-
         :return: hostname in uppercase
         """
         return gethostname().upper()
@@ -86,9 +85,11 @@ class LocalHost:
         try:
             client = docker.from_env()
             client.ping()
+
         except docker.errors.DockerException as err:
             logger.error(f"Docker daemon not running on {LocalHost.get_hostname()}, {err}")
             raise
+
         except Exception as err:
             logger.error(f"Error while checking Docker daemon on {LocalHost.get_hostname()}, {err}")
             return False
