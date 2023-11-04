@@ -14,10 +14,14 @@ class Builder:
     def build_chat_message(container_name: str) -> str:
         logger.debug(f"start build chat message")
 
+        msg = ""
         if cfg.hasError:
             msg = (
-                f"[{LocalHost.get_hostname()}] An error occurred while backing up Container '{container_name}'"
+                f"[{LocalHost.get_hostname()}] An error occurred while backing up container '{container_name}'"
                 f"\nError: {cfg.errorMsg}\nCheck log file for more details.")
+
+        else:
+            msg = f"[{LocalHost.get_hostname()}] Volume backup of container '{container_name}' successful"
 
         logger.debug(f"chat message generated: {msg}")
         return msg

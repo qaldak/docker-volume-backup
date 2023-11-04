@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 class Slack:
     """
-    Initialize Slack to post message to a defined channel
+    Initialize Slack to post message to a defined channel.
+    Following params need to be defined in .env file:
+    'SLACK_CHANNEL_ID' and 'SLACK_AUTH_TOKEN'
     """
 
     def __init__(self):
@@ -41,3 +43,4 @@ class Slack:
 
         except SlackApiError as err:
             logger.error(err)
+            cfg.hasError = True

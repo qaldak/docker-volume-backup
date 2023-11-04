@@ -6,9 +6,7 @@ class Logger:
 
     @staticmethod
     def init_logger(loglevel, container: str):
-        print(os.getenv("BACKUP_DIR"))
         logdir = os.getenv("LOG_DIR")
-        print(f"logdir {logdir}")
 
         if not os.path.isdir(logdir):
             os.makedirs(logdir)
