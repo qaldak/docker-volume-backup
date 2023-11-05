@@ -26,7 +26,7 @@ def main(path, restart):
 
         print(container.start())
         # get directory for volume container
-        backup_dir = BackupDir(path, container.name)
+        backup_dir = BackupDir(path)
 
         # create container directory
         backup_dir.create()
@@ -57,7 +57,7 @@ def main(path, restart):
         # send notification
         Dispatcher(container.name).notify_receiver()
 
-        print(__name__, "Is this the end?")
+        logger.info(f"Volume backup done.")
 
 
 if __name__ == "__main__":

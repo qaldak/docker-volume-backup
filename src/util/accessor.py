@@ -9,32 +9,27 @@ logger = logging.getLogger(__name__)
 
 class BackupDir:
 
-    def __init__(self, path, container: str):
+    def __init__(self, path):
         """
         initialize backup directory
 
         :param path:
-        :param container:
         """
-        self.path = BackupDir.__set(path, container)
+        self.path = BackupDir.__set(path)
 
     @staticmethod
-    def __set(path, container):
-        logger.debug(f"Backup path: {path}, Container: {container}")
+    def __set(path):
+        logger.debug(f"Backup path by command line: {path}")
 
         if not path:
+            if not os.getenv("BACKUP_DIR"):
+                raise ValueError(f"Invalid backup path defined: '{path}'")
+
             path = os.getenv("BACKUP_DIR")
 
-        if not path:
-            raise ValueError(f"Invalid backup path defined: '{path}'")
+        logger.debug(f"Backup directory set: {path}")
 
-        if path[-1] != "/":
-            path = path + "/"
-
-        backup_dir = path + container
-        logger.debug(f"Backup directory set: {backup_dir}")
-
-        return backup_dir
+        return path
 
     def create(self):
         """

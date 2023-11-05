@@ -8,33 +8,33 @@ from util.accessor import BackupDir, LocalHost
 
 class TestAccessorBackupDir(TestCase):
     def test_backup_dir_success(self):
-        backup_dir = BackupDir("/Foo", "Bar")
-        self.assertEqual(backup_dir.path, "/Foo/Bar", "Invalid container directory")
+        backup_dir = BackupDir("/Foo/")
+        self.assertEqual(backup_dir.path, "/Foo/", "Invalid container directory")
 
     @patch("src.util.accessor.os.getenv", return_value="")
     def test_backup_dir_path_not_set(self, dir):
         with self.assertRaises(ValueError):
-            BackupDir("", "Bar")
+            BackupDir("")
 
     @patch("src.util.accessor.os.path.isdir", return_value=True)
     def test_backup_dir_exists(self, mock_dir):
-        backup_dir = BackupDir("/Foo", "Bar")
+        backup_dir = BackupDir("/Foo")
         self.assertIsNone(backup_dir.create(), "Directory not found, but should")
 
     @patch("src.util.accessor.os.path.isdir", return_value=False)
     @patch("src.util.accessor.os.makedirs", return_value=None)
     def test_backup_dir_created(self, mock_dir, mock_makedirs):
-        backup_dir = BackupDir("/Foo", "Bar")
+        backup_dir = BackupDir("/Foo")
         self.assertIsNone(backup_dir.create(), "Directory not found, but should")
 
     @patch("src.util.accessor.os.path.isdir", return_value=False)
     @patch("src.util.accessor.os.makedirs", side_effect=FileExistsError("Directory already exists"))
     def test_backup_dir_error(self, mock_dir, mock_makedir):
-        backup_dir = BackupDir("/Foo", "Bar")
+        backup_dir = BackupDir("/Foo")
         with self.assertLogs("util.accessor", level="INFO") as log:
             backup_dir.create()
             self.assertEqual(
-                ["INFO:util.accessor:Backup directory '/Foo/Bar' exists. Directory already exists"],
+                ["INFO:util.accessor:Backup directory '/Foo' exists. Directory already exists"],
                 log.output)
 
 
