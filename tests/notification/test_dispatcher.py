@@ -26,16 +26,16 @@ class TestDispatcher(TestCase):
 
     @patch.dict("src.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "NEVER", "CHAT_SERVICE": "SLACK", "MQTT_NOTIFICATION": "False"})
-    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
+    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foo")
     def test_dispatcher_notify_receiver_unknown(self, msg):
         Dispatcher("Foo").notify_receiver()
         self.assertEqual("", Dispatcher("Foo").msg)
 
     @patch.dict("src.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SLACK", "MQTT_NOTIFICATION": "False"})
-    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
-    @patch("src.util.cfg.hasError", return_value=False)
-    def test_dispatcher_notify_receiver_onfailure_noerror(self, msg, has_error):
+    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Bar")
+    def test_dispatcher_notify_receiver_onfailure_noerror(self, msg):
+        cfg.hasError = False
         Dispatcher("Foo").notify_receiver()
         self.assertEqual("", Dispatcher("Foo").msg)
 
