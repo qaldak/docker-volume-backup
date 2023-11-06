@@ -43,14 +43,14 @@ class TestContainer(TestCase):
         container = Container("Foo")
         with self.assertRaises(json.JSONDecodeError) as err:
             container.determine_volume()
-        self.assertEqual(
-            "Expecting ',' delimiter: line 1 column 159 (char 158)",
-            str(err.exception))
+            self.assertEqual(
+                "Expecting ',' delimiter: line 1 column 159 (char 158)",
+                str(err.exception))
 
     def test_no_container_found(self):
         container = Container("Foo")
         with self.assertRaises(subprocess.CalledProcessError) as err:
             container.determine_volume()
-        self.assertEqual(
-            "Command '['docker', 'inspect', '-f', '{{json .Mounts}}', 'Foo']' returned non-zero exit status 1.",
-            str(err.exception))
+            self.assertEqual(
+                "Command '['docker', 'inspect', '-f', '{{json .Mounts}}', 'Foo']' returned non-zero exit status 1.",
+                str(err.exception))
