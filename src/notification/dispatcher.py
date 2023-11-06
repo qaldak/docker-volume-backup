@@ -16,7 +16,7 @@ class Dispatcher:
         self.container = container_name
         self.msg = ""
         self.mqtt_msg = ""
-        self.send_mqtt = True if os.getenv("MQTT_NOTIFICATION") else False
+        self.send_mqtt = True if os.getenv("MQTT_NOTIFICATION") == "True" else False
 
     @staticmethod
     def __determine_alerting() -> Enum:
@@ -72,9 +72,11 @@ class Dispatcher:
     def notify_receiver(self):
         match self.alerting:
             case Alerting.NEVER | Alerting.UNDEFINED:
+                logger.debug("No alerting defined. Nothing to post.")
                 return
             case Alerting.ON_FAILURE:
                 if not cfg.hasError:
+                    logger.debug("No errors occurred. Nothing to post.")
                     return
             case Alerting.ALWAYS:
                 pass

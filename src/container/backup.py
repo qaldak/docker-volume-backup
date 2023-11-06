@@ -5,7 +5,7 @@ from python_on_whales import docker, DockerException
 logger = logging.getLogger(__name__)
 
 
-def create_tar_cmd(container) -> str:
+def create_tar_cmd(container) -> list[str]:
     """
     creates a tar command to back up all determined volumes and bindings of the input container.
 
@@ -17,14 +17,13 @@ def create_tar_cmd(container) -> str:
 
     for volume in container.docker_volumes:
         tar_cmd.append(f"{volume}")
-        print(volume)
-        print(tar_cmd)
+        logger.debug(f"Add volume {volume} to tar command")
 
     for binding in container.docker_bindings:
         tar_cmd.append(f"{binding}")
-        print(binding)
-        print(tar_cmd)
+        logger.debug(f"Add binding {binding} to tar command")
 
+    logger.debug(f"tar command created: {tar_cmd}")
     return tar_cmd
 
 
@@ -46,7 +45,6 @@ class Volume:
             raise AssertionError("No volumes to backup")
 
         tar_cmd = create_tar_cmd(container)
-        logger.debug(f"tar command: {tar_cmd}")
 
         # Todo: check issue when running on windows?
         volume_mapping = [{
