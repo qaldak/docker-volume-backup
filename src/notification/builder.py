@@ -1,6 +1,5 @@
 import logging
 
-
 from util import cfg
 from util.accessor import LocalHost
 
@@ -25,7 +24,6 @@ class Builder:
         logger.debug(f"chat message generated: {msg}")
         return msg
 
-
     # Todo: implement mqtt
     @staticmethod
     def build_mqtt_msg(orig_err: str):
@@ -36,8 +34,8 @@ class Builder:
             "container": "xyz",
             "msg": orig_err
         }
+        return "Mqtt Msg: Foo"
 
-        
     @staticmethod
     def build_mqtt_topic(container) -> str:
         topic = f"apps/{LocalHost.get_hostname_upper()}/{container.name}/backup/"
