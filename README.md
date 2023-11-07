@@ -17,7 +17,7 @@ If an error occurs, a message is sent to a defined Slack channel.
 ### Configuration (.env file)
 
 | Param            | Description                                                                                                |
-|------------------|------------------------------------------------------------------------------------------------------------|
+|:-----------------|:-----------------------------------------------------------------------------------------------------------|
 | BACKUP_DIR       | Target path to save the backup                                                                             |      
 | CHAT_ALERTING    | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER |
 | CHAT_SERVICE     | Define Chat service for alerting. Possible values are: <br> SLACK                                          |
