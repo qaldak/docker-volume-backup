@@ -56,4 +56,4 @@ class TestVolume(TestCase):
 def test_create_tar_cmd():
     container = MockContainer()
     tar_cmd = create_tar_cmd(container)
-    assert (["tar", "-czf", f"/backup/foo_bar_volume_backup.tar.gz", "/foo/data", "/foo/config", "/bar/log"], tar_cmd)
+    assert ["tar", "-czf", f"/backup/foo_bar_volume_backup.tar.gz", "/foo/data", "/foo/config", "/bar/log"] == tar_cmd
