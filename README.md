@@ -1,19 +1,34 @@
 # docker-volume-backup
 
+[![Python unit tests](https://github.com/qaldak/docker-volume-backup/actions/workflows/python-tests.yml/badge.svg)](https://github.com/qaldak/docker-volume-backup/actions/workflows/python-tests.yml)
+
 ## Description
 
 Creates a backup of a Docker volume to a target path.
-If an error occurs, a message is send to a defined Slack channel.
+If an error occurs, a message is sent to a defined Slack channel.
 
 ## Getting started
 
 ### Install
 
-% t.b.d.
+1. Clone code from GitHub https://github.com/qaldak/docker-volume-backup.git (or Download it)
+2. Install Python libs `pip install -r requirements.txt`
 
 ### Configuration (.env file)
 
-% t.b.d.
+| Param            | Description                                                                                                |
+|:-----------------|:-----------------------------------------------------------------------------------------------------------|
+| BACKUP_DIR       | Target path to save the backup                                                                             |      
+| CHAT_ALERTING    | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER |
+| CHAT_SERVICE     | Define Chat service for alerting. Possible values are: <br> SLACK                                          |
+| LOG_DIR          | Path for log directory                                                                                     |
+| MQTT             | Define, if MQTT message should be sent. Possible values: True / False                                      |
+| MQTT_BROKER      | Required if MQTT=True. Define address and port of the MQTT Broker                                          |
+| MQTT_TOPIC       | MQTT Topic                                                                                                 |
+| SLACK_AUTH_TOKEN | Required if CHAT_SERVICE=SLACK                                                                             |
+| SLACK_CHANNEL_ID | Required if CHAT_SERVICE=SLACK                                                                             |
+
+See example in [.env](.env)
 
 ### Execute
 
