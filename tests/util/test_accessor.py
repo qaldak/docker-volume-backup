@@ -63,6 +63,7 @@ class TestAccessorLocalhost(TestCase):
             LocalHost.is_docker_daemon_running()
             self.assertRaises(docker.errors.DockerException)
 
-    @patch("src.util.accessor.docker.client.DockerClient.ping", return_value="OK")
+
+    @patch("src.util.accessor.docker.api.daemon.DaemonApiMixin.ping", return_value="OK")
     def test_is_docker_daemon_running(self, ping):
         self.assertTrue(LocalHost.is_docker_daemon_running())
