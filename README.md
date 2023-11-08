@@ -22,9 +22,6 @@ If an error occurs, a message is sent to a defined Slack channel.
 | CHAT_ALERTING    | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER |
 | CHAT_SERVICE     | Define Chat service for alerting. Possible values are: <br> SLACK                                          |
 | LOG_DIR          | Path for log directory                                                                                     |
-| MQTT             | Define, if MQTT message should be sent. Possible values: True / False                                      |
-| MQTT_BROKER      | Required if MQTT=True. Define address and port of the MQTT Broker                                          |
-| MQTT_TOPIC       | MQTT Topic                                                                                                 |
 | SLACK_AUTH_TOKEN | Required if CHAT_SERVICE=SLACK                                                                             |
 | SLACK_CHANNEL_ID | Required if CHAT_SERVICE=SLACK                                                                             |
 
