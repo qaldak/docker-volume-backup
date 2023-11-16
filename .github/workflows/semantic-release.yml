@@ -7,7 +7,9 @@ on:
 
 jobs:
   quality:
-    uses: ./.github/workflows/python-tests.yml
+    name: Run test set
+    with:
+      target_workflow: ./.github/workflows/python-tests.yml
 
   release:
     runs-on: ubuntu-latest
