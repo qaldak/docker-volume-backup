@@ -7,7 +7,7 @@ on:
 
 jobs:
   quality:
-    uses: ./.github/workflows/python-tests.yml@main
+    uses: ./.github/workflows/python-tests.yml
 
   release:
     runs-on: ubuntu-latest
