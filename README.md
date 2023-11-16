@@ -76,4 +76,3 @@ Contributions are welcome!
 
 Unless otherwise specified, all code is released under the MIT License (MIT).<br>
 for used or linked components the respective license terms apply.
-
