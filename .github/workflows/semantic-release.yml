@@ -32,3 +32,8 @@ jobs:
         uses: python-semantic-release/python-semantic-release@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          tests-results: ${{ inputs.tests-results }}
+
+inputs:
+  tests-results:
+    description: The results of the tests to be used for the release.
