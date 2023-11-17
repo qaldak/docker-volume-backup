@@ -9,6 +9,10 @@ on:
   pull_request:
     branches: [ "*" ]
   workflow_call:
+    inputs:
+      target_workflow:
+        required: true
+        type: string
 
 permissions:
   contents: read
