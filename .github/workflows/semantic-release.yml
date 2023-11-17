@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Triggered by new release
-        if: ${{ startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }}
         run: |
-          echo "${{ github.event.head_commit.message }}"
-          echo "Foo"
+          if: startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+')
+            echo "${{ github.event.head_commit.message }}"
+            echo "Foo"
 
       - name: Not triggered by new release
         if: ${{ ! startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }}
