@@ -2,6 +2,19 @@
 
 
 
+## v0.2.1 (2023-11-17)
+
+### Fix
+
+* fix: semantic-release
+
+refactor: semantic-release ([`0dd51e6`](https://github.com/qaldak/docker-volume-backup/commit/0dd51e664565b550e573b9a08fc9cbd1c29a5e96))
+
+### Refactor
+
+* refactor: semantic-release ([`135af2f`](https://github.com/qaldak/docker-volume-backup/commit/135af2fd5504ee49df7c160eabe55c18fbc6d0a4))
+
+
 ## v0.2.0 (2023-11-17)
 
 ### Feature
