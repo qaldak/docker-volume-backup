@@ -3,7 +3,7 @@ name: Create new release
 on:
   push:
     branches:
-      - main
+      - *
 
 jobs:
   quality:
@@ -13,7 +13,6 @@ jobs:
       target_workflow: ./.github/workflows/python-tests.yml
 
   release:
-    if: ${{ ! startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }}
     needs: quality
     runs-on: ubuntu-latest
     concurrency: release
@@ -22,6 +21,11 @@ jobs:
       contents: write
 
     steps:
+      - name: Triggered by new release
+        if: ${{ ! startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }}
+        run: |
+          echo "${{ github.event.head_commit.message }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
