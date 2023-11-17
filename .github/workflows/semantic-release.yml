@@ -21,17 +21,17 @@ jobs:
       contents: write
 
     steps:
-      - name: Triggered by new release
-        run: |
-          if [[ ${{  startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }} ]]; then 
-            echo "${{ github.event.head_commit.message }}"
-            echo "Foo"
-
       - name: Not triggered by new release
-        if: ${{ ! startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }}
+        if: ${{ ! startsWith(github.event.head_commit.message, ^[0-9]+\.[0-9]+\.[0-9]+ ) }}
         run: |
           echo "${{ github.event.head_commit.message }}"
           echo "Bar"
+          
+      - name: Triggered by new release
+        run: |
+          if [[ ${{  startsWith(github.event.head_commit.message, ^[0-9]+\.[0-9]+\.[0-9]+ ) }} ]]; then 
+            echo "${{ github.event.head_commit.message }}"
+            echo "Foo"
           
       - name: Check Tag
         id: check-tag
