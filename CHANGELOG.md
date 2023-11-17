@@ -2,6 +2,13 @@
 
 
 
+## v0.2.3 (2023-11-17)
+
+### Fix
+
+* fix: semantic release ([`a9e865c`](https://github.com/qaldak/docker-volume-backup/commit/a9e865c5170006bde94ac59c5edd720d6fb6c89c))
+
+
 ## v0.2.2 (2023-11-17)
 
 ### Fix
