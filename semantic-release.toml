@@ -1,0 +1,19 @@
+[tool.semantic_release.branches.main]
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "feature",
+    "fix",
+    "perf",
+    "style",
+    "refactor",
+    "test",
+]
+major_tags = ["feat!", "breaking change", "BREAKING CHANGE"]
+minor_tags = ["feat", "feature"]
+patch_tags = ["fix", "perf", "refactor"]
