@@ -7,7 +7,7 @@ on:
 
 jobs:
   quality:
-    name: Run test set
+    name: Run project test set
     uses: ./.github/workflows/python-tests.yml
     with:
       target_workflow: ./.github/workflows/python-tests.yml
