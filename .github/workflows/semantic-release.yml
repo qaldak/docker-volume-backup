@@ -25,12 +25,13 @@ jobs:
         run: |
           echo ${{ github.event_name }}
           echo ${{ github.event.pull_request }}
+          echo ${{ github.event.release }}
           echo ${{ github.event.commits }}
           echo ${{ github.base_ref }}
           echo ${{ github.head_ref }}
           echo ${{ github.ref }}
           echo ${{ github.ref_name }}
-          
+
 
       - name: Checkout repository
         uses: actions/checkout@v4
