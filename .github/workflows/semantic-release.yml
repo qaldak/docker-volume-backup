@@ -21,6 +21,18 @@ jobs:
       contents: write
 
     steps:
+      - name: Regex Match
+        uses: actions-ecosystem/action-regex-match@v2.0.2
+        id: regex
+        with:
+          text: ${{ github.event.head_commit.message }}
+          regex: '/^[0-9]+\.[0-9]+\.[0-9]+/.*'
+
+      - name: Deploy
+        if: steps.regex.outputs.matched == 'true'
+        run: |
+          echo "Foobar!"
+
       - name: Not triggered by new release
         if: ${{ ! startsWith(github.event.head_commit.message, '/^[0-9]+\.[0-9]+\.[0-9]+/' ) }}
         run: |
