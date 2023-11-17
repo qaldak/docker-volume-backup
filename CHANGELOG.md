@@ -2,6 +2,23 @@
 
 
 
+## v0.2.2 (2023-11-17)
+
+### Fix
+
+* fix: only test for semantic release ([`8ca241b`](https://github.com/qaldak/docker-volume-backup/commit/8ca241bded8b38743c3c33ec3b927fcec5cb3dea))
+
+### Refactor
+
+* refactor: semantic-release ([`528788d`](https://github.com/qaldak/docker-volume-backup/commit/528788d49769f72cd695c9dd5bdef513c608b0b9))
+
+### Unknown
+
+* Merge pull request #25 from qaldak/feature/github-actions
+
+fix: semantic-release ([`2ca20c6`](https://github.com/qaldak/docker-volume-backup/commit/2ca20c6478944f3ce6984feb810b3d8cf5403964))
+
+
 ## v0.2.1 (2023-11-17)
 
 ### Fix
