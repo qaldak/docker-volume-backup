@@ -33,6 +33,8 @@ jobs:
           echo ${{ github.ref_name }}
           echo ${{ github.ref_type }}
           echo ${{ github.event.action }}
+          echo ${{ github.relesae }}
+          echo ${{ github.ref.* }}
 
 
       - name: Checkout repository
