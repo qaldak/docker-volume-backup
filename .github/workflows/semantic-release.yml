@@ -1,4 +1,4 @@
-name: Semantic Release
+name: Create new release
 
 on:
   push:
@@ -21,6 +21,16 @@ jobs:
       contents: write
 
     steps:
+      - name : machine echo github
+        env : { CONTENT : "${{ toJson(github) }}" }
+        run : "echo $CONTENT"
+      - name : machine echo runner
+        env : { CONTENT : "${{ toJson(runner) }}" }
+        run : "echo $CONTENT"
+      - name : machine echo job
+        env : { CONTENT : "${{ toJson(job) }}" }
+        run : "echo $CONTENT"
+      
       - name: Check if triggered by pull request
         run: |
           echo ${{ github.event_name }}
