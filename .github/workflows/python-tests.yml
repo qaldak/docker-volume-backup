@@ -14,9 +14,8 @@ on:
         required: true
         type: string
     outputs:
-      tests-results: 
-        description: "Test results Python unit tests"
-        value: ${{ steps.build.outputs.tests-results }}
+      test-results:
+        value: ${{ jobs.build.outputs.tests-results }}
 
 permissions:
   contents: read
