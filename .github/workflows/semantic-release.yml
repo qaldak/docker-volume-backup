@@ -23,12 +23,12 @@ jobs:
     steps:
       - name: Check if triggered by pull request
         run: |
-          if [[ ${{ github.event_name }} == 'pull_request' && ${github.event.pull_request.merged} == 'true' && ${{ github.ref }} == 'refs/heads/main' ]]; then
+          if [[ ${{ github.event_name }} == 'pull_request' && ${{ github.event.pull_request.merged }} == 'true' && ${{ github.ref }} == 'refs/heads/main' ]]; then
             echo "Pull request merged to main branch. Start semantic release."
           else
             echo ${{ github.event_name }}
-            echo ${github.event.pull_request.merged}
-            ${{ github.ref }}
+            echo ${{ github.event.pull_request.merged }}
+            echo ${{ github.ref }}
             echo "Not triggered by pull request. No release needed."
             exit 1
           fi
