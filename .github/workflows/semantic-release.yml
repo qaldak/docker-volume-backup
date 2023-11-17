@@ -2,8 +2,6 @@ name: Create new release
 
 on:
   push:
-    branches:
-      - *
 
 jobs:
   quality:
