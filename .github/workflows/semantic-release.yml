@@ -22,29 +22,29 @@ jobs:
 
     steps:
       - name: Not triggered by new release
-        if: ${{ ! startsWith(github.event.head_commit.message, '/^[0-9]+\.[0-9]+\.[0-9]+/' ) }}
+        if: ${{ ! startsWith(github.event.head_commit.message, `'`/^[0-9]+\.[0-9]+\.[0-9]+/` ) }}
         run: |
           echo "${{ github.event.head_commit.message }}"
           echo "Bar"
-          
+
       - name: Triggered by new release
-        if: ${{ startsWith(github.event.head_commit.message, '/^[0-9]+\.[0-9]+\.[0-9]+/' ) }}
+        if: ${{ startsWith(github.event.head_commit.message, `/^[0-9]+\.[0-9]+\.[0-9]+/` ) }}
         run: |
           echo "${{ github.event.head_commit.message }}"
           echo "Foo"
-          
+
       - name: Check Tag
         id: check-tag
         run: |
           if [[ "${{ github.event.head_commit.message }}" =~ /[0-9]+\.[0-9]+\.[0-9]+/ ]]; then
             echo "::set-output name=match::true"
           fi
-          
+
       - name: Build
         if: steps.check-tag.outputs.match == 'true'
         run: |
           echo "Tag is a match"
-          
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
