@@ -21,6 +21,14 @@ jobs:
       contents: write
 
     steps:
+      - name: Check triggered by new release
+        run: |
+          if [[ ${{ github.event.head_commit.message }} =~ ^\d+\.\d+\.\d+ ]]; then
+            echo "Workflow triggered by new realease"
+          else
+            echo "Commit message does not match pattern"
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -37,6 +45,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Python Semantic Release
+        if: ${{ ! startsWith(github.event.head_commit.message, '[0-9]+.[0-9]+.[0-9]+') }}
         uses: python-semantic-release/python-semantic-release@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
