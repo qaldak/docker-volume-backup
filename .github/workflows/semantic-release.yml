@@ -23,15 +23,14 @@ jobs:
     steps:
       - name: Check if triggered by pull request
         run: |
-          if [[ ${{ github.event_name }} == 'pull_request' && ${{ github.event.pull_request.merged }} == 'true' && ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "Pull request merged to main branch. Start semantic release."
-          else
-            echo ${{ github.event_name }}
-            echo ${{ github.event.pull_request.merged }}
-            echo ${{ github.ref }}
-            echo "Not triggered by pull request. No release needed."
-            exit 1
-          fi
+          echo ${{ github.event_name }}
+          echo ${{ github.event.pull_request }}
+          echo ${{ github.event.commits }}
+          echo ${{ github.base_ref }}
+          echo ${{ github.head_ref }}
+          echo ${{ github.ref }}
+          echo ${{ github.ref_name }}
+          
 
       - name: Checkout repository
         uses: actions/checkout@v4
