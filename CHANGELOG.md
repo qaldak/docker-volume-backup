@@ -2,6 +2,69 @@
 
 
 
+## v0.2.0 (2023-11-17)
+
+### Feature
+
+* feat: test only to trigger semantic release ([`34109a3`](https://github.com/qaldak/docker-volume-backup/commit/34109a36d160e0a1f2f58ce1589d8383e2fd3e3e))
+
+### Refactor
+
+* refactor: semantic-release ([`d9ea284`](https://github.com/qaldak/docker-volume-backup/commit/d9ea2842dbdcc0cb6c4767649311def5fab79ee6))
+
+* refactor: semantic-release ([`82d9671`](https://github.com/qaldak/docker-volume-backup/commit/82d9671cd4cebefb552b5d408232480ea90e8480))
+
+* refactor: semantic-release ([`2b7d418`](https://github.com/qaldak/docker-volume-backup/commit/2b7d418cc412b9a1879f8a346ce82b93ca41446c))
+
+* refactor: semantic-release ([`78f24bf`](https://github.com/qaldak/docker-volume-backup/commit/78f24bf01e5770ee3d8c61772b90a2124562f42b))
+
+* refactor: semantic-release ([`5d0c34b`](https://github.com/qaldak/docker-volume-backup/commit/5d0c34b7f7b723f55b21662a809dbd31df1e06cf))
+
+* refactor: semantic-release ([`0c7989b`](https://github.com/qaldak/docker-volume-backup/commit/0c7989bfe321611e85a3d1f3693a4865dd0e5eb2))
+
+* refactor: semantic-release ([`7267806`](https://github.com/qaldak/docker-volume-backup/commit/7267806449ad080d279cc21a8988080c1f736cc8))
+
+### Unknown
+
+* Update README.md
+
+fix: typo for tests ([`2c5acc0`](https://github.com/qaldak/docker-volume-backup/commit/2c5acc07e8f3fca640dd24872b966a074a128c70))
+
+* Merge pull request #23 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`03fb732`](https://github.com/qaldak/docker-volume-backup/commit/03fb732409008a9c6c791bf336738e7729dc411c))
+
+* Merge pull request #22 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`175afd4`](https://github.com/qaldak/docker-volume-backup/commit/175afd4abf3e3ee7c41710bf7cb684ccac3dad18))
+
+* Merge pull request #21 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`ec05aad`](https://github.com/qaldak/docker-volume-backup/commit/ec05aadb15a48736b90773b8abd600917246444b))
+
+* Merge pull request #20 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`3f5c771`](https://github.com/qaldak/docker-volume-backup/commit/3f5c771e5e7c558b56a5d411aae84abbcc02dd82))
+
+* Merge branch &#39;main&#39; into feature/github-actions ([`f17e900`](https://github.com/qaldak/docker-volume-backup/commit/f17e9007685e4c6f0248dbdffff4ab28e8d586af))
+
+* Merge pull request #19 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`b2b4a8c`](https://github.com/qaldak/docker-volume-backup/commit/b2b4a8c70b7af14699e726657d48c1e49bca70f3))
+
+* Merge branch &#39;main&#39; into feature/github-actions ([`64012b6`](https://github.com/qaldak/docker-volume-backup/commit/64012b602328b40376513bc9f0e19b006c1540fa))
+
+* Merge pull request #18 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`29b1f51`](https://github.com/qaldak/docker-volume-backup/commit/29b1f513a8d9c885f120ee9ef4c3f68523016d74))
+
+* Merge branch &#39;main&#39; into feature/github-actions ([`ae926f5`](https://github.com/qaldak/docker-volume-backup/commit/ae926f52936dd7ba73329677b3902f9644733da0))
+
+* Merge pull request #17 from qaldak/feature/github-actions
+
+refactor: semantic-release ([`cc883a8`](https://github.com/qaldak/docker-volume-backup/commit/cc883a89cbb377af3c2fe361b238e81a3ee17f01))
+
+
 ## v0.1.1 (2023-11-17)
 
 ### Fix
