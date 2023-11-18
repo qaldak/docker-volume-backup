@@ -13,6 +13,7 @@ jobs:
       target_workflow: ./.github/workflows/python-tests.yml
 
   release:
+    if: ${{ ! startsWith(github.event.head_commit.message, 'release' ) }}
     needs: quality
     runs-on: ubuntu-latest
     concurrency: release
@@ -21,42 +22,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Regex Match
-        uses: actions-ecosystem/action-regex-match@v2.0.2
-        id: regex
-        with:
-          text: ${{ github.event.head_commit.message }}
-          regex: '/[0-9]+\.[0-9]+\.[0-9]+/.*'
-
-      - name: Deploy
-        if: steps.regex.outputs.matched == 'true'
-        run: |
-          echo "Foobar!"
-
-      - name: Not triggered by new release
-        if: ${{ ! startsWith(github.event.head_commit.message, '/^[0-9]+\.[0-9]+\.[0-9]+/' ) }}
-        run: |
-          echo "${{ github.event.head_commit.message }}"
-          echo "Bar"
-
-      - name: Triggered by new release
-        if: ${{ startsWith(github.event.head_commit.message, '/^[0-9]+\.[0-9]+\.[0-9]+/' ) }}
-        run: |
-          echo "${{ github.event.head_commit.message }}"
-          echo "Foo"
-
-      - name: Check Tag
-        id: check-tag
-        run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ /[0-9]+\.[0-9]+\.[0-9]+/ ]]; then
-            echo "::set-output name=match::true"
-          fi
-
-      - name: Build
-        if: steps.check-tag.outputs.match == 'true'
-        run: |
-          echo "Tag is a match"
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
