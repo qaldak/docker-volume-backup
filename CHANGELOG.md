@@ -4,9 +4,9 @@
 
 ## v0.2.5 (2023-11-17)
 
-### Fix
+### Build
 
-* fix: semantic relesae ([`10f7225`](https://github.com/qaldak/docker-volume-backup/commit/10f72259fabe1ccffae525e78f83ae88018ee4c4))
+* build: semantic release ([`10f7225`](https://github.com/qaldak/docker-volume-backup/commit/10f72259fabe1ccffae525e78f83ae88018ee4c4))
 
 
 ## v0.1.0 (2023-11-07)
