@@ -1,4 +1,4 @@
-name: Create new release
+name: Test and release new version
 
 on:
   push:
