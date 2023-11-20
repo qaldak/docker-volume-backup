@@ -5,6 +5,6 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "chore(deps) pip"
+      prefix: "chore (deps) pip"
     ignore:
       - dependency-name: "urllib3"
