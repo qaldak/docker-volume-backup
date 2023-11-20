@@ -2,6 +2,55 @@
 
 
 
+## v0.3.0 (2023-11-20)
+
+### Build
+
+* build: Update dependabot.yml ([`50c589a`](https://github.com/qaldak/docker-volume-backup/commit/50c589a891ffd6d1b0808463780d46aa1ff5f5e7))
+
+* build: dependabot.yml: change prefix, semantic-release.yml: change name ([`3514f51`](https://github.com/qaldak/docker-volume-backup/commit/3514f51e9c8baafa908a04f233f9f60d551e8e38))
+
+* build: add exclude_commit_patterns ([`aec0a37`](https://github.com/qaldak/docker-volume-backup/commit/aec0a3798bf8c9716416769e1d4fde276d1734ee))
+
+### Feature
+
+* feat: add hostname to backup filename for a unique filename ([`e9201bf`](https://github.com/qaldak/docker-volume-backup/commit/e9201bf58bd9ec920fa6399abba76d3df593281a))
+
+### Unknown
+
+* Merge pull request #40 from qaldak/feature/unique-backup-file
+
+feat: add hostname to backup filename for a unique filename ([`9e6a006`](https://github.com/qaldak/docker-volume-backup/commit/9e6a006c55678ee21a81738521627bd87c0b08ba))
+
+* Merge pull request #37 from qaldak/dependabot/pip/slack-sdk-3.24.0
+
+chore(deps) pip: bump slack-sdk from 3.23.0 to 3.24.0 ([`d315fa4`](https://github.com/qaldak/docker-volume-backup/commit/d315fa453b5b4cb135654055ed5141039f4af275))
+
+* chore(deps) pip: bump slack-sdk from 3.23.0 to 3.24.0
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.23.0 to 3.24.0.
+- [Release notes](https://github.com/slackapi/python-slack-sdk/releases)
+- [Changelog](https://github.com/slackapi/python-slack-sdk/blob/main/docs-v2/changelog.html)
+- [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.23.0...v3.24.0)
+
+---
+updated-dependencies:
+- dependency-name: slack-sdk
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`3ad21d2`](https://github.com/qaldak/docker-volume-backup/commit/3ad21d2366f00539b79098ecaee108f31b3ee7e5))
+
+* Merge pull request #36 from qaldak/feature/github-actions
+
+build: change Github Action worfklows ([`77a3162`](https://github.com/qaldak/docker-volume-backup/commit/77a3162c51755a82672245409a9df7d72501e720))
+
+* Merge pull request #35 from qaldak/feature/github-actions
+
+build: add exclude_commit_patterns ([`ac072f5`](https://github.com/qaldak/docker-volume-backup/commit/ac072f554bd0c7f3b75820ca1ea6637e1ff982a4))
+
+
 ## v0.2.6 (2023-11-19)
 
 ### Build
