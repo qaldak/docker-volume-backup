@@ -53,7 +53,9 @@ class TestVolume(TestCase):
             self.assertEqual(["INFO:container.backup:Volume backup for container 'foo_bar' successful"], log.output)
 
 
-def test_create_tar_cmd():
+@patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
+def test_create_tar_cmd(host):
     container = MockContainer()
     tar_cmd = create_tar_cmd(container)
-    assert ["tar", "-czf", f"/backup/foo_bar_volume_backup.tar.gz", "/foo/data", "/foo/config", "/bar/log"] == tar_cmd
+    assert ["tar", "-czf", f"/backup/groot_foo_bar_volume_backup.tar.gz", "/foo/data", "/foo/config",
+            "/bar/log"] == tar_cmd
