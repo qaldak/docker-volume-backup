@@ -2,6 +2,8 @@ import logging
 
 from python_on_whales import docker, DockerException
 
+from util.accessor import LocalHost
+
 logger = logging.getLogger(__name__)
 
 
@@ -13,7 +15,7 @@ def create_tar_cmd(container) -> list[str]:
     :return: tar command to execute
     """
 
-    tar_cmd = ["tar", "-czf", f"/backup/{container.name}_volume_backup.tar.gz"]
+    tar_cmd = ["tar", "-czf", f"/backup/{LocalHost.get_hostname()}_{container.name}_volume_backup.tar.gz"]
 
     for volume in container.docker_volumes:
         tar_cmd.append(f"{volume}")
