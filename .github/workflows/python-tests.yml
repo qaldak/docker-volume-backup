@@ -5,7 +5,9 @@ name: Python unit tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "*" ]
+    branches-ignore:
+      - main
   pull_request:
     branches: [ "*" ]
   workflow_call:
