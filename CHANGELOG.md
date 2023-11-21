@@ -2,6 +2,34 @@
 
 
 
+## v0.3.2 (2023-11-21)
+
+### Build
+
+* build: optimize GitHub Actions, optimize Changelog patterns ([`2fbad29`](https://github.com/qaldak/docker-volume-backup/commit/2fbad29faa14dee4f13e5e071e8d4ee9d52004c2))
+
+* build: optimize GitHub Actions, optimize Changelog patterns ([`3c7fb25`](https://github.com/qaldak/docker-volume-backup/commit/3c7fb25f2f7cedbf252f4e5fdd5f1568a626f2bf))
+
+### Chore
+
+* chore: change .env to .env_example ([`ab17d91`](https://github.com/qaldak/docker-volume-backup/commit/ab17d91825f6064b1b72e8188a79c7edcaad9aa4))
+
+### Unknown
+
+* Merge pull request #43 from qaldak/chore/env-file
+
+chore: change .env to .env_example ([`9138624`](https://github.com/qaldak/docker-volume-backup/commit/913862430705ebfc93eed265f3f2c2234c184129))
+
+* Merge pull request #42 from qaldak/feature/github-actions
+
+build: optimize GitHub Actions, optimize Changelog patterns ([`969dee8`](https://github.com/qaldak/docker-volume-backup/commit/969dee81ae8371101d27ac57ae04e8f3b34e730f))
+
+* Merge remote-tracking branch &#39;origin/feature/github-actions&#39; into feature/github-actions
+
+# Conflicts:
+#	.github/workflows/python-tests.yml ([`391e901`](https://github.com/qaldak/docker-volume-backup/commit/391e901e46007436dd477dbf100b89ea84fe4d79))
+
+
 ## v0.3.1 (2023-11-21)
 
 ### Unknown
@@ -16,8 +44,6 @@ refactor: semantic-release ([`05d51d5`](https://github.com/qaldak/docker-volume-
 ### Build
 
 * build: Update dependabot.yml ([`50c589a`](https://github.com/qaldak/docker-volume-backup/commit/50c589a891ffd6d1b0808463780d46aa1ff5f5e7))
-
-* build: dependabot.yml: change prefix, semantic-release.yml: change name ([`3514f51`](https://github.com/qaldak/docker-volume-backup/commit/3514f51e9c8baafa908a04f233f9f60d551e8e38))
 
 * build: add exclude_commit_patterns ([`aec0a37`](https://github.com/qaldak/docker-volume-backup/commit/aec0a3798bf8c9716416769e1d4fde276d1734ee))
 
@@ -62,21 +88,7 @@ build: add exclude_commit_patterns ([`ac072f5`](https://github.com/qaldak/docker
 
 ## v0.2.6 (2023-11-19)
 
-### Build
-
-* build: change semantic release behaviour ([`0607d8f`](https://github.com/qaldak/docker-volume-backup/commit/0607d8fbc627460b581231262a8a68f3e130c325))
-
 ### Chore
-
-* chore: semantic-release.yml ([`b87a3c4`](https://github.com/qaldak/docker-volume-backup/commit/b87a3c4c68a0d8aa92d5a615db137911b92eb7e5))
-
-* chore: Github Actions semantic release
-
-chore: GitHub actions ([`26895a6`](https://github.com/qaldak/docker-volume-backup/commit/26895a6ebd8a5ee91214501005c58e0f6bc6073d))
-
-* chore: semantic-release.yml ([`ffb9670`](https://github.com/qaldak/docker-volume-backup/commit/ffb96704a399ef4572e560d9a1a5cf5540d14b5a))
-
-* chore: optimize semantic-release ([`96947dd`](https://github.com/qaldak/docker-volume-backup/commit/96947dde260aed3e576f71f3d1d8a62b7c553222))
 
 * chore: Merge pull request #8 from qaldak/dependabot/pip/python-on-whales-0.67.0
 
@@ -89,8 +101,6 @@ pip: bump python-on-whales from 0.66.0 to 0.67.0 ([`bb6ead0`](https://github.com
 * docs: update Changelog ([`ef9dceb`](https://github.com/qaldak/docker-volume-backup/commit/ef9dceb88fbacf90528944fc759ce83f3110ba3f))
 
 ### Refactor
-
-* refactor: config file for semantic-release ([`4c48200`](https://github.com/qaldak/docker-volume-backup/commit/4c482001e25507ba7ed0a33394396f11e7854439))
 
 * refactor: commit for test only ([`b4ce3d1`](https://github.com/qaldak/docker-volume-backup/commit/b4ce3d1d9fcf941b67b92727120e54ebbffdf37d))
 
@@ -106,55 +116,7 @@ build: change semantic release behaviour ([`8164729`](https://github.com/qaldak/
 
 * Merge branch &#39;main&#39; into feature/github-actions ([`866efea`](https://github.com/qaldak/docker-volume-backup/commit/866efeac302044d5edfe39bcd1118a922ca95eea))
 
-* 0.2.5
-
-Automatically generated ([`0b59be2`](https://github.com/qaldak/docker-volume-backup/commit/0b59be2d80993fbe469e925f439168ec0c30b6d6))
-
-* 0.2.5
-
-0.2.5 test commit ([`4ef15c8`](https://github.com/qaldak/docker-volume-backup/commit/4ef15c88bfabffaff378d64aa4d58c005eb70c54))
-
-* 0.2.5
-
-0.2.5 test commit ([`b0e9633`](https://github.com/qaldak/docker-volume-backup/commit/b0e9633e6b3aee04f0498e19ff5ded0be740331b))
-
 * Merge branch &#39;main&#39; into feature/github-actions ([`43827fc`](https://github.com/qaldak/docker-volume-backup/commit/43827fca4cccf184424a3b14e3a1fc10315ffde2))
-
-* 0.2.5
-
-0.2.5 another test ([`c2e0650`](https://github.com/qaldak/docker-volume-backup/commit/c2e0650640f038d8999a9033a2e2dccb65c29975))
-
-* 0.2.5
-
-another test ([`8314127`](https://github.com/qaldak/docker-volume-backup/commit/8314127e829161ebefd20133efd4c5568012f261))
-
-* 0.2.5
-
-Tests for semantic-release ([`0ef2f4d`](https://github.com/qaldak/docker-volume-backup/commit/0ef2f4d146873bcd9fee4fbc6925bff6bf79d383))
-
-* 0.2.5
-
-Tests for semantic release ([`cddcf33`](https://github.com/qaldak/docker-volume-backup/commit/cddcf33143bb5c93d42ed558ecbfaab0ec5b36ab))
-
-* 0.2.5
-
-Foo ([`f54e982`](https://github.com/qaldak/docker-volume-backup/commit/f54e982505d5218716f3e13aba758beed37b422d))
-
-* 0.2.5
-
-Automatic created ([`62ae9c9`](https://github.com/qaldak/docker-volume-backup/commit/62ae9c970542b1172f22e90003691c481eb3d1e2))
-
-* 0.2.5
-
-Foo ([`b93117c`](https://github.com/qaldak/docker-volume-backup/commit/b93117c29545f05cec74730d780bbde739bfc0f6))
-
-* 0.2.5
-
-Automatisch generated ([`e2e043f`](https://github.com/qaldak/docker-volume-backup/commit/e2e043f9541a2a0549d17f45a206c5be762c60d1))
-
-* 0.2.5
-
-Commit for tests only ([`029e8b0`](https://github.com/qaldak/docker-volume-backup/commit/029e8b051afdae56a4d87feafabd839d9a87d34c))
 
 * Merge pull request #29 from qaldak/feature/github-actions
 
@@ -178,23 +140,11 @@ refactor: semantic-release ([`f8c4480`](https://github.com/qaldak/docker-volume-
 
 ## v0.2.4 (2023-11-17)
 
-### Fix
-
-* fix: semantic release ([`e1c94a0`](https://github.com/qaldak/docker-volume-backup/commit/e1c94a0ceef196c8480cae36c9c4de0337bfd2ed))
-
 
 ## v0.2.3 (2023-11-17)
 
-### Fix
-
-* fix: semantic release ([`a9e865c`](https://github.com/qaldak/docker-volume-backup/commit/a9e865c5170006bde94ac59c5edd720d6fb6c89c))
-
 
 ## v0.2.2 (2023-11-17)
-
-### Fix
-
-* fix: only test for semantic release ([`8ca241b`](https://github.com/qaldak/docker-volume-backup/commit/8ca241bded8b38743c3c33ec3b927fcec5cb3dea))
 
 ### Unknown
 
@@ -205,18 +155,8 @@ fix: semantic-release ([`2ca20c6`](https://github.com/qaldak/docker-volume-backu
 
 ## v0.2.1 (2023-11-17)
 
-### Fix
-
-* fix: semantic-release
-
-refactor: semantic-release ([`0dd51e6`](https://github.com/qaldak/docker-volume-backup/commit/0dd51e664565b550e573b9a08fc9cbd1c29a5e96))
-
 
 ## v0.2.0 (2023-11-17)
-
-### Feature
-
-* feat: test only to trigger semantic release ([`34109a3`](https://github.com/qaldak/docker-volume-backup/commit/34109a36d160e0a1f2f58ce1589d8383e2fd3e3e))
 
 ### Unknown
 
@@ -297,13 +237,9 @@ refactor: python-test on workflow_call ([`9ab7d83`](https://github.com/qaldak/do
 
 add semantic-release workflow ([`43f9dd8`](https://github.com/qaldak/docker-volume-backup/commit/43f9dd8d2e99af5d6755baacafb57d01d759789a))
 
-* add semantic-release workflow ([`0367a25`](https://github.com/qaldak/docker-volume-backup/commit/0367a2570dc2e06fea25d5874bfa71f48532d2a9))
-
 * Merge pull request #14 from qaldak/feature/github-actions
 
 feat: add semantic-release workflow ([`10b5bde`](https://github.com/qaldak/docker-volume-backup/commit/10b5bde8b584b785c44d5b4900af800083aefbb5))
-
-* add semantic-release workflow ([`4fdbf88`](https://github.com/qaldak/docker-volume-backup/commit/4fdbf882b485bc8a3b2f18970c35782cbf60bbcd))
 
 * Merge pull request #13 from qaldak/feature/github-actions
 
@@ -313,15 +249,11 @@ feat: GitHub actions ([`25af888`](https://github.com/qaldak/docker-volume-backup
 
 * Merge remote-tracking branch &#39;origin/feature/github-actions&#39; into feature/github-actions ([`e086a01`](https://github.com/qaldak/docker-volume-backup/commit/e086a013c09ef5055212c56cd15ad4b86c80a98d))
 
-* add semantic-release workflow ([`149b4c1`](https://github.com/qaldak/docker-volume-backup/commit/149b4c1e146b3ba8e3528ed142814dfc5287b41b))
-
 * Merge pull request #12 from qaldak/feature/github-actions
 
 feat: add semantic-release workflow ([`7bf0bde`](https://github.com/qaldak/docker-volume-backup/commit/7bf0bdece4c6366f798dbd3d648182cde16b5ae5))
 
 * Merge branch &#39;main&#39; into feature/github-actions ([`7a172a8`](https://github.com/qaldak/docker-volume-backup/commit/7a172a82a9e502df5329f0f4a8aec8bd76274c2b))
-
-* add semantic-release workflow ([`c6e7aca`](https://github.com/qaldak/docker-volume-backup/commit/c6e7acaa09373734e1bef2a1619ae69ef8fbd3b3))
 
 * Merge pull request #11 from qaldak/feature/github-actions
 
@@ -331,25 +263,17 @@ feat: GitHub actions ([`89e1f74`](https://github.com/qaldak/docker-volume-backup
 
 * Merge remote-tracking branch &#39;origin/feature/github-actions&#39; into feature/github-actions ([`be8ade2`](https://github.com/qaldak/docker-volume-backup/commit/be8ade2a0fa8ed1828cc3fa8c9d7a5dccbaca315))
 
-* add semantic-release workflow ([`20f842d`](https://github.com/qaldak/docker-volume-backup/commit/20f842d386b10f09db77d3a5d0a065af3a0a97f2))
-
 * Merge pull request #10 from qaldak/feature/github-actions
 
 refactor: semantic release ([`6622721`](https://github.com/qaldak/docker-volume-backup/commit/6622721f5772ad6bec14358d2eb81395af23f276))
 
 * Merge branch &#39;main&#39; into feature/github-actions ([`dc59d90`](https://github.com/qaldak/docker-volume-backup/commit/dc59d90ceaf55ecd6c1d35ef011e5bf48ee65265))
 
-* add semantic-release workflow ([`5d57e8a`](https://github.com/qaldak/docker-volume-backup/commit/5d57e8ab82d1d40a93ab48cdf0a13a54f66fc467))
-
 * Update README.md ([`43f2f42`](https://github.com/qaldak/docker-volume-backup/commit/43f2f42e8a0857deb74ab3bd365c13bed7d63455))
-
-* Update semantic-release.yml ([`9c5bb1b`](https://github.com/qaldak/docker-volume-backup/commit/9c5bb1b7e662e3890749a6f17868cad8f89dedd5))
 
 * Merge pull request #9 from qaldak/feature/github-actions
 
 Feature/GitHub actions ([`ee50720`](https://github.com/qaldak/docker-volume-backup/commit/ee50720b1250965e5857746f35cfdeb7c3c323f6))
-
-* add semantic-release workflow ([`2d45d63`](https://github.com/qaldak/docker-volume-backup/commit/2d45d630b9c89d38e6ae759e2ff0cef5ba89ce0b))
 
 * refactor python-tests on Github-Actions ([`4668268`](https://github.com/qaldak/docker-volume-backup/commit/46682682fa1d22c570ffd4eaf1a873d69a6cb342))
 
