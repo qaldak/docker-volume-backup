@@ -58,28 +58,26 @@ class Dispatcher:
             raise
 
     def __send_message(self):
-        match self.receiver:
-            case Receiver.SLACK:
-                # Todo: Validate settings before post message Slack().is_config_valid() slack = Slack()
-                Slack().post_message(self.msg)
-            case _:
-                logger.error(f"Receiver '{self.receiver.name}' not implemented yet.")
+        if self.receiver == Receiver.SLACK:
+            # Todo: Validate settings before post message Slack().is_config_valid() slack = Slack()
+            Slack().post_message(self.msg)
+        else:
+            logger.error(f"Receiver '{self.receiver.name}' not implemented yet.")
 
     @staticmethod
     def __send_mqtt_message():
         print(__name__, "Bar")
 
     def notify_receiver(self):
-        match self.alerting:
-            case Alerting.NEVER | Alerting.UNDEFINED:
-                logger.debug("No alerting defined. Nothing to post.")
+        if self.alerting in (Alerting.NEVER, Alerting.UNDEFINED):
+            logger.debug("No alerting defined. Nothing to post.")
+            return
+        if self.alerting == Alerting.ON_FAILURE:
+            if not cfg.hasError:
+                logger.debug("No errors occurred. Nothing to post.")
                 return
-            case Alerting.ON_FAILURE:
-                if not cfg.hasError:
-                    logger.debug("No errors occurred. Nothing to post.")
-                    return
-            case Alerting.ALWAYS:
-                pass
+        if self.alerting == Alerting.ALWAYS:
+            pass
 
         logger.debug(f"ready to build the chat message")
 
