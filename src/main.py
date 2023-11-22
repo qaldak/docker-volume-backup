@@ -1,5 +1,7 @@
 import logging
 
+from dotenv import load_dotenv
+
 from container.backup import Volume
 from container.container import Container
 from notification.dispatcher import Dispatcher
@@ -24,7 +26,6 @@ def main(path, restart):
         if not container.exists():
             raise ValueError(f"Container '{container.name}' not found on '{LocalHost.get_hostname()}'")
 
-        print(container.start())
         # get directory for volume container
         backup_dir = BackupDir(path)
 
@@ -61,6 +62,9 @@ def main(path, restart):
 
 
 if __name__ == "__main__":
+    # load .env
+    load_dotenv()
+
     args = ArgParser.parse_cli_args()
 
     # initialize objects

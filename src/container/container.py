@@ -27,7 +27,7 @@ class Container:
         :return: boolean
         """
         if docker.container.exists(str(self.name)):
-            self.id = str(docker.container.inspect(x=self.name))
+            self.id = str(docker.container.inspect(self.name))
             logger.debug(f"Container '{self.name}' found with id '{self.id}'")
             return True
         logger.debug(f"Container '{self.name}' not found")
