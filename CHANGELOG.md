@@ -2,6 +2,19 @@
 
 
 
+## v0.3.3 (2023-11-22)
+
+### Refactor
+
+* refactor: ready for Python3.9, changes for running on target hosts ([`1000096`](https://github.com/qaldak/docker-volume-backup/commit/1000096ca683b076428de238dfe1f6baa57226ca))
+
+### Unknown
+
+* Merge pull request #44 from qaldak/refactor/python3-9-ready
+
+refactor: ready for Python3.9, changes for running on target hosts ([`e74309e`](https://github.com/qaldak/docker-volume-backup/commit/e74309eee496d526280e8a1071c97b139ece23d0))
+
+
 ## v0.3.2 (2023-11-21)
 
 ### Build
