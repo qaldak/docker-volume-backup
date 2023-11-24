@@ -1,10 +1,33 @@
 import logging
+import os
+from enum import Enum
 
 from python_on_whales import docker, DockerException
 
 from util.accessor import LocalHost
 
 logger = logging.getLogger(__name__)
+
+
+def __determine_compression_method() -> tuple[str, str]:
+    try:
+        logger.debug(f"Defined compression method: {os.getenv('COMPRESSION_METHOD')}")
+
+        if not os.getenv("COMPRESSION_METHOD"):
+            logger.debug(
+                f"Compression method undefined or empty. Return '{Compression.GZIP.value}'")
+            return Compression.GZIP.value, FileExtension.GZIP.value
+
+        return Compression[os.getenv("COMPRESSION_METHOD")].value, FileExtension[os.getenv("COMPRESSION_METHOD")].value
+
+    except KeyError as err:
+        logger.warning(
+            f"Compression method not defined properly: {os.getenv('COMPRESSION_METHOD')}. Using '{Compression.GZIP.value}'")
+        return Compression.GZIP.value, FileExtension.GZIP.value
+
+    except Exception as err:
+        logger.error(err)
+        raise
 
 
 def create_tar_cmd(container) -> list[str]:
@@ -15,7 +38,10 @@ def create_tar_cmd(container) -> list[str]:
     :return: tar command to execute
     """
 
-    tar_cmd = ["tar", "-czf", f"/backup/{LocalHost.get_hostname()}_{container.name}_volume_backup.tar.gz"]
+    cmp_method, file_ext = __determine_compression_method()
+
+    tar_cmd = ["tar", "c", f"{cmp_method}", "-f",
+               f"/backup/{LocalHost.get_hostname()}-{container.name}-volume-backup.tar{file_ext}"]
 
     for volume in container.docker_volumes:
         tar_cmd.append(f"{volume}")
@@ -68,3 +94,13 @@ class Volume:
         except Exception as err:
             logger.exception(err)
             raise
+
+
+class Compression(Enum):
+    BZIP2 = "-j"
+    GZIP = "-z"  # default
+
+
+class FileExtension(Enum):
+    BZIP2 = ".bz2"
+    GZIP = ".gz"

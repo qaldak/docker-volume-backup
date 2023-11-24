@@ -16,14 +16,15 @@ If an error occurs, a message is sent to a defined Slack channel.
 
 ### Configuration (.env file)
 
-| Param            | Description                                                                                                |
-|:-----------------|:-----------------------------------------------------------------------------------------------------------|
-| BACKUP_DIR       | Target path to save the backup                                                                             |      
-| CHAT_ALERTING    | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER |
-| CHAT_SERVICE     | Define Chat service for alerting. Possible values are: <br> SLACK                                          |
-| LOG_DIR          | Path for log directory                                                                                     |
-| SLACK_AUTH_TOKEN | Required if CHAT_SERVICE=SLACK                                                                             |
-| SLACK_CHANNEL_ID | Required if CHAT_SERVICE=SLACK                                                                             |
+| Param              | Description                                                                                                                    |
+|:-------------------|:-------------------------------------------------------------------------------------------------------------------------------|
+| BACKUP_DIR         | Target path to save the backup                                                                                                 |      
+| LOG_DIR            | Path for log directory                                                                                                         |
+| COMPRESSION_METHOD | (optional) Define the compression method for tar file. If undefined: Default = GZIP. Possible values are: <br> GZIP <br> BZIP2 |
+| CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                     |
+| CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                              |
+| SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                 |
+| SLACK_CHANNEL_ID   | Required if CHAT_SERVICE=SLACK                                                                                                 |
 
 See example in [.env](.env)
 
