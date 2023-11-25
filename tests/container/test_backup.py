@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from python_on_whales import DockerException
 
-from container.backup import Volume, create_tar_cmd
+from container.backup import Volume, create_tar_cmd, __determine_compression_method
 
 
 class MockContainer(TestCase):
@@ -54,8 +54,32 @@ class TestVolume(TestCase):
 
 
 @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
-def test_create_tar_cmd(host):
+def test_create_tar_cmd_default(host):
     container = MockContainer()
     tar_cmd = create_tar_cmd(container)
-    assert ["tar", "-czf", f"/backup/groot_foo_bar_volume_backup.tar.gz", "/foo/data", "/foo/config",
+    assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz", "/foo/data", "/foo/config",
             "/bar/log"] == tar_cmd
+
+
+@patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
+def test_create_tar_cmd_default_bz2(host):
+    with patch("container.backup.__determine_compression_method", return_value=("-j", ".bz2")):
+        container = MockContainer()
+        tar_cmd = create_tar_cmd(container)
+        assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2", "/foo/data", "/foo/config",
+                "/bar/log"] == tar_cmd
+
+
+@patch("src.container.backup.os.getenv", return_value="GZIP")
+def test_determine_compression_method_gz(env):
+    assert ("-z", ".gz") == __determine_compression_method()
+
+
+@patch("src.container.backup.os.getenv", return_value="BZIP2")
+def test_determine_compression_method_bz2(env):
+    assert ("-j", ".bz2") == __determine_compression_method()
+
+
+@patch("src.container.backup.os.getenv", return_value="")
+def test_determine_compression_method_default(env):
+    assert ("-z", ".gz") == __determine_compression_method()

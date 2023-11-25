@@ -2,6 +2,21 @@
 
 
 
+## v0.4.0 (2023-11-25)
+
+### Feature
+
+* feat: implement compression method. Default: GZIP ([`44edb11`](https://github.com/qaldak/docker-volume-backup/commit/44edb11ec2520ff0f4c5955e966a38440102844e))
+
+* feat: implement compression method. Default: GZIP ([`0091c1b`](https://github.com/qaldak/docker-volume-backup/commit/0091c1be2ce7c1e27e764ae9f8d1a81e3e29485a))
+
+### Unknown
+
+* Merge pull request #46 from qaldak/feature/compression-method
+
+Feature/compression method ([`7e0a6e9`](https://github.com/qaldak/docker-volume-backup/commit/7e0a6e920f3d1a26747573ced02a8d6c1d360fea))
+
+
 ## v0.3.3 (2023-11-22)
 
 ### Refactor
