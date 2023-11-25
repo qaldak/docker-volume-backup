@@ -50,7 +50,10 @@ class TestVolume(TestCase):
         container = MockContainer()
         with self.assertLogs("container.backup", level="INFO") as log:
             Volume.run_backup(container, backup_dir)
-            self.assertEqual(["INFO:container.backup:Volume backup for container 'foo_bar' successful"], log.output)
+            self.assertEqual(["INFO:container.backup:Execute Volume backup for container 'foo_bar'. tar command: ["
+                              "'tar', 'c', '-z', '-f', '/backup/fedora-foo_bar-volume-backup.tar.gz', '/foo/data', "
+                              "'/foo/config', '/bar/log']",
+                              "INFO:container.backup:Volume backup for container 'foo_bar' successful"], log.output)
 
 
 @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")

@@ -80,9 +80,8 @@ class Volume:
         }]
         logger.debug(f"volume mapping for backup container: {volume_mapping}")
 
-        logger.info(f"Execute Volume backup for container '{container.name}'. tar command: {tar_cmd}")
         try:
-            logger.info(f"Run Volume backup for '{container.name}' with tar command: {tar_cmd}")
+            logger.info(f"Execute Volume backup for container '{container.name}'. tar command: {tar_cmd}")
 
             tmp = docker.run("busybox:latest", tar_cmd, remove=True, volumes_from=container.name,
                              volumes=volume_mapping, detach=False)
