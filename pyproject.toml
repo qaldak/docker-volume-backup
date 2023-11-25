@@ -8,6 +8,7 @@ exclude_commit_patterns = [
     "Automatic created",
     "Automatically generated",
     "Automatisch generated",
+    "Merge pull request*.",
     "refactor: semantic-release",
     ".*semantic[- ]release",
     ".*another test",
