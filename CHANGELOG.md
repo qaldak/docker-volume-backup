@@ -2,6 +2,13 @@
 
 
 
+## v0.5.1 (2023-11-26)
+
+### Refactor
+
+* refactor: pyproject.toml: add version, add exclude pattern (#48) ([`470d64c`](https://github.com/qaldak/docker-volume-backup/commit/470d64c4ab9e622b181889ef74be446ee5b16c2d))
+
+
 ## v0.5.0 (2023-11-25)
 
 ### Documentation
@@ -17,10 +24,6 @@
 * refactor: optimize setup ([`207e5db`](https://github.com/qaldak/docker-volume-backup/commit/207e5dbe9dc78688aea2632f9091d7d45b99d8cf))
 
 * refactor: optimize log info ([`247cee9`](https://github.com/qaldak/docker-volume-backup/commit/247cee924c2b7ba37c5b6f5fe2b8fd45f769fba7))
-
-### Unknown
-
-* Merge branch &#39;main&#39; of https://github.com/qaldak/docker-volume-backup into refactor/optimizations-for-operation ([`b036f76`](https://github.com/qaldak/docker-volume-backup/commit/b036f76f0663d5fa86a016f39e1cd09d18b919d2))
 
 
 ## v0.4.0 (2023-11-25)
@@ -54,13 +57,6 @@
 ### Chore
 
 * chore: change .env to .env_example ([`ab17d91`](https://github.com/qaldak/docker-volume-backup/commit/ab17d91825f6064b1b72e8188a79c7edcaad9aa4))
-
-### Unknown
-
-* Merge remote-tracking branch &#39;origin/feature/github-actions&#39; into feature/github-actions
-
-# Conflicts:
-#	.github/workflows/python-tests.yml ([`391e901`](https://github.com/qaldak/docker-volume-backup/commit/391e901e46007436dd477dbf100b89ea84fe4d79))
 
 
 ## v0.3.1 (2023-11-21)
@@ -115,16 +111,6 @@ pip: bump python-on-whales from 0.66.0 to 0.67.0 ([`bb6ead0`](https://github.com
 
 * refactor: commit for test only ([`b4ce3d1`](https://github.com/qaldak/docker-volume-backup/commit/b4ce3d1d9fcf941b67b92727120e54ebbffdf37d))
 
-### Unknown
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`866efea`](https://github.com/qaldak/docker-volume-backup/commit/866efeac302044d5edfe39bcd1118a922ca95eea))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`43827fc`](https://github.com/qaldak/docker-volume-backup/commit/43827fca4cccf184424a3b14e3a1fc10315ffde2))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`cf5aeb1`](https://github.com/qaldak/docker-volume-backup/commit/cf5aeb19bbcc1fd52d9bb453b151cfde8c9dfd96))
-
-* Merge branch &#39;main&#39; into dependabot/pip/python-on-whales-0.67.0 ([`e500771`](https://github.com/qaldak/docker-volume-backup/commit/e50077144056994d12f3fb4a50d3abb61df3d8e4))
-
 
 ## v0.2.5 (2023-11-17)
 
@@ -152,12 +138,6 @@ pip: bump python-on-whales from 0.66.0 to 0.67.0 ([`bb6ead0`](https://github.com
 * Update README.md
 
 fix: typo for tests ([`2c5acc0`](https://github.com/qaldak/docker-volume-backup/commit/2c5acc07e8f3fca640dd24872b966a074a128c70))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`f17e900`](https://github.com/qaldak/docker-volume-backup/commit/f17e9007685e4c6f0248dbdffff4ab28e8d586af))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`64012b6`](https://github.com/qaldak/docker-volume-backup/commit/64012b602328b40376513bc9f0e19b006c1540fa))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`ae926f5`](https://github.com/qaldak/docker-volume-backup/commit/ae926f52936dd7ba73329677b3902f9644733da0))
 
 
 ## v0.1.1 (2023-11-17)
@@ -189,18 +169,6 @@ refactor: on workflow_call ([`5218b9b`](https://github.com/qaldak/docker-volume-
 * Update python-tests.yml
 
 refactor: python-test on workflow_call ([`9ab7d83`](https://github.com/qaldak/docker-volume-backup/commit/9ab7d83974f43f79f8662dd623cca2b10a6f8276))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`9390f08`](https://github.com/qaldak/docker-volume-backup/commit/9390f085a8620af78772c5073b1d0c3beb5660eb))
-
-* Merge remote-tracking branch &#39;origin/feature/github-actions&#39; into feature/github-actions ([`e086a01`](https://github.com/qaldak/docker-volume-backup/commit/e086a013c09ef5055212c56cd15ad4b86c80a98d))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`7a172a8`](https://github.com/qaldak/docker-volume-backup/commit/7a172a82a9e502df5329f0f4a8aec8bd76274c2b))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`aa3d397`](https://github.com/qaldak/docker-volume-backup/commit/aa3d3973bf1f93c2aa68daaf14a6152151b0965f))
-
-* Merge remote-tracking branch &#39;origin/feature/github-actions&#39; into feature/github-actions ([`be8ade2`](https://github.com/qaldak/docker-volume-backup/commit/be8ade2a0fa8ed1828cc3fa8c9d7a5dccbaca315))
-
-* Merge branch &#39;main&#39; into feature/github-actions ([`dc59d90`](https://github.com/qaldak/docker-volume-backup/commit/dc59d90ceaf55ecd6c1d35ef011e5bf48ee65265))
 
 * Update README.md ([`43f2f42`](https://github.com/qaldak/docker-volume-backup/commit/43f2f42e8a0857deb74ab3bd365c13bed7d63455))
 
