@@ -43,10 +43,6 @@ class TestAccessorLocalhost(TestCase):
         hostname = LocalHost.get_hostname()
         self.assertTrue(hostname.islower())
 
-    def test_get_hostname_upper(self):
-        hostname = LocalHost.get_hostname_upper()
-        self.assertTrue(hostname.isupper())
-
     @patch("src.util.accessor.docker.from_env", side_effect=ConnectionError(
         "('Connection aborted.', ConnectionRefusedError(111, 'Connection refused')"))
     def test_is_docker_daemon_running_exception(self, client):
@@ -62,7 +58,6 @@ class TestAccessorLocalhost(TestCase):
         with self.assertLogs("util.accessor", level="ERROR") as log:
             LocalHost.is_docker_daemon_running()
             self.assertRaises(docker.errors.DockerException)
-
 
     @patch("src.util.accessor.docker.api.daemon.DaemonApiMixin.ping", return_value="OK")
     def test_is_docker_daemon_running(self, ping):

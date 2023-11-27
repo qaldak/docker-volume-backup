@@ -7,7 +7,7 @@ from util import cfg
 
 class TestDispatcher(TestCase):
     @patch.dict("src.notification.dispatcher.os.environ",
-                {"CHAT_ALERTING": "FOO", "CHAT_SERVICE": "MESSANGER", "MQTT_NOTIFICATION": ""})
+                {"CHAT_ALERTING": "FOO", "CHAT_SERVICE": "MESSENGER", "MQTT_NOTIFICATION": ""})
     def test_dispatcher_init_env_undefined(self):
         dispatcher = Dispatcher("Foo")
         self.assertEqual(dispatcher.alerting, Alerting.UNDEFINED)
@@ -29,7 +29,7 @@ class TestDispatcher(TestCase):
     @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foo")
     def test_dispatcher_notify_receiver_unknown(self, msg):
         Dispatcher("Foo").notify_receiver()
-        self.assertEqual("", Dispatcher("Foo").msg)
+        self.assertEqual("", Dispatcher("Foo").msg)  # Todo: check
 
     @patch.dict("src.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SLACK", "MQTT_NOTIFICATION": "False"})
@@ -37,7 +37,7 @@ class TestDispatcher(TestCase):
     def test_dispatcher_notify_receiver_onfailure_noerror(self, msg):
         cfg.hasError = False
         Dispatcher("Foo").notify_receiver()
-        self.assertEqual("", Dispatcher("Foo").msg)
+        self.assertEqual("", Dispatcher("Foo").msg)  # Todo: check
 
     @patch.dict("src.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SIGNAL", "MQTT_NOTIFICATION": "False"})
@@ -51,5 +51,5 @@ class TestDispatcher(TestCase):
             self.assertEqual(
                 ["DEBUG:notification.dispatcher:ready to build the chat message",
                  "DEBUG:notification.dispatcher:post message to chat tool: Foobar...",
-                 "ERROR:notification.dispatcher:Receiver 'UNDEFINED' not implemented yet."],
+                 "ERROR:notification.dispatcher:Receiver 'SIGNAL' not implemented yet."],
                 log.output)

@@ -32,9 +32,8 @@ class TestVolume(TestCase):
 
         with self.assertRaises(AssertionError) as err:
             Volume.run_backup(container, backup_dir)
-            self.assertEqual(
-                "No volumes to backup",
-                str(err.exception))
+
+        self.assertEqual("No volumes to backup", str(err.exception))
 
     @patch("src.container.backup.docker.run", side_effect=DockerException(["Fake error message"], 115))
     def test_run_backup_docker_exception(self, error):
@@ -42,7 +41,7 @@ class TestVolume(TestCase):
         container = MockContainer()
         with self.assertRaises(DockerException) as err:
             Volume.run_backup(container, backup_dir)
-            self.assertEqual("Fake error message", str(err.exception))
+        self.assertEqual("Fake error message", str(err.exception))
 
     @patch("src.container.backup.docker.run", return_value="Everything is allright")
     def test_run_backup_successful(self, tmp):
