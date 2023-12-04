@@ -2,6 +2,49 @@
 
 
 
+## v0.5.2 (2023-12-04)
+
+### Build
+
+* build: change dependabot commit prefix ([`b37eb07`](https://github.com/qaldak/docker-volume-backup/commit/b37eb07b4f30cd22a8725ad9945b8c5cf4b9b61b))
+
+### Chore
+
+* chore: pip: bump slack-sdk from 3.26.0 to 3.26.1
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.0 to 3.26.1.
+- [Release notes](https://github.com/slackapi/python-slack-sdk/releases)
+- [Changelog](https://github.com/slackapi/python-slack-sdk/blob/main/docs-v2/changelog.html)
+- [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.26.0...v3.26.1)
+
+---
+updated-dependencies:
+- dependency-name: slack-sdk
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d076c2b`](https://github.com/qaldak/docker-volume-backup/commit/d076c2b89881d09cad8d99d63c185191955acdda))
+
+### Unknown
+
+* chore (deps) pip: bump slack-sdk from 3.24.0 to 3.26.0
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.24.0 to 3.26.0.
+- [Release notes](https://github.com/slackapi/python-slack-sdk/releases)
+- [Changelog](https://github.com/slackapi/python-slack-sdk/blob/main/docs-v2/changelog.html)
+- [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.24.0...v3.26.0)
+
+---
+updated-dependencies:
+- dependency-name: slack-sdk
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d9d50b6`](https://github.com/qaldak/docker-volume-backup/commit/d9d50b6bab2601facec9fb633d4b1f15d6444882))
+
+
 ## v0.5.1 (2023-11-26)
 
 ### Refactor
