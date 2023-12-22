@@ -1,10 +1,12 @@
 import logging
 import os
+import time
 from enum import Enum
 
 from python_on_whales import docker, DockerException
 
-from util.accessor import LocalHost
+from util import cfg
+from util.accessor import LocalHost, calc_duration
 
 logger = logging.getLogger(__name__)
 
@@ -82,12 +84,15 @@ class Volume:
 
         try:
             logger.info(f"Execute Volume backup for container '{container.name}'. tar command: {tar_cmd}")
+            cfg.backup_start_time = int(time.time())
 
             tmp = docker.run("busybox:latest", tar_cmd, remove=True, volumes_from=container.name,
                              volumes=volume_mapping, detach=False)
 
+            cfg.backup_end_time = int(time.time())
             logger.debug(f"Return value running backup: {tmp}")
-            logger.info(f"Volume backup for container '{container.name}' successful")
+            logger.info(f"Volume backup for container '{container.name}' successful. Duration: "
+                        f"{calc_duration(cfg.backup_start_time, cfg.backup_end_time)}")
 
         except DockerException as err:
             logger.exception(err)

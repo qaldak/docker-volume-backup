@@ -1,4 +1,5 @@
 import logging
+import time
 
 from dotenv import load_dotenv
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 def main(path, restart):
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
+    cfg.job_start_time = int(time.time())
 
     try:
         # check Docker daemon is running!
@@ -55,8 +57,12 @@ def main(path, restart):
         logger.info(f"Volume backup for container '{args.container}' completed successfully")
 
     finally:
+        cfg.job_end_time = int(time.time())
+
         # send notification
-        Dispatcher(container.name).notify_receiver()
+        dispatcher = Dispatcher(container.name)
+        dispatcher.notify_chat_receiver()
+        dispatcher.notify_mqtt_receiver()
 
         logger.info(f"Volume backup done.")
 

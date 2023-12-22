@@ -35,13 +35,13 @@ class TestVolume(TestCase):
 
         self.assertEqual("No volumes to backup", str(err.exception))
 
-    @patch("src.container.backup.docker.run", side_effect=DockerException(["Fake error message"], 115))
+    @patch("src.container.backup.docker.run", side_effect=DockerException(command_launched=[""], return_code=115))
     def test_run_backup_docker_exception(self, error):
         backup_dir = MockBackupDir()
         container = MockContainer()
         with self.assertRaises(DockerException) as err:
             Volume.run_backup(container, backup_dir)
-        self.assertEqual("Fake error message", str(err.exception))
+        self.assertEqual(115, err.exception.return_code)
 
     @patch("src.container.backup.docker.run", return_value="Everything is allright")
     def test_run_backup_successful(self, tmp):
@@ -49,10 +49,14 @@ class TestVolume(TestCase):
         container = MockContainer()
         with self.assertLogs("container.backup", level="INFO") as log:
             Volume.run_backup(container, backup_dir)
-            self.assertEqual(["INFO:container.backup:Execute Volume backup for container 'foo_bar'. tar command: ["
-                              "'tar', 'c', '-z', '-f', '/backup/fedora-foo_bar-volume-backup.tar.gz', '/foo/data', "
-                              "'/foo/config', '/bar/log']",
-                              "INFO:container.backup:Volume backup for container 'foo_bar' successful"], log.output)
+            self.assertEqual([
+                "INFO:container.backup:Execute Volume backup for container 'foo_bar'. tar "
+                "command: ['tar', 'c', '-z', '-f', "
+                "'/backup/fedora-foo_bar-volume-backup.tar.gz', '/foo/data', '/foo/config', "
+                "'/bar/log']",
+                "INFO:container.backup:Volume backup for container 'foo_bar' successful. "
+                'Duration: 0:00:00'],
+                log.output)
 
 
 @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")

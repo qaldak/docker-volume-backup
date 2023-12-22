@@ -1,9 +1,10 @@
+import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
 import docker.errors
 
-from util.accessor import BackupDir, LocalHost
+from util.accessor import BackupDir, LocalHost, calc_duration
 
 
 class TestAccessorBackupDir(TestCase):
@@ -62,3 +63,8 @@ class TestAccessorLocalhost(TestCase):
     @patch("src.util.accessor.docker.api.daemon.DaemonApiMixin.ping", return_value="OK")
     def test_is_docker_daemon_running(self, ping):
         self.assertTrue(LocalHost.is_docker_daemon_running())
+
+
+def test_calc_duration():
+    assert calc_duration(1924945200, 1924952402) == datetime.timedelta(seconds=7202)
+    assert str(calc_duration(1924945200, 1924952402)) == "2:00:02"
