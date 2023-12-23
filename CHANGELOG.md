@@ -2,6 +2,26 @@
 
 
 
+## v0.5.3 (2023-12-18)
+
+### Chore
+
+* chore: pip: bump python-on-whales from 0.67.0 to 0.68.0
+
+Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales) from 0.67.0 to 0.68.0.
+- [Release notes](https://github.com/gabrieldemarmiesse/python-on-whales/releases)
+- [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.67.0...v0.68.0)
+
+---
+updated-dependencies:
+- dependency-name: python-on-whales
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`7e55134`](https://github.com/qaldak/docker-volume-backup/commit/7e551343a8acddfd14bb3eb50abd17ad4f19bb42))
+
+
 ## v0.5.2 (2023-12-04)
 
 ### Build
