@@ -12,19 +12,23 @@ If an error occurs, a message is sent to a defined Slack channel.
 ### Install
 
 1. Clone code from GitHub https://github.com/qaldak/docker-volume-backup.git (or Download it)
-2. Install Python libs `pip install -r requirements.txt`
+2. Install Python libs `pip install .`
 
 ### Configuration (.env file)
 
-| Param              | Description                                                                                                                    |
-|:-------------------|:-------------------------------------------------------------------------------------------------------------------------------|
-| BACKUP_DIR         | Target path to save the backup                                                                                                 |      
-| LOG_DIR            | Path for log directory                                                                                                         |
-| COMPRESSION_METHOD | (optional) Define the compression method for tar file. If undefined: Default = GZIP. Possible values are: <br> GZIP <br> BZIP2 |
-| CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                     |
-| CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                              |
-| SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                 |
-| SLACK_CHANNEL_ID   | Required if CHAT_SERVICE=SLACK                                                                                                 |
+| Param              | Description                                                                                                                           |
+|:-------------------|:--------------------------------------------------------------------------------------------------------------------------------------|
+| BACKUP_DIR         | Target path to save the backup                                                                                                        |      
+| LOG_DIR            | Path for log directory                                                                                                                |
+| COMPRESSION_METHOD | (optional) Define the compression method for tar file. Possible values are: <br> GZIP (default, if undefined) <br> BZIP2              |
+| CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                            |
+| CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                                     |
+| SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                        |
+| SLACK_CHANNEL_ID   | Required if CHAT_SERVICE=SLACK                                                                                                        |
+| MQTT_ALERTING      | Define in which case a MQTT message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                       |
+| MQTT_BROKER        | Address of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                            |
+| MQTT_PORT          | Port of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                               |
+| MQTT_TOPIC         | Topic for MQTT message. Mandatory, if MQTT_ALERTING is enabled. <br> Wildcards {HOSTNAME} and {CONTAINER} will be replaced at runtime |
 
 See example in [.env](.env)
 
@@ -48,7 +52,7 @@ optional parameter: see Command line
 
 ### Requirements
 
-* Python 3.10 or higher
+* Python 3.09 or higher
 * Python modules, see [requirements.txt](requirements.txt)
 
 ### Links
@@ -60,6 +64,7 @@ optional parameter: see Command line
 #### Tools
 
 * [busybox](https://busybox.net/)
+* [eclipse-mosquitto](https://mosquitto.org/)
 * [slack](https://slack.com)
 * [slack api](https://slack.dev)
 
@@ -68,6 +73,7 @@ optional parameter: see Command line
 there are much more Docker images for the same purpose. This here I used for this project:<br>
 
 * [busybox](https://hub.docker.com/_/busybox) Official Busybox base image by Docker Community
+* [eclipse-mosquitto](https://hub.docker.com/_/eclipse-mosquitto) Official eclipse-mosquitto by Eclipse Foundation
 
 ## Contribute
 
