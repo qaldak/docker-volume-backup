@@ -1,9 +1,10 @@
+import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
 import docker.errors
 
-from util.accessor import BackupDir, LocalHost
+from util.accessor import BackupDir, LocalHost, calc_duration
 
 
 class TestAccessorBackupDir(TestCase):
@@ -43,10 +44,6 @@ class TestAccessorLocalhost(TestCase):
         hostname = LocalHost.get_hostname()
         self.assertTrue(hostname.islower())
 
-    def test_get_hostname_upper(self):
-        hostname = LocalHost.get_hostname_upper()
-        self.assertTrue(hostname.isupper())
-
     @patch("src.util.accessor.docker.from_env", side_effect=ConnectionError(
         "('Connection aborted.', ConnectionRefusedError(111, 'Connection refused')"))
     def test_is_docker_daemon_running_exception(self, client):
@@ -63,7 +60,11 @@ class TestAccessorLocalhost(TestCase):
             LocalHost.is_docker_daemon_running()
             self.assertRaises(docker.errors.DockerException)
 
-
     @patch("src.util.accessor.docker.api.daemon.DaemonApiMixin.ping", return_value="OK")
     def test_is_docker_daemon_running(self, ping):
         self.assertTrue(LocalHost.is_docker_daemon_running())
+
+
+def test_calc_duration():
+    assert calc_duration(1924945200, 1924952402) == datetime.timedelta(seconds=7202)
+    assert str(calc_duration(1924945200, 1924952402)) == "2:00:02"

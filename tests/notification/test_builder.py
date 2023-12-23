@@ -32,12 +32,53 @@ class TestBuilder(TestCase):
         msg = Builder.build_chat_message(container.name)
         self.assertEqual("[foo] Volume backup of container 'foo_bar' successful", msg, "Invalid chat message (success)")
 
-    @patch("src.notification.builder.LocalHost.get_hostname_upper", return_value="FOO")
-    def test_build_mqtt_topic(self, host):
+    @patch.dict("src.notification.dispatcher.os.environ",
+                {"MQTT_TOPIC": "apps/{HOSTNAME}/{CONTAINER}/backup/"})
+    @patch("src.notification.builder.LocalHost.get_hostname", return_value="Foo")
+    def test_build_mqtt_topic_with_placeholders(self, host):
         container = MockContainer()
         topic = Builder.build_mqtt_topic(container)
         self.assertEqual("apps/FOO/foo_bar/backup/", topic, "Invalid MQTT topic")
 
-    def test_build_mqtt_msg(self):
+    @patch.dict("src.notification.dispatcher.os.environ",
+                {"MQTT_TOPIC": "apps/{HOSTNAME}/backup/"})
+    @patch("src.notification.builder.LocalHost.get_hostname", return_value="Foo")
+    def test_build_mqtt_topic_one_placeholder(self, host):
+        container = MockContainer()
+        topic = Builder.build_mqtt_topic(container)
+        self.assertEqual("apps/FOO/backup/", topic, "Invalid MQTT topic")
+
+    @patch.dict("src.notification.dispatcher.os.environ",
+                {"MQTT_TOPIC": "apps/container/backup/"})
+    @patch("src.notification.builder.LocalHost.get_hostname", return_value="Foo")
+    def test_build_mqtt_topic_without_placeholders(self, host):
+        container = MockContainer()
+        topic = Builder.build_mqtt_topic(container)
+        self.assertEqual("apps/container/backup/", topic, "Invalid MQTT topic")
+
+    @patch.dict("src.notification.dispatcher.os.environ",
+                {"MQTT_TOPIC": ""})
+    @patch("src.notification.builder.LocalHost.get_hostname", return_value="Foo")
+    def test_build_mqtt_topic_undefined(self, host):
+        container = MockContainer()
+        with self.assertRaises(ValueError) as err:
+            topic = Builder.build_mqtt_topic(container)
+
+        self.assertEqual("MQTT_TOPIC undefined in .env file", str(err.exception))
+
+    @patch("src.notification.builder.time.time", return_value=4102398000)
+    @patch("src.notification.builder.LocalHost.get_hostname", return_value="myHost")
+    def test_build_mqtt_msg(self, host, time):
+        cfg.job_start_time = 1924945200
+        cfg.job_end_time = 1924952401
+
         mqtt_msg = Builder.build_mqtt_msg("Foo")
-        self.assertEqual("Mqtt Msg: Foo", mqtt_msg, "Invalid MQTT message")
+        self.assertEqual(
+            {"time": 4102398000,
+             "host": "myHost",
+             "container": "Foo",
+             "duration": "2:00:01",
+             "hasError": False,
+             "msg": "Docker volume backup successful"},
+            mqtt_msg,
+            "Invalid MQTT message object")

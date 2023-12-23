@@ -3,6 +3,7 @@ import os
 from enum import Enum
 
 from notification.builder import Builder
+from notification.mqtt import MQTT
 from notification.slack import Slack
 from util import cfg
 
@@ -11,26 +12,25 @@ logger = logging.getLogger(__name__)
 
 class Dispatcher:
     def __init__(self, container_name: str):
-        self.alerting = self.__determine_alerting()
-        self.receiver = self.__determine_receiver()
+        self.alerting = self.__determine_alerting("CHAT_ALERTING")
+        self.receiver = self.__determine_receiver("CHAT_SERVICE")
         self.container = container_name
         self.msg = ""
-        self.mqtt_msg = ""
-        self.send_mqtt = True if os.getenv("MQTT_NOTIFICATION") == "True" else False
+        self.mqtt_alerting = self.__determine_alerting("MQTT_ALERTING")
 
     @staticmethod
-    def __determine_alerting() -> Enum:
+    def __determine_alerting(comm_type: str) -> Enum:
         try:
-            logger.debug(f"Defined alerting: {os.getenv('CHAT_ALERTING')}")
+            logger.debug(f"Defined alerting: {os.getenv(comm_type)}")
 
-            if not os.getenv("CHAT_ALERTING"):
-                logger.debug(f"Alerting undefined or empty: {os.getenv('CHAT_ALERTING')}. Return {Alerting.UNDEFINED}")
+            if not os.getenv(comm_type):
+                logger.debug(f"Alerting undefined or empty: {os.getenv(comm_type)}. Return {Alerting.UNDEFINED}")
                 return Alerting.UNDEFINED
 
-            return Alerting[os.getenv("CHAT_ALERTING")]
+            return Alerting[os.getenv(comm_type)]
 
         except KeyError as err:
-            logger.warning(f"Alerting not defined properly: {os.getenv('CHAT_ALERTING')}")
+            logger.warning(f"Alerting not defined properly: {os.getenv(comm_type)}")
             return Alerting.UNDEFINED
 
         except Exception as err:
@@ -38,18 +38,18 @@ class Dispatcher:
             raise
 
     @staticmethod
-    def __determine_receiver() -> Enum:
+    def __determine_receiver(comm_type: str) -> Enum:
         try:
-            logger.debug(f"Defined receiver: {os.getenv('CHAT_SERVICE')}")
+            logger.debug(f"Defined receiver: {os.getenv(comm_type)}")
 
-            if not os.getenv("CHAT_SERVICE"):
-                logger.debug(f"Receiver undefined or empty: {os.getenv('CHAT_SERVICE')}. Return {Receiver.UNDEFINED}")
+            if not os.getenv(comm_type):
+                logger.debug(f"Receiver undefined or empty: {os.getenv(comm_type)}. Return {Receiver.UNDEFINED}")
                 return Receiver.UNDEFINED
 
-            return Receiver[os.getenv("CHAT_SERVICE")]
+            return Receiver[os.getenv(comm_type)]
 
         except KeyError as err:
-            logger.error(f"Defined CHAT_SERVICE={os.getenv('CHAT_SERVICE')} unknown. Return {Receiver.UNDEFINED}")
+            logger.error(f"CHAT_SERVICE={os.getenv(comm_type)} unknown. Return {Receiver.UNDEFINED}")
 
             return Receiver.UNDEFINED
 
@@ -57,37 +57,58 @@ class Dispatcher:
             logger.error(err)
             raise
 
-    def __send_message(self):
-        if self.receiver == Receiver.SLACK:
+    def __send_message(self, receiver: Enum):
+        if receiver == Receiver.SLACK:
             # Todo: Validate settings before post message Slack().is_config_valid() slack = Slack()
             Slack().post_message(self.msg)
+        if receiver == Receiver.MQTT:
+            # Todo: Validate settings before post message MQTT().is_config_valid() mqtt = MQTT()
+
+            mqtt_msg = Builder.build_mqtt_msg(self.container)
+
+            mqtt_topic = Builder.build_mqtt_topic(self.container)
+
+            if MQTT(mqtt_topic, mqtt_msg).send_msg():
+                logger.info("MQTT message sent successfully.")
+            else:
+                logger.warning("Error occurred while sending MQTT message")
         else:
-            logger.error(f"Receiver '{self.receiver.name}' not implemented yet.")
+            logger.error(f"Receiver '{os.getenv('CHAT_SERVICE')}' not implemented yet.")
 
     @staticmethod
-    def __send_mqtt_message():
-        print(__name__, "Bar")
-
-    def notify_receiver(self):
-        if self.alerting in (Alerting.NEVER, Alerting.UNDEFINED):
+    def __need_alerting(alerting: Enum) -> bool:
+        if alerting in (Alerting.NEVER, Alerting.UNDEFINED):
             logger.debug("No alerting defined. Nothing to post.")
-            return
-        if self.alerting == Alerting.ON_FAILURE:
+            return False
+        if alerting == Alerting.ON_FAILURE:
             if not cfg.hasError:
                 logger.debug("No errors occurred. Nothing to post.")
-                return
-        if self.alerting == Alerting.ALWAYS:
+                return False
+        if alerting == Alerting.ALWAYS:
             pass
+
+        return True
+
+    def notify_chat_receiver(self):
+        if not self.__need_alerting(self.alerting):
+            logger.debug("Chat message not needed. Config: ", {self.alerting})
+            return
 
         logger.debug(f"ready to build the chat message")
 
         self.msg = Builder.build_chat_message(self.container)
 
         logger.debug(f"post message to chat tool: {self.msg[:100]}...")
-        self.__send_message()
+        self.__send_message(self.receiver)
 
-        if self.send_mqtt:
-            self.__send_mqtt_message()
+    def notify_mqtt_receiver(self):
+        if not self.__need_alerting(self.mqtt_alerting):
+            logger.debug("MQTT message not needed. Config: ", {self.alerting})
+            return
+
+        logger.debug(f"ready to build the communication message")
+
+        self.__send_message(Receiver.MQTT)
 
 
 class Receiver(Enum):

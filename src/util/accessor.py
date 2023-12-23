@@ -1,8 +1,9 @@
 import logging
 import os
+from _socket import gethostname
+from datetime import datetime, timedelta
 
 import docker
-from _socket import gethostname
 
 logger = logging.getLogger(__name__)
 
@@ -63,13 +64,6 @@ class LocalHost:
         return gethostname().lower()
 
     @staticmethod
-    def get_hostname_upper() -> str:
-        """
-        :return: hostname in uppercase
-        """
-        return gethostname().upper()
-
-    @staticmethod
     def is_docker_daemon_running() -> bool:
         """
         Determines whether Docker daemon is running on the local host.
@@ -90,3 +84,8 @@ class LocalHost:
             return False
 
         return True
+
+
+def calc_duration(start: int, end: int) -> timedelta:
+    duration = datetime.fromtimestamp(end) - datetime.fromtimestamp(start)
+    return duration
