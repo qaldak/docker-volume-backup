@@ -2,6 +2,19 @@
 
 
 
+## v0.6.0 (2023-12-23)
+
+### Documentation
+
+* docs: update README for mqtt #39 ([`70e563b`](https://github.com/qaldak/docker-volume-backup/commit/70e563bef37d06103bb82ce1b098f5a27e0f6a5a))
+
+### Feature
+
+* feat: implement mqtt #39 ([`3b707ec`](https://github.com/qaldak/docker-volume-backup/commit/3b707ec9a415fd692c851844dd11a9e57e036ec2))
+
+* feat: calc job and backup duration ([`58b4932`](https://github.com/qaldak/docker-volume-backup/commit/58b4932424d7447624793c0a34177fe04f6d48a9))
+
+
 ## v0.5.3 (2023-12-18)
 
 ### Chore
@@ -45,6 +58,10 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d076c2b`](https://github.com/qaldak/docker-volume-backup/commit/d076c2b89881d09cad8d99d63c185191955acdda))
+
+### Test
+
+* test: fix unit test ([`7c5f1b6`](https://github.com/qaldak/docker-volume-backup/commit/7c5f1b6e7a2ca4a858429a1b4647d57e46d5db0c))
 
 ### Unknown
 
