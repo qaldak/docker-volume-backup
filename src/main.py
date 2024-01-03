@@ -7,7 +7,7 @@ from container.backup import Volume
 from container.container import Container
 from notification.dispatcher import Dispatcher
 from util import cfg
-from util.accessor import BackupDir, LocalHost
+from util.accessor import BackupDir, LocalHost, EnvSettings
 from util.argparser import ArgParser
 from util.logger import Logger
 
@@ -70,6 +70,7 @@ def main(path, restart):
 if __name__ == "__main__":
     # load .env
     load_dotenv()
+    EnvSettings().validate()
 
     args = ArgParser.parse_cli_args()
 
