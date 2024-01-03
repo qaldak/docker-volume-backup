@@ -37,7 +37,7 @@ class TestBuilder(TestCase):
     @patch("src.notification.builder.LocalHost.get_hostname", return_value="Foo")
     def test_build_mqtt_topic_with_placeholders(self, host):
         container = MockContainer()
-        topic = Builder.build_mqtt_topic(container.name)
+        topic = Builder.build_mqtt_topic(container)
         self.assertEqual("apps/FOO/foo_bar/backup/", topic, "Invalid MQTT topic")
 
     @patch.dict("src.notification.dispatcher.os.environ",
