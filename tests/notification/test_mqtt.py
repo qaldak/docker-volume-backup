@@ -42,7 +42,10 @@ class TestMQTT(TestCase):
         with self.assertLogs("notification.mqtt", level="DEBUG") as log:
             self.assertTrue(MQTT("testing/topic", "my message from new container").send_msg(),
                             "Sending MQTT with temp container failed")
-            self.assertEqual(["INFO:notification.mqtt:No running mosquitto container found. Download image and create "
+            self.assertEqual(["DEBUG:notification.mqtt:MQTT command: ['mosquitto_pub', '-h', "
+                              "'my.mqttbroker.home', '-p', '1883', '-t', 'testing/topic', '-m', 'my message "
+                              "from new container']",
+                              "INFO:notification.mqtt:No running mosquitto container found. Download image and create "
                               "a temporary container",
                               "DEBUG:notification.mqtt:Remove existing container 'tmp-mosquitto'."], log.output)
 
