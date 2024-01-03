@@ -6,6 +6,7 @@ from notification.builder import Builder
 from notification.mqtt import MQTT
 from notification.slack import Slack
 from util import cfg
+from util.accessor import Alerting, Receiver
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +60,9 @@ class Dispatcher:
 
     def __send_message(self, receiver: Enum):
         if receiver == Receiver.SLACK:
-            # Todo: Validate settings before post message Slack().is_config_valid() slack = Slack()
             Slack().post_message(self.msg)
-        if receiver == Receiver.MQTT:
-            # Todo: Validate settings before post message MQTT().is_config_valid() mqtt = MQTT()
 
+        if receiver == Receiver.MQTT:
             mqtt_msg = Builder.build_mqtt_msg(self.container)
 
             mqtt_topic = Builder.build_mqtt_topic(self.container)
@@ -109,16 +108,3 @@ class Dispatcher:
         logger.debug(f"ready to build the communication message")
 
         self.__send_message(Receiver.MQTT)
-
-
-class Receiver(Enum):
-    SLACK = 1
-    MQTT = 80
-    UNDEFINED = 99
-
-
-class Alerting(Enum):
-    ALWAYS = 10
-    ON_FAILURE = 20
-    NEVER = 90
-    UNDEFINED = 99
