@@ -59,24 +59,25 @@ class BackupDir:
 class EnvSettings:
 
     def __validate_chat_settings(self):
-        if os.getenv("CHAT_ALERTING") in (Alerting.ALWAYS, Alerting.ON_FAILURE):
-            if not os.getenv("CHAT_SERVICE") == Receiver.SLACK:
+        if os.getenv("CHAT_ALERTING") in (Alerting.ALWAYS.name, Alerting.ON_FAILURE.name):
+            if not os.getenv("CHAT_SERVICE") == Receiver.SLACK.name:
                 err = "CHAT_ALERTING enabled but CHAT_SERVICE not correct. Check .env config."
                 logger.error(err)
                 raise ValueError(err)
+
             self.__validate_slack_settings()
 
     @staticmethod
     def __validate_slack_settings():
-        if not os.getenv("SLACK_CHANNEL_ID") and os.getenv("SLACK_AUTH_TOKEN"):
+        if not (os.getenv("SLACK_CHANNEL_ID") and os.getenv("SLACK_AUTH_TOKEN")):
             err = "CHAT_SERVICE=SLACK but SLACK_CHANNEL_ID / SLACK_AUTH_TOKEN missing. Check .env config."
             logger.error(err)
             raise ValueError(err)
 
     @staticmethod
     def __validate_mqtt_settings():
-        if os.getenv("MQTT_ALERTING") in (Alerting.ALWAYS, Alerting.ON_FAILURE):
-            if not os.getenv("MQTT_BROKER") and os.getenv("MQTT_PORT") and os.getenv("MQTT_TOPIC"):
+        if os.getenv("MQTT_ALERTING") in (Alerting.ALWAYS.name, Alerting.ON_FAILURE.name):
+            if not (os.getenv("MQTT_BROKER") and os.getenv("MQTT_TOPIC")):
                 err = "MQTT_ALERTING enabled but MQTT config not correct. Check .env config."
                 raise ValueError(err)
 
