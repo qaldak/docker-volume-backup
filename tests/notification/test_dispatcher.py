@@ -1,9 +1,8 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from notification.dispatcher import Dispatcher
+from notification.dispatcher import Dispatcher, Alerting, Receiver
 from util import cfg
-from util.accessor import Alerting, Receiver
 
 
 class TestDispatcher(TestCase):
