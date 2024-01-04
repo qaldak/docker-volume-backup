@@ -1,10 +1,12 @@
 import datetime
+import os
 from unittest import TestCase
 from unittest.mock import patch
 
 import docker.errors
+from dotenv import load_dotenv
 
-from util.accessor import BackupDir, LocalHost, calc_duration
+from util.accessor import BackupDir, LocalHost, calc_duration, EnvSettings
 
 
 class TestAccessorBackupDir(TestCase):
@@ -37,6 +39,46 @@ class TestAccessorBackupDir(TestCase):
             self.assertEqual(
                 ["INFO:util.accessor:Backup directory '/Foo' exists. Directory already exists"],
                 log.output)
+
+
+class TestAccessorEnvSettings(TestCase):
+
+    def tearDown(self):
+        env_settings = ["CHAT_ALERTING", "CHAT_SERVICE", "SLACK_CHANNEL_ID", "SLACK_AUTH_TOKEN", "MQTT_ALERTING",
+                        "MQTT_BROKER", "MQTT_PORT", "MQTT_TOPIC"]
+        for env_setting in env_settings:
+            try:
+                del os.environ[env_setting]
+            except KeyError as err:
+                pass
+
+    def test_validate_env_settings(self):
+        load_dotenv("fixtures/env_files/.env_ok")
+        self.assertIsNone(EnvSettings().validate(), "Validate correct env settings failed")
+
+    def test_validate_env_settings_chat_error(self):
+        load_dotenv("fixtures/env_files/.env_chat_error")
+        with self.assertRaises(ValueError) as err:
+            EnvSettings().validate()
+
+        self.assertEqual("CHAT_ALERTING enabled but CHAT_SERVICE not correct. Check .env config.", str(err.exception),
+                         "Chat settings error not raised")
+
+    def test_validate_env_settings_slack_error(self):
+        load_dotenv("fixtures/env_files/.env_chat_slack_error")
+        with self.assertRaises(ValueError) as err:
+            EnvSettings().validate()
+
+        self.assertEqual("CHAT_SERVICE=SLACK but SLACK_CHANNEL_ID / SLACK_AUTH_TOKEN missing. Check .env config.",
+                         str(err.exception), "Slack settings error not raised")
+
+    def test_validate_env_settings_mqtt_error(self):
+        load_dotenv("fixtures/env_files/.env_mqtt_error")
+        with self.assertRaises(ValueError) as err:
+            EnvSettings().validate()
+
+        self.assertEqual("MQTT_ALERTING enabled but MQTT config not correct. Check .env config.",
+                         str(err.exception), "MQTT settings error not raised")
 
 
 class TestAccessorLocalhost(TestCase):
