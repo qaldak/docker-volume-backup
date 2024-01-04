@@ -90,7 +90,7 @@ class Dispatcher:
 
     def notify_chat_receiver(self):
         if not self.__need_alerting(self.alerting):
-            logger.debug("Chat message not needed. Config: ", {self.alerting})
+            logger.debug(f"Chat message not needed. Config: {self.alerting.name}")
             return
 
         logger.debug(f"ready to build the chat message")
@@ -102,7 +102,7 @@ class Dispatcher:
 
     def notify_mqtt_receiver(self):
         if not self.__need_alerting(self.mqtt_alerting):
-            logger.debug("MQTT message not needed. Config: ", {self.alerting})
+            logger.debug(f"MQTT message not needed. Config: {self.mqtt_alerting.name}")
             return
 
         logger.debug(f"ready to build the communication message")
