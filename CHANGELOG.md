@@ -2,6 +2,38 @@
 
 
 
+## v0.7.0 (2024-01-04)
+
+### Feature
+
+* feat: implement #52 ([`5eeef4c`](https://github.com/qaldak/docker-volume-backup/commit/5eeef4c4cd6dd5c936164125336840fef5f631d0))
+
+* feat: implement #52 ([`fdece99`](https://github.com/qaldak/docker-volume-backup/commit/fdece99760a448ef78f901109c5891b47506ca07))
+
+* feat: implement #52 ([`6bc81e4`](https://github.com/qaldak/docker-volume-backup/commit/6bc81e4af6047ac934b7082c6b11e89e35c5ea03))
+
+* feat: implement #52
+refactor: implement #39 ([`10822d2`](https://github.com/qaldak/docker-volume-backup/commit/10822d246426ca3b621d71da7dc5ed05c7c3acf0))
+
+* feat: implement mqtt #39 ([`aa4f43c`](https://github.com/qaldak/docker-volume-backup/commit/aa4f43c3ee65ff9121cf08038924ee3e698d0dd4))
+
+* feat: implement mqtt #39 ([`235cc39`](https://github.com/qaldak/docker-volume-backup/commit/235cc39d207010427b34af486aaee86a46c3fc48))
+
+### Fix
+
+* fix: debug logging ([`028045b`](https://github.com/qaldak/docker-volume-backup/commit/028045b5aaff5f6e29b0c3f5209f8d7fa6bcc83d))
+
+### Unknown
+
+* Revert &#34;feat: implement mqtt #39&#34;
+
+This reverts commit 235cc39d207010427b34af486aaee86a46c3fc48. ([`5f90c5e`](https://github.com/qaldak/docker-volume-backup/commit/5f90c5e5754923e98112344e6a7cc626c8261e06))
+
+* Revert &#34;feat: implement mqtt #39&#34;
+
+This reverts commit 235cc39d207010427b34af486aaee86a46c3fc48. ([`34ae367`](https://github.com/qaldak/docker-volume-backup/commit/34ae3676b04c1f5f2b317eb239722ce7c7cf2ecb))
+
+
 ## v0.6.0 (2023-12-23)
 
 ### Documentation
