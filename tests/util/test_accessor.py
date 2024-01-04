@@ -45,7 +45,7 @@ class TestAccessorEnvSettings(TestCase):
 
     def tearDown(self):
         env_settings = ["CHAT_ALERTING", "CHAT_SERVICE", "SLACK_CHANNEL_ID", "SLACK_AUTH_TOKEN", "MQTT_ALERTING",
-                        "MQTT_BROKER", "MQTT_TOPIC"]
+                        "MQTT_BROKER", "MQTT_PORT", "MQTT_TOPIC"]
         for env_setting in env_settings:
             try:
                 del os.environ[env_setting]

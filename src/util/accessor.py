@@ -77,7 +77,7 @@ class EnvSettings:
     @staticmethod
     def __validate_mqtt_settings():
         if os.getenv("MQTT_ALERTING") in (Alerting.ALWAYS.name, Alerting.ON_FAILURE.name):
-            if not (os.getenv("MQTT_BROKER") and os.getenv("MQTT_TOPIC")):
+            if not (os.getenv("MQTT_BROKER") and os.getenv("MQTT_PORT") and os.getenv("MQTT_TOPIC")):
                 err = "MQTT_ALERTING enabled but MQTT config not correct. Check .env config."
                 raise ValueError(err)
 
