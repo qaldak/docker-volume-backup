@@ -2,6 +2,21 @@
 
 
 
+## v0.8.0 (2024-01-12)
+
+### Documentation
+
+* docs: update .env-example file ([`3af1bb6`](https://github.com/qaldak/docker-volume-backup/commit/3af1bb6231fb7aece4fca56205a2b746e04cc4e8))
+
+### Feature
+
+* feat: change file settings on backup-file (#56) ([`f1686d5`](https://github.com/qaldak/docker-volume-backup/commit/f1686d5d12ad84e35736473494683f6715ba4713))
+
+### Refactor
+
+* refactor: param name ([`4ba8e80`](https://github.com/qaldak/docker-volume-backup/commit/4ba8e80f8ea8addd46933c3b11c2606e58b618a4))
+
+
 ## v0.7.0 (2024-01-04)
 
 ### Feature
