@@ -97,3 +97,41 @@ class TestBackup(TestCase):
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
         assert ("-z", ".gz") == backup._determine_compression_method()
+
+    @patch.dict("src.container.backup.os.environ",
+                {"BACKUP_FILE_OWNER": "9876", "BACKUP_FILE_GROUP": "9876", "BACKUP_FILE_PERMS": "777"})
+    def test_should_change_filesettings_true_true(self):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertEqual((True, True), backup.should_change_filesettings())
+
+    @patch.dict("src.container.backup.os.environ",
+                {"BACKUP_FILE_GROUP": "9876"})
+    def test_should_change_filesettings_true_false(self):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertEqual((True, False), backup.should_change_filesettings())
+
+    @patch.dict("src.container.backup.os.environ",
+                {"BACKUP_FILE_OWNER": "", "BACKUP_FILE_PERMS": "741"})
+    def test_should_change_filesettings_false_true(self):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertEqual((False, True), backup.should_change_filesettings())
+
+    def test_should_change_filesettings_false_false(self):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertEqual((False, False), backup.should_change_filesettings())
+
+    @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
+    @patch("src.container.backup.Backup._determine_compression_method", return_value=("-z", ".gz"))
+    def test_get_backup_filename(self, host, compression):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertEqual("/backup/groot-foo_bar-volume-backup.tar.gz", backup._get_backup_filename())
