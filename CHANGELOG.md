@@ -2,6 +2,17 @@
 
 
 
+## v0.8.1 (2024-01-12)
+
+### Refactor
+
+* refactor: check container state after stop/start command ([`4e5f7a9`](https://github.com/qaldak/docker-volume-backup/commit/4e5f7a9fce09c902a86e55dd684a357f1d75a127))
+
+### Test
+
+* test: add tests (#56) ([`b97c42a`](https://github.com/qaldak/docker-volume-backup/commit/b97c42af253424e764601dc5aaf10d0f376e5ee5))
+
+
 ## v0.8.0 (2024-01-12)
 
 ### Documentation
