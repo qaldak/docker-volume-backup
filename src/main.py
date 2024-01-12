@@ -3,7 +3,7 @@ import time
 
 from dotenv import load_dotenv
 
-from container.backup import Volume
+from container.backup import Backup
 from container.container import Container
 from notification.dispatcher import Dispatcher
 from util import cfg
@@ -41,8 +41,19 @@ def main(path, restart):
         if restart:
             container.stop()
 
-        Volume.run_backup(container, backup_dir)
+        # init Backup object and run backup tasks
+        backup = Backup(container=container, backup_dir=backup_dir)
+        backup.run_backup()
 
+        should_change_ownership, should_change_permissions = backup.should_change_filesettings()
+
+        if should_change_ownership:
+            backup.change_file_ownership()
+
+        if should_change_permissions:
+            backup.change_file_permissions()
+
+        # restart stopped container
         if restart:
             container.start()
             # Todo: check container

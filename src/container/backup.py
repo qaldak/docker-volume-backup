@@ -11,87 +11,169 @@ from util.accessor import LocalHost, calc_duration
 logger = logging.getLogger(__name__)
 
 
-def __determine_compression_method() -> tuple[str, str]:
-    try:
-        logger.debug(f"Defined compression method: {os.getenv('COMPRESSION_METHOD')}")
+class Backup:
 
-        if not os.getenv("COMPRESSION_METHOD"):
-            logger.debug(
-                f"Compression method undefined or empty. Return '{Compression.GZIP.value}'")
-            return Compression.GZIP.value, FileExtension.GZIP.value
-
-        return Compression[os.getenv("COMPRESSION_METHOD")].value, FileExtension[os.getenv("COMPRESSION_METHOD")].value
-
-    except KeyError as err:
-        logger.warning(
-            f"Compression method not defined properly: {os.getenv('COMPRESSION_METHOD')}. Using '{Compression.GZIP.value}'")
-        return Compression.GZIP.value, FileExtension.GZIP.value
-
-    except Exception as err:
-        logger.error(err)
-        raise
-
-
-def create_tar_cmd(container) -> list[str]:
-    """
-    creates a tar command to back up all determined volumes and bindings of the input container.
-
-    :param container:
-    :return: tar command to execute
-    """
-
-    cmp_method, file_ext = __determine_compression_method()
-
-    tar_cmd = ["tar", "c", f"{cmp_method}", "-f",
-               f"/backup/{LocalHost.get_hostname()}-{container.name}-volume-backup.tar{file_ext}"]
-
-    for volume in container.docker_volumes:
-        tar_cmd.append(f"{volume}")
-        logger.debug(f"Add volume {volume} to tar command")
-
-    for binding in container.docker_bindings:
-        tar_cmd.append(f"{binding}")
-        logger.debug(f"Add binding {binding} to tar command")
-
-    logger.debug(f"tar command created: {tar_cmd}")
-    return tar_cmd
-
-
-class Volume:
-
-    @staticmethod
-    def run_backup(container, backup_dir):
+    def __init__(self, container, backup_dir):
         """
-        backup all volumes and bindings of input container to a tar-file in the backup-directory.
+        initalize Backup object
 
         :param container:
         :param backup_dir:
         """
+        self.backup_dir = backup_dir
+        self.container = container
+        self.backup_file = self._get_backup_filename()
+        self.new_user_id = os.getenv("BACKUP_FILE_OWNER")
+        self.new_group_id = os.getenv("BACKUP_FILE_GROUP")
+        self.new_file_perms = os.getenv("BACKUP_FILE_PERMS")
+        self.volume_mapping = [{f"{self.backup_dir.path}:/backup"}]
 
-        logger.debug(f"Start backup for volumes {container.docker_volumes} and bindings {container.docker_bindings}")
-        logger.debug(f"Backup path: {backup_dir.path}")
+    @staticmethod
+    def _determine_compression_method() -> tuple[str, str]:
+        """
+        determine compression method for tar command and associated file extensions according to .env settings.
 
-        if not container.has_docker_volume and not container.has_docker_bindings:
+        :return: 1. compression method, 2. file extension (tuple[str, str])
+        """
+        try:
+            logger.debug(f"Defined compression method: {os.getenv('COMPRESSION_METHOD')}")
+
+            if not os.getenv("COMPRESSION_METHOD"):
+                logger.debug(
+                    f"Compression method undefined or empty. Return '{Compression.GZIP.value}'")
+                return Compression.GZIP.value, FileExtension.GZIP.value
+
+            return Compression[os.getenv("COMPRESSION_METHOD")].value, FileExtension[
+                os.getenv("COMPRESSION_METHOD")].value
+
+        except KeyError as err:
+            logger.warning(
+                f"Compression method not defined properly: {os.getenv('COMPRESSION_METHOD')}. "
+                f"Using '{Compression.GZIP.value}'")
+            return Compression.GZIP.value, FileExtension.GZIP.value
+
+        except Exception as err:
+            logger.error(err)
+            raise
+
+    def _create_tar_cmd(self) -> list[str]:
+        """
+        creates a tar command to back up all determined volumes and bindings of the input container.
+
+        :return: tar command to execute (list[str])
+        """
+
+        cmp_method, file_ext = self._determine_compression_method()
+        backup_filename = self._get_backup_filename()
+
+        tar_cmd = ["tar", "c", f"{cmp_method}", "-f",
+                   f"{backup_filename}"]
+
+        for volume in self.container.docker_volumes:
+            tar_cmd.append(f"{volume}")
+            logger.debug(f"Add volume {volume} to tar command")
+
+        for binding in self.container.docker_bindings:
+            tar_cmd.append(f"{binding}")
+            logger.debug(f"Add binding {binding} to tar command")
+
+        logger.debug(f"tar command created: {tar_cmd}")
+        return tar_cmd
+
+    def _exec_docker_run(self, cmd: list[str]):
+        return docker.run("busybox:latest", cmd, remove=True, volumes_from=self.container.name,
+                          volumes=self.volume_mapping, detach=False)
+
+    def _get_backup_filename(self) -> str:
+        """
+        calc backup filename with correct file extension according env settings
+
+        :return: string of backup filename including path
+        """
+        cmp_method, file_ext = self._determine_compression_method()
+        return f"/backup/{LocalHost.get_hostname()}-{self.container.name}-volume-backup.tar{file_ext}"
+
+    def change_file_ownership(self):
+        """
+        Changes file ownership according to .env settings by running a Docker container.
+        Execution via Docker to provide the required permissions.
+        """
+        logger.debug(f"UserId = '{self.new_user_id}', GroupId = '{self.new_group_id}'")
+        if not self.new_group_id:
+            new_ownership = self.new_user_id
+        elif not self.new_user_id:
+            new_ownership = self.new_group_id
+        else:
+            new_ownership = f"{self.new_user_id}:{self.new_group_id}"
+
+        chown_cmd = ["chown", f"{new_ownership}", f"{self.backup_file}"]
+
+        try:
+            tmp = self._exec_docker_run(chown_cmd)
+
+            logger.debug(f"Return value running backup: {tmp}")
+            logger.info(f"chown command run successful.")
+
+        except DockerException as err:
+            logger.exception(err)
+            raise
+
+        except Exception as err:
+            logger.exception(err)
+            raise
+
+    def change_file_permissions(self):
+        """
+        Changes file permissions according to .env settings by running a Docker container.
+        Execution via Docker to provide the required permissions.
+        """
+        logger.debug(f"new permissions: '{self.new_file_perms}'")
+
+        chmod_cmd = ["chmod", f"{self.new_file_perms}", f"{self.backup_file}"]
+
+        try:
+            tmp = self._exec_docker_run(chmod_cmd)
+
+            logger.debug(f"Return value running backup: {tmp}")
+            logger.info(f"chmod command run successful.")
+
+        except DockerException as err:
+            logger.exception(err)
+            raise
+
+        except Exception as err:
+            logger.exception(err)
+            raise
+
+    def run_backup(self):
+        """
+        backup all volumes and bindings of input container to a tar-file in the backup-directory.
+        """
+
+        logger.debug(
+            f"Start backup for volumes {self.container.docker_volumes} and bindings {self.container.docker_bindings}")
+        logger.debug(f"Backup path: {self.backup_dir.path}")
+
+        if not self.container.has_docker_volume and not self.container.has_docker_bindings:
             raise AssertionError("No volumes to backup")
 
-        tar_cmd = create_tar_cmd(container)
+        tar_cmd = self._create_tar_cmd()
 
         # Todo: check issue when running on windows?
         volume_mapping = [{
-            f"{backup_dir.path}:/backup"
+            f"{self.backup_dir.path}:/backup"
         }]
         logger.debug(f"volume mapping for backup container: {volume_mapping}")
 
         try:
-            logger.info(f"Execute Volume backup for container '{container.name}'. tar command: {tar_cmd}")
+            logger.info(f"Execute Volume backup for container '{self.container.name}'. tar command: {tar_cmd}")
             cfg.backup_start_time = int(time.time())
 
-            tmp = docker.run("busybox:latest", tar_cmd, remove=True, volumes_from=container.name,
-                             volumes=volume_mapping, detach=False)
+            tmp = self._exec_docker_run(tar_cmd)
 
             cfg.backup_end_time = int(time.time())
             logger.debug(f"Return value running backup: {tmp}")
-            logger.info(f"Volume backup for container '{container.name}' successful. Duration: "
+            logger.info(f"Volume backup for container '{self.container.name}' successful. Duration: "
                         f"{calc_duration(cfg.backup_start_time, cfg.backup_end_time)}")
 
         except DockerException as err:
@@ -101,6 +183,28 @@ class Volume:
         except Exception as err:
             logger.exception(err)
             raise
+
+    def should_change_filesettings(self) -> tuple[bool, bool]:
+        """
+        determines if file ownership or file settings should change according .env settings.
+
+        :return: should_change_ownership (boolean), should_change_permissions (boolean)
+        """
+        should_change_ownership = False
+        should_change_permissions = False
+
+        if self.new_user_id or self.new_group_id:
+            logger.debug(f"new file ownership defined: user = {os.getenv('BACKUP_FILE_OWNER')}, "
+                         f"group = {os.getenv('BACKUP_FILE_GROUP')}")
+            should_change_ownership = True
+
+        if self.new_file_perms:
+            logger.debug(f"new file permissions defined: {os.getenv('BACKUP_FILE_PERMS')}")
+            should_change_permissions = True
+
+        logger.debug(f"should change filesettings: change owner: {should_change_ownership}, "
+                     f"change permission: {should_change_permissions}")
+        return should_change_ownership, should_change_permissions
 
 
 class Compression(Enum):

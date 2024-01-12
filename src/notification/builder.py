@@ -48,7 +48,7 @@ class Builder:
         return value
 
     @staticmethod
-    def build_mqtt_topic(container) -> str:
+    def build_mqtt_topic(container_name) -> str:
         try:
             topic = os.getenv("MQTT_TOPIC")
 
@@ -56,7 +56,7 @@ class Builder:
                 logger.error("MQTT_TOPIC undefined in .env file")
                 raise ValueError("MQTT_TOPIC undefined in .env file")
 
-            values = {"HOSTNAME": LocalHost.get_hostname().upper(), "CONTAINER": container}
+            values = {"HOSTNAME": LocalHost.get_hostname().upper(), "CONTAINER": container_name}
             topic = topic.format(**values)
 
             logger.debug(f"MQTT topic: {topic}")
