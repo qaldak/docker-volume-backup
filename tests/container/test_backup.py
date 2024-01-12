@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from python_on_whales import DockerException
 
-from container.backup import Volume, create_tar_cmd, __determine_compression_method
+from container.backup import Backup
 
 
 class MockContainer(TestCase):
@@ -22,7 +22,7 @@ class MockBackupDir(TestCase):
         self.path = "/backup"
 
 
-class TestVolume(TestCase):
+class TestBackup(TestCase):
 
     def test_run_backup_no_volumes(self):
         backup_dir = MockBackupDir()
@@ -31,7 +31,7 @@ class TestVolume(TestCase):
         container.has_docker_bindings = False
 
         with self.assertRaises(AssertionError) as err:
-            Volume.run_backup(container, backup_dir)
+            Backup(container=container, backup_dir=backup_dir).run_backup()
 
         self.assertEqual("No volumes to backup", str(err.exception))
 
@@ -40,7 +40,7 @@ class TestVolume(TestCase):
         backup_dir = MockBackupDir()
         container = MockContainer()
         with self.assertRaises(DockerException) as err:
-            Volume.run_backup(container, backup_dir)
+            Backup(container=container, backup_dir=backup_dir).run_backup()
         self.assertEqual(115, err.exception.return_code)
 
     @patch("src.container.backup.docker.run", return_value="Everything is allright")
@@ -48,7 +48,7 @@ class TestVolume(TestCase):
         backup_dir = MockBackupDir()
         container = MockContainer()
         with self.assertLogs("container.backup", level="INFO") as log:
-            Volume.run_backup(container, backup_dir)
+            Backup(container=container, backup_dir=backup_dir).run_backup()
             self.assertEqual([
                 "INFO:container.backup:Execute Volume backup for container 'foo_bar'. tar "
                 "command: ['tar', 'c', '-z', '-f', "
@@ -58,34 +58,42 @@ class TestVolume(TestCase):
                 'Duration: 0:00:00'],
                 log.output)
 
-
-@patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
-def test_create_tar_cmd_default(host):
-    container = MockContainer()
-    tar_cmd = create_tar_cmd(container)
-    assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz", "/foo/data", "/foo/config",
-            "/bar/log"] == tar_cmd
-
-
-@patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
-def test_create_tar_cmd_default_bz2(host):
-    with patch("container.backup.__determine_compression_method", return_value=("-j", ".bz2")):
+    @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
+    def test_create_tar_cmd_default(self, host):
         container = MockContainer()
-        tar_cmd = create_tar_cmd(container)
-        assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2", "/foo/data", "/foo/config",
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        tar_cmd = backup._create_tar_cmd()
+        assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz", "/foo/data", "/foo/config",
                 "/bar/log"] == tar_cmd
 
+    @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
+    def test_create_tar_cmd_default_bz2(self, host):
+        with patch("container.backup.Backup._determine_compression_method", return_value=("-j", ".bz2")):
+            container = MockContainer()
+            backup_dir = MockBackupDir()
+            backup = Backup(container=container, backup_dir=backup_dir)
+            tar_cmd = backup._create_tar_cmd()
+            assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2", "/foo/data", "/foo/config",
+                    "/bar/log"] == tar_cmd
 
-@patch("src.container.backup.os.getenv", return_value="GZIP")
-def test_determine_compression_method_gz(env):
-    assert ("-z", ".gz") == __determine_compression_method()
+    @patch("src.container.backup.os.getenv", return_value="GZIP")
+    def test_determine_compression_method_gz(self, env):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        assert ("-z", ".gz") == backup._determine_compression_method()
 
+    @patch("src.container.backup.os.getenv", return_value="BZIP2")
+    def test_determine_compression_method_bz2(self, env):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        assert ("-j", ".bz2") == backup._determine_compression_method()
 
-@patch("src.container.backup.os.getenv", return_value="BZIP2")
-def test_determine_compression_method_bz2(env):
-    assert ("-j", ".bz2") == __determine_compression_method()
-
-
-@patch("src.container.backup.os.getenv", return_value="")
-def test_determine_compression_method_default(env):
-    assert ("-z", ".gz") == __determine_compression_method()
+    @patch("src.container.backup.os.getenv", return_value="")
+    def test_determine_compression_method_default(self, env):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        assert ("-z", ".gz") == backup._determine_compression_method()

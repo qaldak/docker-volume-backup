@@ -16,19 +16,22 @@ If an error occurs, a message is sent to a defined Slack channel.
 
 ### Configuration (.env file)
 
-| Param              | Description                                                                                                                           |
-|:-------------------|:--------------------------------------------------------------------------------------------------------------------------------------|
-| BACKUP_DIR         | Target path to save the backup                                                                                                        |      
-| LOG_DIR            | Path for log directory                                                                                                                |
-| COMPRESSION_METHOD | (optional) Define the compression method for tar file. Possible values are: <br> GZIP (default, if undefined) <br> BZIP2              |
-| CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                            |
-| CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                                     |
-| SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                        |
-| SLACK_CHANNEL_ID   | Required if CHAT_SERVICE=SLACK                                                                                                        |
-| MQTT_ALERTING      | Define in which case a MQTT message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                       |
-| MQTT_BROKER        | Address of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                            |
-| MQTT_PORT          | Port of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                               |
-| MQTT_TOPIC         | Topic for MQTT message. Mandatory, if MQTT_ALERTING is enabled. <br> Wildcards {HOSTNAME} and {CONTAINER} will be replaced at runtime |
+| Param              | Description                                                                                                                                |
+|:-------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
+| BACKUP_DIR         | Target path to save the backup                                                                                                             |      
+| BACKUP_FILE_OWNER  | (optional) Define owner for created backup file. User id is needed, e.g. 1000 <br> Without this param, backup file created as root user.   |
+| BACKUP_FILE_GROUP  | (optional) Define group for created backup file. Group id is needed, e.g. 1000 <br> Without this param, backup file created as root group. |
+| BACKUP_FILE_PERMS  | (optional) Define permissions for created backup file, numeric mode only, e.g. 741                                                         |
+| LOG_DIR            | Path for log directory                                                                                                                     |
+| COMPRESSION_METHOD | (optional) Define the compression method for tar file. Possible values are: <br> GZIP (default, if undefined) <br> BZIP2                   |
+| CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                                 |
+| CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                                          |
+| SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                             |
+| SLACK_CHANNEL_ID   | Required if CHAT_SERVICE=SLACK                                                                                                             |
+| MQTT_ALERTING      | Define in which case a MQTT message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                            |
+| MQTT_BROKER        | Address of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                                 |
+| MQTT_PORT          | Port of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                                    |
+| MQTT_TOPIC         | Topic for MQTT message. Mandatory, if MQTT_ALERTING is enabled. <br> Wildcards {HOSTNAME} and {CONTAINER} will be replaced at runtime      |
 
 See example in [.env](.env)
 
