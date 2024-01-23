@@ -36,7 +36,7 @@ class Container:
         logger.debug(f"Container '{self.name}' not found")
         return False
 
-    def determine_volume(self) -> bool:
+    def determine_volume(self):
         logger.debug(f"determining volumes ...")
         try:
             mounts = json.loads(subprocess.check_output(["docker", "inspect", "-f", "{{json .Mounts}}", self.name],
@@ -78,15 +78,14 @@ class Container:
 
                 self.has_docker_bindings = True
 
+    def is_volume_available(self) -> bool:
+        self.determine_volume()
+
         if self.has_docker_volume or self.has_docker_bindings:
             logger.debug(f"Volumes found: {self.has_docker_volume}, Bindings found: {self.has_docker_bindings}")
             return True
 
         return False
-
-    def is_volume_available(self):
-        # Todo: calculate boolean instead simple return determine_volume()
-        return self.determine_volume()
 
     def stop(self):
         logger.debug("Stop docker container")
@@ -101,6 +100,7 @@ class Container:
 
         except python_on_whales.exceptions.NoSuchContainer as err:
             logger.error(f"Error on stopping Container '{self.name}'. {err}")
+            raise
 
         if not self._is_container_stopped():
             warning_msg = f"Container {self.name} not stopped properly. Continue backup anyway."

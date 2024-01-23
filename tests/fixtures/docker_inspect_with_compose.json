@@ -1,0 +1,278 @@
+{
+  "Id": "abc12345678",
+  "Created": "2024-12-24T21:47:53.443476863Z",
+  "Path": "/docker-entrypoint.sh",
+  "Args": [
+    "/usr/sbin/foo",
+    "-c",
+    "/foo/config/bar.conf"
+  ],
+  "State": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2024-12-24T21:49:10.365708204Z",
+    "FinishedAt": "2024-12-24T21:50:54.189029143Z"
+  },
+  "Image": "sha256:0c987654321cba",
+  "ResolvConfPath": "/var/lib/docker/containers/abc12345678/resolv.conf",
+  "HostnamePath": "/var/lib/docker/containers/abc12345678/hostname",
+  "HostsPath": "/var/lib/docker/containers/abc12345678/hosts",
+  "LogPath": "/var/lib/docker/containers/abc12345678/abc12345678-json.log",
+  "Name": "/foo_bar",
+  "RestartCount": 0,
+  "Driver": "btrfs",
+  "Platform": "linux",
+  "MountLabel": "",
+  "ProcessLabel": "",
+  "AppArmorProfile": "",
+  "ExecIDs": null,
+  "HostConfig": {
+    "Binds": [
+      "/docker/foo/bar.conf:/foo/config/bar.conf:rw"
+    ],
+    "ContainerIDFile": "",
+    "LogConfig": {
+      "Type": "json-file",
+      "Config": {
+        "max-file": "1",
+        "max-size": "1m",
+        "tag": "{{.Name}}"
+      }
+    },
+    "NetworkMode": "foo",
+    "PortBindings": {
+      "1883/tcp": [
+        {
+          "HostIp": "",
+          "HostPort": "1883"
+        }
+      ],
+      "9001/tcp": [
+        {
+          "HostIp": "",
+          "HostPort": "9001"
+        }
+      ]
+    },
+    "RestartPolicy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    },
+    "AutoRemove": false,
+    "VolumeDriver": "",
+    "VolumesFrom": null,
+    "ConsoleSize": [
+      0,
+      0
+    ],
+    "CapAdd": null,
+    "CapDrop": null,
+    "CgroupnsMode": "private",
+    "Dns": null,
+    "DnsOptions": null,
+    "DnsSearch": null,
+    "ExtraHosts": [],
+    "GroupAdd": null,
+    "IpcMode": "private",
+    "Cgroup": "",
+    "Links": null,
+    "OomScoreAdj": 0,
+    "PidMode": "",
+    "Privileged": false,
+    "PublishAllPorts": false,
+    "ReadonlyRootfs": false,
+    "SecurityOpt": null,
+    "UTSMode": "",
+    "UsernsMode": "",
+    "ShmSize": 67108864,
+    "Runtime": "runc",
+    "Isolation": "",
+    "CpuShares": 0,
+    "Memory": 0,
+    "NanoCpus": 0,
+    "CgroupParent": "",
+    "BlkioWeight": 0,
+    "BlkioWeightDevice": null,
+    "BlkioDeviceReadBps": null,
+    "BlkioDeviceWriteBps": null,
+    "BlkioDeviceReadIOps": null,
+    "BlkioDeviceWriteIOps": null,
+    "CpuPeriod": 0,
+    "CpuQuota": 0,
+    "CpuRealtimePeriod": 0,
+    "CpuRealtimeRuntime": 0,
+    "CpusetCpus": "",
+    "CpusetMems": "",
+    "Devices": null,
+    "DeviceCgroupRules": null,
+    "DeviceRequests": null,
+    "MemoryReservation": 0,
+    "MemorySwap": 0,
+    "MemorySwappiness": null,
+    "OomKillDisable": null,
+    "PidsLimit": null,
+    "Ulimits": null,
+    "CpuCount": 0,
+    "CpuPercent": 0,
+    "IOMaximumIOps": 0,
+    "IOMaximumBandwidth": 0,
+    "Mounts": [
+      {
+        "Type": "volume",
+        "Source": "foo_data",
+        "Target": "/foo/data",
+        "VolumeOptions": {}
+      },
+      {
+        "Type": "volume",
+        "Source": "foo_data",
+        "Target": "/foo/log",
+        "VolumeOptions": {}
+      }
+    ],
+    "MaskedPaths": [
+      "/proc/asound",
+      "/proc/acpi",
+      "/proc/kcore",
+      "/proc/keys",
+      "/proc/latency_stats",
+      "/proc/timer_list",
+      "/proc/timer_stats",
+      "/proc/sched_debug",
+      "/proc/scsi",
+      "/sys/firmware",
+      "/sys/devices/virtual/powercap"
+    ],
+    "ReadonlyPaths": [
+      "/proc/bus",
+      "/proc/fs",
+      "/proc/irq",
+      "/proc/sys",
+      "/proc/sysrq-trigger"
+    ]
+  },
+  "GraphDriver": {
+    "Data": null,
+    "Name": "btrfs"
+  },
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "foo_data",
+      "Source": "/var/lib/docker/volumes/foo_data/_data",
+      "Destination": "/foo/data",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "volume",
+      "Name": "foo_data",
+      "Source": "/var/lib/docker/volumes/foo_data/_data",
+      "Destination": "/foo/log",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    },
+    {
+      "Type": "bind",
+      "Source": "/docker/foo/bar.conf",
+      "Destination": "/foo/config/bar.conf",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ],
+  "Config": {
+    "Hostname": "ad4ddbf6de8f",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": false,
+    "AttachStdout": true,
+    "AttachStderr": true,
+    "ExposedPorts": {
+      "1883/tcp": {},
+      "9001/tcp": {}
+    },
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Cmd": [
+      "/usr/sbin/foo",
+      "-c",
+      "/foo/config/bar.conf"
+    ],
+    "Image": "foo-bar",
+    "Volumes": {
+      "/foo/data": {},
+      "/foo/log": {}
+    },
+    "WorkingDir": "",
+    "Entrypoint": [
+      "/docker-entrypoint.sh"
+    ],
+    "OnBuild": null,
+    "Labels": {
+      "com.some.service.enable": "true",
+      "com.some.service.monitor-only": "true",
+      "com.docker.compose.config-hash": "9e87654abc",
+      "com.docker.compose.container-number": "1",
+      "com.docker.compose.depends_on": "",
+      "com.docker.compose.image": "sha256:0c987654321cba",
+      "com.docker.compose.oneoff": "False",
+      "com.docker.compose.project": "foo",
+      "com.docker.compose.project.config_files": "/docker/foo/docker-compose.yml",
+      "com.docker.compose.project.working_dir": "/docker/foo",
+      "com.docker.compose.service": "foo",
+      "com.docker.compose.version": "2.21.0"
+    }
+  },
+  "NetworkSettings": {
+    "Bridge": "",
+    "HairpinMode": false,
+    "LinkLocalIPv6Address": "",
+    "LinkLocalIPv6PrefixLen": 0,
+    "Ports": {},
+    "SandboxKey": "/var/run/docker/netns/7f5b9625ddf2",
+    "SecondaryIPAddresses": null,
+    "SecondaryIPv6Addresses": null,
+    "EndpointID": "",
+    "Gateway": "",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "IPAddress": "",
+    "IPPrefixLen": 0,
+    "IPv6Gateway": "",
+    "MacAddress": "",
+    "Networks": {
+      "foo": {
+        "IPAMConfig": null,
+        "Links": null,
+        "Aliases": [
+          "foo_bar",
+          "foo",
+          "ad4ddbf6de8f"
+        ],
+        "NetworkID": "abc123",
+        "EndpointID": "",
+        "Gateway": "",
+        "IPAddress": "",
+        "IPPrefixLen": 0,
+        "IPv6Gateway": "",
+        "GlobalIPv6Address": "",
+        "GlobalIPv6PrefixLen": 0,
+        "MacAddress": "",
+        "DriverOpts": null
+      }
+    }
+  }
+}
