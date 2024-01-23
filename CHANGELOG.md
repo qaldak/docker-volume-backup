@@ -2,6 +2,14 @@
 
 
 
+## v0.8.3 (2024-01-23)
+
+### Refactor
+
+* refactor: is_volume_available
+test: add tests ([`6d51d0c`](https://github.com/qaldak/docker-volume-backup/commit/6d51d0c6d7526eca89d47d49874dcbadf6b479f6))
+
+
 ## v0.8.2 (2024-01-16)
 
 ### Chore
