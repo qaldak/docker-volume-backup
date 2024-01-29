@@ -2,6 +2,27 @@
 
 
 
+## v0.8.4 (2024-01-29)
+
+### Chore
+
+* chore: pip: bump python-dotenv from 1.0.0 to 1.0.1
+
+Bumps [python-dotenv](https://github.com/theskumar/python-dotenv) from 1.0.0 to 1.0.1.
+- [Release notes](https://github.com/theskumar/python-dotenv/releases)
+- [Changelog](https://github.com/theskumar/python-dotenv/blob/main/CHANGELOG.md)
+- [Commits](https://github.com/theskumar/python-dotenv/compare/v1.0.0...v1.0.1)
+
+---
+updated-dependencies:
+- dependency-name: python-dotenv
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`11e75a4`](https://github.com/qaldak/docker-volume-backup/commit/11e75a448432467815cc13a465c2b4511b69fa33))
+
+
 ## v0.8.3 (2024-01-23)
 
 ### Refactor
