@@ -1,5 +1,5 @@
 docker-py==1.10.6
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 python-on-whales==0.68.0
 slack_sdk==3.26.2
 urllib3<2 # Todo: check https://github.com/docker/docker-py/issues/3113
