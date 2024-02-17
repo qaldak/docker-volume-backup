@@ -2,6 +2,57 @@
 
 
 
+## v0.9.0 (2024-02-17)
+
+### Chore
+
+* chore: update actions ([`b2726ca`](https://github.com/qaldak/docker-volume-backup/commit/b2726ca39fbcbe52aae2b0a06e1f13c6b5778840))
+
+### Feature
+
+* feat: implement addition backup infos sent through MQTT ([`8346b00`](https://github.com/qaldak/docker-volume-backup/commit/8346b00aed1ac914bb411963afc84a041c6fbfe0))
+
+### Fix
+
+* fix: github actions: python tests ([`f3025c7`](https://github.com/qaldak/docker-volume-backup/commit/f3025c733162bc5db9798b1c005d58d740edb5a0))
+
+* fix: github actions: python tests ([`7936e5c`](https://github.com/qaldak/docker-volume-backup/commit/7936e5c72f39aee6248b7e7d3ceb810ee2d5a581))
+
+* fix: github actions: python tests ([`4e37244`](https://github.com/qaldak/docker-volume-backup/commit/4e372441f49e407a7b57b88fe266093aa085feea))
+
+* fix: github actions: python tests ([`038550b`](https://github.com/qaldak/docker-volume-backup/commit/038550b19aa07f0ce5f611ee1d5859ca09b55798))
+
+* fix: github actions: python tests ([`fe46487`](https://github.com/qaldak/docker-volume-backup/commit/fe46487e15d04b6734608301f7337317bab5db3d))
+
+* fix: github actions: python tests ([`cba6476`](https://github.com/qaldak/docker-volume-backup/commit/cba6476e766830acfa773198a1a595839ccdd3cf))
+
+* fix: github actions: python tests ([`6e4902f`](https://github.com/qaldak/docker-volume-backup/commit/6e4902f6577dd502f1d3b0963acec0831640d8e0))
+
+* fix: github actions: python tests ([`f2a43bd`](https://github.com/qaldak/docker-volume-backup/commit/f2a43bdf07db9cf7863d4d33f5954f7e2af3c0c2))
+
+* fix: github actions: python tests ([`0f30024`](https://github.com/qaldak/docker-volume-backup/commit/0f300244ea3ac1dc85d79359b85951669749667e))
+
+* fix: github actions: python tests ([`fdd59ef`](https://github.com/qaldak/docker-volume-backup/commit/fdd59ef43acf222314941d5738cc7cf01ee40b85))
+
+* fix: github actions: python tests ([`1687afd`](https://github.com/qaldak/docker-volume-backup/commit/1687afd2cb34c22c594f035129f0a035c151d8d1))
+
+* fix: github actions: python tests ([`c69305c`](https://github.com/qaldak/docker-volume-backup/commit/c69305c3a81a28971adc444c44d2ec2554fa44df))
+
+* fix: github actions: python tests ([`057b2a0`](https://github.com/qaldak/docker-volume-backup/commit/057b2a0ee0e2d506434209220df30e247199397c))
+
+* fix: github actions: python tests ([`ce17d5c`](https://github.com/qaldak/docker-volume-backup/commit/ce17d5c23fa99edbe0be2d906e27e5619898d178))
+
+* fix: github actions: python tests ([`1ce2cf7`](https://github.com/qaldak/docker-volume-backup/commit/1ce2cf76f93d96c13153a6a34de8d8251f97df9c))
+
+* fix: github actions: python tests ([`b83cc04`](https://github.com/qaldak/docker-volume-backup/commit/b83cc0456a32df79e15dfb336941c0da3001cd87))
+
+* fix: github actions: python tests ([`6349be2`](https://github.com/qaldak/docker-volume-backup/commit/6349be2fa854a25471521ec3f18604ef120584c5))
+
+* fix: undo ([`5eef5c8`](https://github.com/qaldak/docker-volume-backup/commit/5eef5c8fe54fe833e718e54390ac73d1beb65220))
+
+* fix: tests structure in github actions ([`817fe33`](https://github.com/qaldak/docker-volume-backup/commit/817fe33cdb2daf9213802c4eb48136fcb99dec0c))
+
+
 ## v0.8.4 (2024-01-29)
 
 ### Chore
