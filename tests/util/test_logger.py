@@ -6,7 +6,7 @@ from unittest.mock import patch
 from util.logger import Logger
 
 
-@unittest.skipIf(sys.version == "3.9", "Skip on Python 3.9")
+@unittest.skipIf(sys.version_info[1] == 9, "Skip on Python 3.9") # Todo: remove after support Python 3.9
 class TestLogger(unittest.TestCase):
 
     def test_missing_input_arg(self):
