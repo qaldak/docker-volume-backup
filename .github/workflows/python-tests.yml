@@ -45,10 +45,8 @@ jobs:
 
       # temporary only until distutils provided in Python 3.12
       - name: Install setuptools for Python3.12
-        with:
-          python-version: 3.12
         run: |
-          pip install setuptools
+          if [ "${{ matrix.python-version }}" == "3.12" ]; then pip install setuptools; fi
 
       - name: Install python project
         run: |
