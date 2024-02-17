@@ -55,9 +55,9 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Run Tests
-        working-directory: ./tests
+        working-directory: ./
         run: |
-          python -m unittest ./*/test_*.py
+          python -m unittest tests/*/test_*.py
 
     outputs:
       tests-results: ${{ steps.build.outputs.tests-results }}
