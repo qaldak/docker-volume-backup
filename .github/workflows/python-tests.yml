@@ -43,6 +43,13 @@ jobs:
           pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      # temporary only until distutils provided in Python 3.12
+      - name: Install setuptools for Python3.12
+        with:
+          python-version: 3.12
+        run: |
+          pip install setuptools
+
       - name: Install python project
         run: |
           python -m pip install .
