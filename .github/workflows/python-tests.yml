@@ -57,7 +57,7 @@ jobs:
       - name: Run Tests
         working-directory: ./tests
         run: |
-          python -m unittest tests/*/test_*.py
+          python -m unittest ./*/test_*.py
 
     outputs:
       tests-results: ${{ steps.build.outputs.tests-results }}
