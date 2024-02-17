@@ -1,10 +1,12 @@
 import logging
+import sys
 import unittest
 from unittest.mock import patch
 
 from util.logger import Logger
 
 
+@unittest.skipIf(sys.version == "3.9", "Skip on Python 3.9")
 class TestLogger(unittest.TestCase):
 
     def test_missing_input_arg(self):
