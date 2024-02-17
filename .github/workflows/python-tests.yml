@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest distutils
+          pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install python project
@@ -56,7 +56,8 @@ jobs:
 
       - name: Run Tests
         run: |
-          python -m unittest tests/*/test_*.py
+          # python -m unittest tests/*/test_*.py
+          pytest tests/
 
     outputs:
       tests-results: ${{ steps.build.outputs.tests-results }}
