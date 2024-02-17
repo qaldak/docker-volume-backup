@@ -53,11 +53,11 @@ class TestAccessorEnvSettings(TestCase):
                 pass
 
     def test_validate_env_settings(self):
-        load_dotenv("fixtures/env_files/.env_ok")
+        load_dotenv("tests/fixtures/env_files/.env_ok")
         self.assertIsNone(EnvSettings().validate(), "Validate correct env settings failed")
 
     def test_validate_env_settings_chat_error(self):
-        load_dotenv("fixtures/env_files/.env_chat_error")
+        load_dotenv("tests/fixtures/env_files/.env_chat_error")
         with self.assertRaises(ValueError) as err:
             EnvSettings().validate()
 
@@ -65,7 +65,7 @@ class TestAccessorEnvSettings(TestCase):
                          "Chat settings error not raised")
 
     def test_validate_env_settings_slack_error(self):
-        load_dotenv("fixtures/env_files/.env_chat_slack_error")
+        load_dotenv("tests/fixtures/env_files/.env_chat_slack_error")
         with self.assertRaises(ValueError) as err:
             EnvSettings().validate()
 
@@ -73,7 +73,7 @@ class TestAccessorEnvSettings(TestCase):
                          str(err.exception), "Slack settings error not raised")
 
     def test_validate_env_settings_mqtt_error(self):
-        load_dotenv("fixtures/env_files/.env_mqtt_error")
+        load_dotenv("tests/fixtures/env_files/.env_mqtt_error")
         with self.assertRaises(ValueError) as err:
             EnvSettings().validate()
 

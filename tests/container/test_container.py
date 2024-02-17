@@ -18,7 +18,7 @@ class TestContainer(TestCase):
         container = Container("Foo")
         self.assertFalse(container.exists(), "Container not exist! Expected: 'False'")
 
-    @patch("subprocess.check_output", return_value=open("fixtures/docker_inspect_volume_only.output").read())
+    @patch("subprocess.check_output", return_value=open("tests/fixtures/docker_inspect_volume_only.output").read())
     def test_determine_volumes(self, mock_check_output):
         container = Container("Foo")
         container.determine_volume()
@@ -27,7 +27,7 @@ class TestContainer(TestCase):
         self.assertFalse(container.has_docker_bindings, "Unexpected container bindings found!")
         self.assertEqual(container.docker_bindings, [], "Unexpected container bindings found!")
 
-    @patch("subprocess.check_output", return_value=open("fixtures/docker_inspect_multiple_volumes.output").read())
+    @patch("subprocess.check_output", return_value=open("tests/fixtures/docker_inspect_multiple_volumes.output").read())
     def test_determine_multiple_volumes(self, mock_check_output):
         container = Container("Foo")
         container.determine_volume()
@@ -38,7 +38,7 @@ class TestContainer(TestCase):
         self.assertEqual(container.docker_bindings, ["/opt/foo/bar", "/var/log"],
                          "Binding destinations not correct!")
 
-    @patch("subprocess.check_output", return_value=open("fixtures/docker_inspect_invalid_output.output").read())
+    @patch("subprocess.check_output", return_value=open("tests/fixtures/docker_inspect_invalid_output.output").read())
     def test_determine_invalid_output(self, mock_check_output):
         container = Container("Foo")
         with self.assertRaises(json.JSONDecodeError) as err:
@@ -60,7 +60,7 @@ class TestContainer(TestCase):
         container = Container("foo")
 
         # Mocking the return value
-        with open("fixtures/docker_inspect_with_compose.json") as file:
+        with open("tests/fixtures/docker_inspect_with_compose.json") as file:
             mock_inspect_container.return_value = json.load(file)
 
         self.assertEqual((True, "/docker/foo/docker-compose.yml"), container._is_container_started_by_compose())
@@ -70,7 +70,7 @@ class TestContainer(TestCase):
         container = Container("foo")
 
         # Mocking the return value
-        with open("fixtures/docker_inspect_without_compose.json") as file:
+        with open("tests/fixtures/docker_inspect_without_compose.json") as file:
             mock_inspect_container.return_value = json.load(file)
 
         self.assertEqual((False, None), container._is_container_started_by_compose())
