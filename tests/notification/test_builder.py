@@ -71,12 +71,16 @@ class TestBuilder(TestCase):
     def test_build_mqtt_msg(self, host, time):
         cfg.job_start_time = 1924945200
         cfg.job_end_time = 1924952401
+        cfg.backup_file = "myHost-Foo-backup.tar.gz"
+        cfg.backup_size = 987654321
 
         mqtt_msg = Builder.build_mqtt_msg("Foo")
         self.assertEqual(
             {"time": 4102398000,
              "host": "myHost",
              "container": "Foo",
+             "backupFile": "myHost-Foo-backup.tar.gz",
+             "backupSize": 987654321,
              "duration": "2:00:01",
              "hasError": False,
              "msg": "Docker volume backup successful"},

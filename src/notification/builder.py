@@ -38,6 +38,8 @@ class Builder:
             "time": int(time.time()),
             "host": LocalHost.get_hostname(),
             "container": container_name,
+            "backupFile": cfg.backup_file,
+            "backupSize": cfg.backup_size,
             "duration": str(calc_duration(cfg.job_start_time, cfg.job_end_time)),
             "hasError": cfg.hasError,
             "msg": mqtt_msg
