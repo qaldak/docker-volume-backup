@@ -43,8 +43,10 @@ class TestBackup(TestCase):
             Backup(container=container, backup_dir=backup_dir).run_backup()
         self.assertEqual(115, err.exception.return_code)
 
+    @patch("src.container.backup.os.path.getsize", return_value=987654321)
+    @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
     @patch("src.container.backup.docker.run", return_value="Everything is allright")
-    def test_run_backup_successful(self, tmp):
+    def test_run_backup_successful(self, tmp, hostname, filesize):
         backup_dir = MockBackupDir()
         container = MockContainer()
         with self.assertLogs("container.backup", level="INFO") as log:
@@ -52,10 +54,10 @@ class TestBackup(TestCase):
             self.assertEqual([
                 "INFO:container.backup:Execute Volume backup for container 'foo_bar'. tar "
                 "command: ['tar', 'c', '-z', '-f', "
-                "'/backup/fedora-foo_bar-volume-backup.tar.gz', '/foo/data', '/foo/config', "
+                "'/backup/groot-foo_bar-volume-backup.tar.gz', '/foo/data', '/foo/config', "
                 "'/bar/log']",
                 "INFO:container.backup:Volume backup for container 'foo_bar' successful. "
-                'Duration: 0:00:00'],
+                'Duration: 0:00:00, Backup size: 987654321'],
                 log.output)
 
     @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
@@ -129,9 +131,23 @@ class TestBackup(TestCase):
         self.assertEqual((False, False), backup.should_change_filesettings())
 
     @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
-    @patch("src.container.backup.Backup._determine_compression_method", return_value=("-z", ".gz"))
-    def test_get_backup_filename(self, host, compression):
+    def test_get_backup_filepath(self, host):
         container = MockContainer()
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
-        self.assertEqual("/backup/groot-foo_bar-volume-backup.tar.gz", backup._get_backup_filename())
+        self.assertEqual("/backup/groot-foo_bar-volume-backup.tar.gz", backup._get_backup_filepath())
+
+    @patch("src.container.backup.LocalHost.get_hostname", return_value="groot")
+    def test_get_backup_filename(self, host):
+        with patch("container.backup.Backup._determine_compression_method", return_value=("-j", ".bz2")):
+            container = MockContainer()
+            backup_dir = MockBackupDir()
+            backup = Backup(container=container, backup_dir=backup_dir)
+            self.assertEqual("groot-foo_bar-volume-backup.tar.bz2", backup._get_backup_filename())
+
+    @patch("src.container.backup.os.path.getsize", return_value=987654321)
+    def test_get_backup_file_size(self, filesize):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertEqual(987654321, backup._get_backup_file_size())

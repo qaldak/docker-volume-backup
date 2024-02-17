@@ -31,9 +31,9 @@ jobs:
         python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -42,6 +42,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # temporary only until distutils provided in Python 3.12
+      - name: Install setuptools for Python3.12
+        run: |
+          if [ "${{ matrix.python-version }}" == "3.12" ]; then pip install setuptools; fi
+
+      - name: Install python project
+        run: |
+          python -m pip install .
 
       - name: Lint with flake8
         run: |
@@ -52,7 +61,8 @@ jobs:
 
       - name: Run Tests
         run: |
-          python -m unittest tests/test_*.py
+          # python -m unittest tests/*/test_*.py
+          pytest tests/ --doctest-modules --junitxml=tests/junit/test-results-${{ matrix.python-version }}.xml
 
     outputs:
       tests-results: ${{ steps.build.outputs.tests-results }}

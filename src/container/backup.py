@@ -22,7 +22,7 @@ class Backup:
         """
         self.backup_dir = backup_dir
         self.container = container
-        self.backup_file = self._get_backup_filename()
+        self.backup_file = self._get_backup_filepath()
         self.new_user_id = os.getenv("BACKUP_FILE_OWNER")
         self.new_group_id = os.getenv("BACKUP_FILE_GROUP")
         self.new_file_perms = os.getenv("BACKUP_FILE_PERMS")
@@ -64,10 +64,10 @@ class Backup:
         """
 
         cmp_method, file_ext = self._determine_compression_method()
-        backup_filename = self._get_backup_filename()
+        backup_filepath = self._get_backup_filepath()
 
         tar_cmd = ["tar", "c", f"{cmp_method}", "-f",
-                   f"{backup_filename}"]
+                   f"{backup_filepath}"]
 
         for volume in self.container.docker_volumes:
             tar_cmd.append(f"{volume}")
@@ -87,12 +87,29 @@ class Backup:
 
     def _get_backup_filename(self) -> str:
         """
-        calc backup filename with correct file extension according env settings
+        calc backup filename with correct extension according env settings
 
-        :return: string of backup filename including path
+        :return: string of backup file name
         """
         cmp_method, file_ext = self._determine_compression_method()
-        return f"/backup/{LocalHost.get_hostname()}-{self.container.name}-volume-backup.tar{file_ext}"
+        backup_file = f"{LocalHost.get_hostname()}-{self.container.name}-volume-backup.tar{file_ext}"
+
+        cfg.backup_file = backup_file
+        return backup_file
+
+    def _get_backup_filepath(self) -> str:
+        """
+        calc backup file path
+
+        :return: string of backup file path
+        """
+        return f"/backup/{self._get_backup_filename()}"
+
+    def _get_backup_file_size(self) -> int:
+        """
+        :return: size backup file in bytes
+        """
+        return os.path.getsize(self._get_backup_filepath())
 
     def change_file_ownership(self):
         """
@@ -172,10 +189,12 @@ class Backup:
 
             tmp = self._exec_docker_run(tar_cmd)
 
+            cfg.backup_size = self._get_backup_file_size()
             cfg.backup_end_time = int(time.time())
             logger.debug(f"Return value running backup: {tmp}")
             logger.info(f"Volume backup for container '{self.container.name}' successful. Duration: "
-                        f"{calc_duration(cfg.backup_start_time, cfg.backup_end_time)}")
+                        f"{calc_duration(cfg.backup_start_time, cfg.backup_end_time)}, "
+                        f"Backup size: {cfg.backup_size}")
 
         except DockerException as err:
             logger.exception(err)
