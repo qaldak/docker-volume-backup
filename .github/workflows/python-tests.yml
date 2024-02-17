@@ -57,7 +57,7 @@ jobs:
       - name: Run Tests
         run: |
           # python -m unittest tests/*/test_*.py
-          pytest tests/
+          pytest tests/ --doctest-modules --junitxml=junit/test-results-${{ matrix.python-version }}.xml
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v4
