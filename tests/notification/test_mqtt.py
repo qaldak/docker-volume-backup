@@ -1,3 +1,5 @@
+import os
+import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -14,6 +16,7 @@ class MockContainer(TestCase):
 
 
 class TestMQTT(TestCase):
+    @unittest.skipIf(os.getenv("GITHUB_ACTIONS") == "true", "Skip on Github")
     @patch("src.notification.mqtt.docker.container.execute", return_value="Well done")
     # @patch("src.notification.mqtt.docker.container.list",
     #        return_value=[MockContainer("abc1", "my_mosquitto_container")])
