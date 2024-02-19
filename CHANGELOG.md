@@ -2,6 +2,27 @@
 
 
 
+## v0.9.2 (2024-02-19)
+
+### Chore
+
+* chore: pip: bump slack-sdk from 3.26.2 to 3.27.0
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.2 to 3.27.0.
+- [Release notes](https://github.com/slackapi/python-slack-sdk/releases)
+- [Changelog](https://github.com/slackapi/python-slack-sdk/blob/main/docs-v2/changelog.html)
+- [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.26.2...v3.27.0)
+
+---
+updated-dependencies:
+- dependency-name: slack-sdk
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`5addd6f`](https://github.com/qaldak/docker-volume-backup/commit/5addd6f3d45bf42a9131ab007ad97db6ef611931))
+
+
 ## v0.9.1 (2024-02-19)
 
 ### Chore
