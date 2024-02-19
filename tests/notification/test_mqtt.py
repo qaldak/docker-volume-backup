@@ -3,9 +3,8 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
-from python_on_whales import DockerException
-
 from notification.mqtt import MQTT
+from python_on_whales import DockerException
 
 
 class MockContainer(TestCase):
@@ -18,12 +17,12 @@ class MockContainer(TestCase):
 class TestMQTT(TestCase):
     @unittest.skipIf(os.getenv("GITHUB_ACTIONS") == "true", "Skip on Github")
     @patch("src.notification.mqtt.docker.container.execute", return_value="Well done")
-    # @patch("src.notification.mqtt.docker.container.list",
-    #        return_value=[MockContainer("abc1", "my_mosquitto_container")])
+    @patch("src.notification.mqtt.docker.container.list",
+           return_value=[MockContainer("abc1", "my_mosquitto_container")])
     @patch("src.notification.mqtt.MQTT.determine_mqtt_container", return_value="mock_container")
     @patch.dict("src.notification.mqtt.os.environ",
-                {"MQTT_BROKER": "jarvis2.kng.home", "MQTT_PORT": "1883"})
-    def test_send_msg_running_container(self, mock_container, mock_exists):
+                {"MQTT_BROKER": "my.mqtt.broker", "MQTT_PORT": "1883"})
+    def test_send_msg_running_container(self, mock_container, mock_docker_container, mock_exists):
         self.assertTrue(MQTT("testing/topic", "my message from running container").send_msg(),
                         "Sending MQTT with running container failed")
 

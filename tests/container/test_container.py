@@ -10,7 +10,7 @@ class TestContainer(TestCase):
 
     @patch("src.container.container.docker.container.exists", return_value=True)
     @patch("src.container.container.docker.container.inspect", return_value="00001234")
-    def test_container_valid(self, mock_container_state, mock_container_id):
+    def test_container_valid(self, mock_container_id, mock_container_state):
         container = Container("Foo")
         self.assertTrue(container.exists(), "Container not exist! Expected: 'True'")
 
