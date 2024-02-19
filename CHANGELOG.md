@@ -2,6 +2,13 @@
 
 
 
+## v0.9.3 (2024-02-19)
+
+### Refactor
+
+* refactor: fix tests ([`d57796e`](https://github.com/qaldak/docker-volume-backup/commit/d57796ef09812ecfa5ae1cf2cc65bee0275c24b9))
+
+
 ## v0.9.2 (2024-02-19)
 
 ### Chore
