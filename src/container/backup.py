@@ -111,7 +111,13 @@ class Backup:
         """
         backup_file_host = f"{self.backup_dir.path}/{self._get_backup_filename()}"
         logger.debug(f"Backup file size on host: {backup_file_host}, size: {os.path.getsize(backup_file_host)}")
-        return os.path.getsize(backup_file_host)
+        try:
+            return os.path.getsize(backup_file_host)
+
+        except FileNotFoundError as err:
+            logger.error(f"Not able to determine file size. Backup file not found: {backup_file_host}, Error: {err}")
+            cfg.hasError = True
+            cfg.errorMsg = err
 
     def change_file_ownership(self):
         """
