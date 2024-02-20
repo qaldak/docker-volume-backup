@@ -2,6 +2,13 @@
 
 
 
+## v0.9.4 (2024-02-20)
+
+### Fix
+
+* fix: determine backup file size ([`543bdc9`](https://github.com/qaldak/docker-volume-backup/commit/543bdc9dd1ddcd49910a7b39131fca533f1899e1))
+
+
 ## v0.9.3 (2024-02-19)
 
 ### Refactor
