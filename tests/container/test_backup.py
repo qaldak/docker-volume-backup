@@ -19,7 +19,7 @@ class MockContainer(TestCase):
 class MockBackupDir(TestCase):
     def __init__(self) -> None:
         super().__init__()
-        self.path = "/backup"
+        self.path = "/foo/backup"
 
 
 class TestBackup(TestCase):
