@@ -107,9 +107,11 @@ class Backup:
 
     def _get_backup_file_size(self) -> int:
         """
-        :return: size backup file in bytes
+        :return: size of backup file in bytes (from host)
         """
-        return os.path.getsize(self._get_backup_filepath())
+        backup_file_host = f"{self.backup_dir.path}/{self._get_backup_filename()}"
+        logger.debug(f"Backup file size on host: {backup_file_host}, size: {os.path.getsize(backup_file_host)}")
+        return os.path.getsize(backup_file_host)
 
     def change_file_ownership(self):
         """
