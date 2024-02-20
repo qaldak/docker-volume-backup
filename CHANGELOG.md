@@ -2,6 +2,13 @@
 
 
 
+## v0.9.5 (2024-02-20)
+
+### Refactor
+
+* refactor: stabilize ([`9a80651`](https://github.com/qaldak/docker-volume-backup/commit/9a806519456ddcec83463bd9e61d5a21dde046a7))
+
+
 ## v0.9.4 (2024-02-20)
 
 ### Fix
