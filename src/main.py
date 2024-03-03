@@ -14,7 +14,7 @@ from util.logger import Logger
 logger = logging.getLogger(__name__)
 
 
-def main(path, restart):
+def create_backup(path, restart):
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
     cfg.job_start_time = int(time.time())
@@ -91,4 +91,4 @@ if __name__ == "__main__":
 
     logger.debug(f"Start volume backup with args '{args}'")
 
-    main(args.path, args.restart)
+    create_backup(args.path, args.restart)

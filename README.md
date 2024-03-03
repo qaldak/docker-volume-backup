@@ -5,7 +5,9 @@
 ## Description
 
 Creates a backup of a Docker volume to a target path.
-If an error occurs, a message is sent to a defined Slack channel.
+If an error occurs, a message is sent to a defined Slack channel and/or MQTT broker. </br>
+With option "--restore", it restores from existing volume backup file to a Docker volume. If Docker volume not already
+exist, new Docker volume will be created (e.g. for restoring on another host).
 
 ## Getting started
 
@@ -39,11 +41,22 @@ See example in [.env](.env)
 
 #### Command line
 
+__create backup__
+
 `python3 -m src.main <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
 
 optional parameter:
 
 * "-p" set backup directory path, e.g. "-p /backup/container/foo"
+* "-r" stops container for backup and restart after work
+* "--debug" set loglevel to DEBUG
+
+__restore backup__
+
+`python3 -m src.main --restore <path to backup file> <Docker container name> [-r|--restart] [--debug]`
+
+optional parameter:
+
 * "-r" stops container for backup and restart after work
 * "--debug" set loglevel to DEBUG
 

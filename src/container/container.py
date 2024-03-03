@@ -8,10 +8,11 @@ from json import JSONDecodeError
 
 import docker as docker_cli
 import python_on_whales.exceptions
-from python_on_whales import docker, DockerClient
+from python_on_whales import DockerClient
 
 from util import cfg
 
+docker = DockerClient()
 logger = logging.getLogger(__name__)
 
 
