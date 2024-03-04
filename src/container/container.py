@@ -8,7 +8,7 @@ from json import JSONDecodeError
 
 import docker as docker_cli
 import python_on_whales.exceptions
-from python_on_whales import docker
+from python_on_whales import docker, DockerClient
 
 from util import cfg
 
