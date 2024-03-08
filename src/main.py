@@ -78,6 +78,15 @@ def create_backup(path, restart):
         logger.info(f"Volume backup done.")
 
 
+def restore_backup(docker_volume, target_path, backup_file):
+    print(f"Starting restore Docker volume")
+    print(f"docker_volume: {docker_volume}, target_path: {target_path}, backup_file: {backup_file}")
+
+    # Todo: check container is running. No: go, Yes: stop
+    # Todo: check docker volume exists. Yes: go, No: create
+    # Todo: check backup_file exists. Yes: go, No: Error
+
+
 if __name__ == "__main__":
     # load .env
     load_dotenv()
@@ -91,4 +100,7 @@ if __name__ == "__main__":
 
     logger.debug(f"Start volume backup with args '{args}'")
 
-    create_backup(args.path, args.restart)
+    if args.restore:
+        restore_backup(args.dockervolume, args.targetpath, args.backupfile)
+    else:
+        create_backup(args.path, args.restart)

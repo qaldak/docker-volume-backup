@@ -32,7 +32,15 @@ class TestArgParser(TestCase):
         with self.assertRaises(ValueError) as err:
             args = ArgParser.parse_cli_args()
         self.assertEqual(str(err.exception),
-                         "Parameters --backupfile and --volume only available in combination with --restore")
+                         "Parameters --backupfile, --targetpath or --volume only available in combination with --restore")
+
+    def test_validate_args_failed_backup_targetpath(self):
+        sys.argv = ["main.py", "foo_bar", "--restart", "--targetpath", "/foo/bar", "--debug"]
+
+        with self.assertRaises(ValueError) as err:
+            args = ArgParser.parse_cli_args()
+        self.assertEqual(str(err.exception),
+                         "Parameters --backupfile, --targetpath or --volume only available in combination with --restore")
 
     def test_validate_args_failed_backup_backupfile(self):
         sys.argv = ["main.py", "foo_bar", "--restart", "--backupfile", "/foo/bar/backup.tar.gz", "--debug"]
@@ -40,7 +48,7 @@ class TestArgParser(TestCase):
         with self.assertRaises(ValueError) as err:
             args = ArgParser.parse_cli_args()
         self.assertEqual(str(err.exception),
-                         "Parameters --backupfile and --volume only available in combination with --restore")
+                         "Parameters --backupfile, --targetpath or --volume only available in combination with --restore")
 
     def test_validate_args_failed_restore_path(self):
         sys.argv = ["main.py", "foo_bar", "-p", "/foo/bar", "--restart", "--restore", "--debug"]
@@ -64,23 +72,34 @@ class TestArgParser(TestCase):
         with self.assertRaises(ValueError) as err:
             args = ArgParser.parse_cli_args()
         self.assertEqual(str(err.exception),
-                         "Parameter --backupfile and --volume are mandatory in combination with --restore")
+                         "Parameter --backupfile, --targetpath and --volume are mandatory in combination with --restore")
 
-    def test_validate_args_failed_restore_volume(self):
-        sys.argv = ["main.py", "foo_bar", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "--debug"]
+    def test_validate_args_failed_restore_targetpath(self):
+        sys.argv = ["main.py", "foo_bar", "--restore", "--volume", "fooData", "--backupfile",
+                    "/foo/bar/backup.tar.gz" "--debug"]
 
         with self.assertRaises(ValueError) as err:
             args = ArgParser.parse_cli_args()
         self.assertEqual(str(err.exception),
-                         "Parameter --backupfile and --volume are mandatory in combination with --restore")
+                         "Parameter --backupfile, --targetpath and --volume are mandatory in combination with --restore")
+
+    def test_validate_args_failed_restore_volume(self):
+        sys.argv = ["main.py", "foo_bar", "--restore", "-tp", "/foo/bar", "--backupfile", "/foo/bar/backup.tar.gz",
+                    "--debug"]
+
+        with self.assertRaises(ValueError) as err:
+            args = ArgParser.parse_cli_args()
+        self.assertEqual(str(err.exception),
+                         "Parameter --backupfile, --targetpath and --volume are mandatory in combination with --restore")
 
     def test_parse_all_args_for_restore(self):
-        sys.argv = ["main.py", "foo_bar", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "--volume",
-                    "foobarData", "--debug"]
+        sys.argv = ["main.py", "foo_bar", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/data/foo",
+                    "--volume", "foobarData", "--debug"]
 
         args = ArgParser.parse_cli_args()
         self.assertEqual(args.container, "foo_bar", "Error: container param not matched")
         self.assertTrue(args.restore, "Error: restore param not matched")
         self.assertEqual(args.backupfile, "/foo/bar/backup.tar.gz", "Error: backupfile param not matched")
-        self.assertEqual(args.targetvolume, "foobarData", "Error: volume param not matched")
+        self.assertEqual(args.dockervolume, "foobarData", "Error: volume param not matched")
+        self.assertEqual(args.targetpath, "/data/foo", "Error: targetpath param not mached")
         self.assertEqual(args.loglevel, logging.DEBUG, "Error: loglevel not matched")

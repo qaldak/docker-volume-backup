@@ -15,8 +15,10 @@ class ArgParser:
         parser.add_argument("--restore", action="store_true", dest="restore",
                             help="Restore backup to Docker volume. Needs parameter --backupfile and --volume")
         parser.add_argument("--backupfile", help="Path and name of backup file to restore")
-        parser.add_argument("--volume", dest="targetvolume",
-                            help="Target volume to restore backup")
+        parser.add_argument("-dv", "--volume", dest="dockervolume",
+                            help="Docker volume to restore backup")
+        parser.add_argument("-tp", "--targetpath", dest="targetpath",
+                            help="Target file path to restore backup")
         parser.add_argument("--debug", action="store_const", dest="loglevel", const=logging.DEBUG,
                             default=logging.INFO,
                             help="Set loglevel to DEBUG")
@@ -32,8 +34,10 @@ class ArgParser:
             if args.path or args.restart:
                 raise ValueError("Parameter --path and --restart not available in combination with --restore")
 
-            if not (args.backupfile and args.targetvolume):
-                raise ValueError("Parameter --backupfile and --volume are mandatory in combination with --restore")
+            if not (args.backupfile and args.targetpath and args.dockervolume):
+                raise ValueError(
+                    "Parameter --backupfile, --targetpath and --volume are mandatory in combination with --restore")
 
-        if not args.restore and (args.targetvolume or args.backupfile):
-            raise ValueError("Parameters --backupfile and --volume only available in combination with --restore")
+        if not args.restore and (args.dockervolume or args.targetpath or args.backupfile):
+            raise ValueError(
+                "Parameters --backupfile, --targetpath or --volume only available in combination with --restore")
