@@ -2,6 +2,47 @@
 
 
 
+## v0.9.7 (2024-03-11)
+
+### Chore
+
+* chore: pip: bump python-on-whales from 0.69.0 to 0.70.0
+
+Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales) from 0.69.0 to 0.70.0.
+- [Release notes](https://github.com/gabrieldemarmiesse/python-on-whales/releases)
+- [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.69.0...v0.70.0)
+
+---
+updated-dependencies:
+- dependency-name: python-on-whales
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`4cea5af`](https://github.com/qaldak/docker-volume-backup/commit/4cea5af088c74d92b80582b5e821679a033f4e56))
+
+
+## v0.9.6 (2024-03-04)
+
+### Chore
+
+* chore: pip: bump slack-sdk from 3.27.0 to 3.27.1
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.0 to 3.27.1.
+- [Release notes](https://github.com/slackapi/python-slack-sdk/releases)
+- [Changelog](https://github.com/slackapi/python-slack-sdk/blob/main/docs-v2/changelog.html)
+- [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.27.0...v3.27.1)
+
+---
+updated-dependencies:
+- dependency-name: slack-sdk
+  dependency-type: direct:production
+  update-type: version-update:semver-patch
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`f5d6b45`](https://github.com/qaldak/docker-volume-backup/commit/f5d6b45875a4012404181d690e62a0e3ce678f89))
+
+
 ## v0.9.5 (2024-02-20)
 
 ### Refactor
