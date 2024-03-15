@@ -1,14 +1,13 @@
 import logging
 
-from python_on_whales import DockerClient, DockerException
+from python_on_whales import docker, DockerException
 
-docker = DockerClient()
 logger = logging.getLogger(__name__)
 
 
 class Volume:
     def __init__(self, container_name):
-        self.name = container_name + "Volume"  # Todo: check
+        self.name = container_name + "_data"  # Todo: check
 
     def exists(self) -> bool:
         try:
@@ -19,3 +18,11 @@ class Volume:
 
         except DockerException as err:
             logger.error("Foo", err)
+
+    def create(self) -> object:
+        try:
+            return docker.volume.create(volume_name=self.name)
+
+        except DockerException as err:
+            logger.error(err)
+            raise
