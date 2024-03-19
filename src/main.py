@@ -82,7 +82,7 @@ def create_backup(path, restart):
 
 
 def restore_backup(docker_volume, target_path, backup_file):
-    print(f"Starting restore Docker volume")
+    print(f"Starting restore process ...")
     print(f"docker_volume: {docker_volume}, target_path: {target_path}, backup_file: {backup_file}")
 
     if not os.path.exists(backup_file):
@@ -99,8 +99,12 @@ def restore_backup(docker_volume, target_path, backup_file):
         new_volume = volume.create()
         logger.info(f"New Docker volume created: {new_volume}")
 
-    print("restore")
-    Recovery().restore_volume_backup()
+    print(f"Starting restore Docker volume")
+    recovery = Recovery(docker_volume=docker_volume, target_path=target_path, backup_file=backup_file)
+    print(f"Docker volume restored. Comparing restored files")
+    recovery.restore_volume_backup()
+    print(f"Compare successful.")
+    # recovery.check_restore()
 
     # Todo: Features
     # Todo: printing info to console: stop container, docker volume already exists: overwrite?
@@ -114,8 +118,10 @@ if __name__ == "__main__":
     args = ArgParser.parse_cli_args()
 
     # initialize objects
-    Logger.init_logger(args.loglevel, args.container)
-    if args.container:
+    log_identifier = args.container if args.backup else "restore-" + args.dockervolume
+    Logger.init_logger(args.loglevel, log_identifier)
+
+    if args.backup:
         container = Container(args.container)
 
     logger.debug(f"Start volume backup with args '{args}'")

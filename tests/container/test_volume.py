@@ -74,6 +74,11 @@ class TestRecovery(TestCase):
     def test_recovery_create_backup_cmd(self):
         recovery = Recovery(backup_file="/backup/path/foo.xyz.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")
-        self.assertEqual(recovery._create_backup_cmd(),
+        self.assertEqual(recovery._create_tar_cmd(),
                          ["tar", "-x", "-z", "-v", "-f", "/backup/path/foo.xyz.gz", "--strip-components=3", "-C",
                           "/foo/bar/baz"], "Backup command failed")
+
+    def test_create_list_cmd(self):
+        recovery = Recovery(backup_file="/backup/path/foo.xyz.gz", docker_volume="foo_data",
+                            target_path="/foo/bar/baz")
+        recovery._create_list_cmd()

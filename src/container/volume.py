@@ -62,17 +62,39 @@ class Recovery:
     def __init__(self, backup_file, docker_volume, target_path):
         self.backup_file = backup_file
         self.backup_path = os.path.dirname(backup_file)
+        self.container_backup_file = os.path.basename(backup_file)
         self.docker_volume = docker_volume
         self.target_path = target_path
 
     def restore_volume_backup(self):
+        try:
+            restore_cmd = self._create_tar_cmd()
+            print(restore_cmd)
+
+            self._exec_docker_run(restore_cmd)
+
+        except DockerException as err:
+            logger.exception(err)
+            raise
+
+    def check_recovery(self):
         pass
 
-    def _create_backup_cmd(self) -> list[str]:
+    def _create_list_cmd(self):
+        # path ermitteln: nur erster /
+        base_dir = os.path.split(self.target_path)
+        print(base_dir)
+        # find /path/to/check -mindepth 1 | wc - l
+
+    def _create_tar_list_cmd(self) -> list[str]:
+        # t?vf /backup/fedora-mosquitto_fedora-volume-backup.tar.gz | wc -l
+        pass
+
+    def _create_tar_cmd(self) -> list[str]:
         cmp_method = self._determine_cmp_method()
-        backup_cmd = ["tar", "-x", f"{cmp_method}", "-v", "-f", f"{self.backup_file}",
-                      f"--strip-components={self._determine_strip_length()}", "-C", f"{self.target_path}"]
-        return backup_cmd
+        tar_cmd = ["tar", "-x", f"{cmp_method}", "-v", "-f", f"/backup/{self.container_backup_file}",
+                   f"--strip-components={self._determine_strip_length()}", "-C", f"{self.target_path}"]
+        return tar_cmd
 
     def _determine_strip_length(self) -> int:
         return str(self.target_path).count("/")
@@ -82,6 +104,7 @@ class Recovery:
         return Compression[FileExtension(file_extension).name].value  # Todo: move to accessor?
 
     def _exec_docker_run(self, cmd: list[str]):
-        volume_mapping = [f"{self.docker_volume}:{self.target_path}", f"{self.backup_path}:/backup"]
+        volume_mapping = [{f"{self.docker_volume}:{self.target_path}"}, {f"{self.backup_path}:/backup"}]
+        print(f"Volume mapping: {volume_mapping}")
 
         return docker.run("busybox:latest", cmd, remove=True, volumes=volume_mapping, detach=False)
