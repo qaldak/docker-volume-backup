@@ -1,10 +1,13 @@
 import logging
+import os.path
+import sys
 import time
 
 from dotenv import load_dotenv
 
 from container.backup import Backup
 from container.container import Container
+from container.volume import Volume, Recovery
 from notification.dispatcher import Dispatcher
 from util import cfg
 from util.accessor import BackupDir, LocalHost, EnvSettings
@@ -82,9 +85,25 @@ def restore_backup(docker_volume, target_path, backup_file):
     print(f"Starting restore Docker volume")
     print(f"docker_volume: {docker_volume}, target_path: {target_path}, backup_file: {backup_file}")
 
-    # Todo: check container is running. No: go, Yes: stop
-    # Todo: check docker volume exists. Yes: go, No: create
-    # Todo: check backup_file exists. Yes: go, No: Error
+    if not os.path.exists(backup_file):
+        raise FileNotFoundError(f"Backup file not found: '{backup_file}'")
+
+    # Todo: validate target path beginning with /
+
+    volume = Volume(docker_volume)
+    if volume.exists() and volume.in_use():
+        # Todo: input "Continue: (Y/N)"
+        sys.exit()
+
+    elif not volume.exists():
+        new_volume = volume.create()
+        logger.info(f"New Docker volume created: {new_volume}")
+
+    print("restore")
+    Recovery().restore_volume_backup()
+
+    # Todo: Features
+    # Todo: printing info to console: stop container, docker volume already exists: overwrite?
 
 
 if __name__ == "__main__":
@@ -96,7 +115,8 @@ if __name__ == "__main__":
 
     # initialize objects
     Logger.init_logger(args.loglevel, args.container)
-    container = Container(args.container)
+    if args.container:
+        container = Container(args.container)
 
     logger.debug(f"Start volume backup with args '{args}'")
 

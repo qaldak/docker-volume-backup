@@ -1,12 +1,11 @@
 import logging
 import os
 import time
-from enum import Enum
 
 from python_on_whales import docker, DockerException
 
 from util import cfg
-from util.accessor import LocalHost, calc_duration
+from util.accessor import LocalHost, calc_duration, Compression, FileExtension
 
 logger = logging.getLogger(__name__)
 
@@ -233,13 +232,3 @@ class Backup:
         logger.debug(f"should change filesettings: change owner: {should_change_ownership}, "
                      f"change permission: {should_change_permissions}")
         return should_change_ownership, should_change_permissions
-
-
-class Compression(Enum):
-    BZIP2 = "-j"
-    GZIP = "-z"  # default
-
-
-class FileExtension(Enum):
-    BZIP2 = ".bz2"
-    GZIP = ".gz"
