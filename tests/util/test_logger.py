@@ -20,7 +20,7 @@ class TestLogger(unittest.TestCase):
         with self.assertRaises(TypeError) as err:
             Logger.init_logger(loglevel=logging.DEBUG)
 
-        self.assertEqual("Logger.init_logger() missing 1 required positional argument: 'container'",
+        self.assertEqual("Logger.init_logger() missing 1 required positional argument: 'identifier'",
                          str(err.exception))
 
     @patch("src.util.logger.os.getenv", return_value="../bar")

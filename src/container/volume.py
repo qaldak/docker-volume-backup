@@ -78,17 +78,23 @@ class Recovery:
             raise
 
     def check_recovery(self):
-        pass
+        file_counter = self._exec_docker_run(self._create_list_cmd())
+        print(file_counter)
 
-    def _create_list_cmd(self):
-        # path ermitteln: nur erster /
-        base_dir = os.path.split(self.target_path)
-        print(base_dir)
-        # find /path/to/check -mindepth 1 | wc - l
+        tar_file_counter = self._exec_docker_run(self._create_tar_list_cmd())
+        print("Bar: ", tar_file_counter)
+
+    def _create_list_cmd(self) -> list[str]:
+        base_dir = "/" + str(self.target_path).split("/")[1]
+        list_cmd = ["ash", "-c", f"find {base_dir} -mindepth 1"]
+        print(list_cmd)
+        return list_cmd
 
     def _create_tar_list_cmd(self) -> list[str]:
         # t?vf /backup/fedora-mosquitto_fedora-volume-backup.tar.gz | wc -l
-        pass
+        cmp_method = self._determine_cmp_method()
+        tar_cmd = ["ash", "-c", f"tar -t {cmp_method} -v -f /backup/{self.container_backup_file}"]
+        return tar_cmd
 
     def _create_tar_cmd(self) -> list[str]:
         cmp_method = self._determine_cmp_method()
@@ -106,5 +112,6 @@ class Recovery:
     def _exec_docker_run(self, cmd: list[str]):
         volume_mapping = [{f"{self.docker_volume}:{self.target_path}"}, {f"{self.backup_path}:/backup"}]
         print(f"Volume mapping: {volume_mapping}")
+        print(f"Command: {cmd}")
 
         return docker.run("busybox:latest", cmd, remove=True, volumes=volume_mapping, detach=False)

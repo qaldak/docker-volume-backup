@@ -104,7 +104,7 @@ def restore_backup(docker_volume, target_path, backup_file):
     print(f"Docker volume restored. Comparing restored files")
     recovery.restore_volume_backup()
     print(f"Compare successful.")
-    # recovery.check_restore()
+    recovery.check_recovery()
 
     # Todo: Features
     # Todo: printing info to console: stop container, docker volume already exists: overwrite?

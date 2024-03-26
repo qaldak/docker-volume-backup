@@ -1,3 +1,4 @@
+import os.path
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -75,10 +76,12 @@ class TestRecovery(TestCase):
         recovery = Recovery(backup_file="/backup/path/foo.xyz.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")
         self.assertEqual(recovery._create_tar_cmd(),
-                         ["tar", "-x", "-z", "-v", "-f", "/backup/path/foo.xyz.gz", "--strip-components=3", "-C",
+                         ["tar", "-x", "-z", "-v", "-f", "/backup/foo.xyz.gz", "--strip-components=3", "-C",
                           "/foo/bar/baz"], "Backup command failed")
 
     def test_create_list_cmd(self):
         recovery = Recovery(backup_file="/backup/path/foo.xyz.gz", docker_volume="foo_data",
-                            target_path="/foo/bar/baz")
+                            target_path="/foo/bar/baz/to/the/file")
+
+        print(os.path.dirname("/foo/bar/baz/ha/llo/"))
         recovery._create_list_cmd()
