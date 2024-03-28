@@ -82,8 +82,9 @@ def create_backup(path, restart):
 
 
 def restore_backup(docker_volume, target_path, backup_file):
-    print(f"Starting restore process ...")
-    print(f"docker_volume: {docker_volume}, target_path: {target_path}, backup_file: {backup_file}")
+    print(f"Launching recovery process ...")
+    logger.info(f"Launching recovery process. Docker volume: {docker_volume}, target path: {target_path}, "
+                f"backup file to restore: {backup_file}")
 
     if not os.path.exists(backup_file):
         raise FileNotFoundError(f"Backup file not found: '{backup_file}'")
@@ -99,12 +100,13 @@ def restore_backup(docker_volume, target_path, backup_file):
         new_volume = volume.create()
         logger.info(f"New Docker volume created: {new_volume}")
 
-    print(f"Starting restore Docker volume")
     recovery = Recovery(docker_volume=docker_volume, target_path=target_path, backup_file=backup_file)
-    print(f"Docker volume restored. Comparing restored files")
+
     recovery.restore_volume_backup()
-    print(f"Compare successful.")
+
     recovery.check_recovery()
+
+    print("Recovery process done.")
 
     # Todo: Features
     # Todo: printing info to console: stop container, docker volume already exists: overwrite?

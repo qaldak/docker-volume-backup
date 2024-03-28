@@ -45,7 +45,7 @@ class Backup:
             return Compression[os.getenv("COMPRESSION_METHOD")].value, FileExtension[
                 os.getenv("COMPRESSION_METHOD")].value
 
-        except KeyError as err:
+        except KeyError:
             logger.warning(
                 f"Compression method not defined properly: {os.getenv('COMPRESSION_METHOD')}. "
                 f"Using '{Compression.GZIP.value}'")

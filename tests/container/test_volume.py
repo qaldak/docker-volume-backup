@@ -1,4 +1,4 @@
-import os.path
+import warnings
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -83,5 +83,35 @@ class TestRecovery(TestCase):
         recovery = Recovery(backup_file="/backup/path/foo.xyz.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz/to/the/file")
 
-        print(os.path.dirname("/foo/bar/baz/ha/llo/"))
-        recovery._create_list_cmd()
+        self.assertEqual(recovery._create_list_cmd(), ['ash', '-c', 'find /foo -mindepth 1 | wc -l'],
+                         "Tar command failed")
+
+    @patch("builtins.print")
+    @patch("src.container.volume.docker.run", return_value="4")
+    def test_check_recovery_successful(self, mock_docker_vol_content, mock_print):
+        recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
+                            target_path="/foo/bar/baz")
+
+        recovery.check_recovery()
+        mock_print.assert_called_with("Recovery successful. Number of restored files matches: 4 vs 4")
+
+    @patch("warnings.warn")
+    @patch("src.container.volume.docker.run", return_value="7")
+    def test_check_recovery_failed(self, mock_docker_vol_content, mock_warning):
+        recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
+                            target_path="/foo/bar/baz")
+
+        with warnings.catch_warnings(record=True) as w:
+            recovery.check_recovery()
+            mock_warning.assert_called_with(
+                "Number of restored files does not match the content of tar file: 7 vs 4. Check manually or run again in debug mode for more details.")
+
+    @patch("src.container.volume.docker.run", return_value="Foobar")
+    def test_check_recovery_error(self, mock_docker_vol_content):
+        recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
+                            target_path="/foo/bar/baz")
+
+        with self.assertRaises(ValueError) as err:
+            recovery.check_recovery()
+
+        self.assertEqual("invalid literal for int() with base 10: 'Foobar'", str(err.exception))
