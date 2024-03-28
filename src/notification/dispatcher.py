@@ -30,7 +30,7 @@ class Dispatcher:
 
             return Alerting[os.getenv(comm_type)]
 
-        except KeyError as err:
+        except KeyError:
             logger.warning(f"Alerting not defined properly: {os.getenv(comm_type)}")
             return Alerting.UNDEFINED
 
@@ -49,7 +49,7 @@ class Dispatcher:
 
             return Receiver[os.getenv(comm_type)]
 
-        except KeyError as err:
+        except KeyError:
             logger.error(f"CHAT_SERVICE={os.getenv(comm_type)} unknown. Return {Receiver.UNDEFINED}")
 
             return Receiver.UNDEFINED
