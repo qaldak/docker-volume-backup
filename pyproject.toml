@@ -27,13 +27,14 @@ exclude_commit_patterns = [
     ".*[Cc]ommit for test[s] only",
     ".*Foo",
     ".*Tests for semantic[- ]release",
-    ".*test commit.*"
+    ".*test commit.*",
+    "break:*",
+    "BREAKING CHANGE:*"
 ]
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = [
     "build",
-    "break",
     "chore",
     "ci",
     "docs",
@@ -45,6 +46,5 @@ allowed_tags = [
     "release",
     "test",
 ]
-major_tags = ["break"]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf", "refactor", "chore"]
