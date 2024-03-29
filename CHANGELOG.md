@@ -2,6 +2,33 @@
 
 
 
+## v1.0.0 (2024-03-29)
+
+### Break
+
+* break: BREAKING CHANGE: force by refactor ([`a7a1101`](https://github.com/qaldak/docker-volume-backup/commit/a7a1101e055af462303fabbcc356d1f650c4a2bc))
+
+* break: change pyproject.toml to force BREAKING CHANGE ([`647c8c6`](https://github.com/qaldak/docker-volume-backup/commit/647c8c66d36e730e1b7e9eba326464b045c7c83e))
+
+### Breaking
+
+* feat!: force new major version
+
+feat!: force new major version
+
+BREAKING CHANGE: change command line parameters for backup (--backup) ([`eeabcea`](https://github.com/qaldak/docker-volume-backup/commit/eeabcea5e0856f9bb16952e6a0f0810f7ecc269c))
+
+### Unknown
+
+* feat! force new release version
+
+feat!: force new release version
+
+BREAKING CHANGE: changed command line parameters for backup ([`7435bab`](https://github.com/qaldak/docker-volume-backup/commit/7435babf64eaf11190a493fcab437816d6c6e78b))
+
+* BREAKING CHANGE: force new release ([`06ef747`](https://github.com/qaldak/docker-volume-backup/commit/06ef7471641542ed63f71a23ee285f9b074f97c1))
+
+
 ## v0.10.0 (2024-03-29)
 
 ### Unknown
