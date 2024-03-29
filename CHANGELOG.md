@@ -2,6 +2,19 @@
 
 
 
+## v0.10.0 (2024-03-29)
+
+### Unknown
+
+* BREAKING CHANGE: feat: implement restore function (#72) ([`eccb464`](https://github.com/qaldak/docker-volume-backup/commit/eccb464c90ac6f39233844474b49fb2e92894a98))
+
+* BREAKING CHANGE: feat: implement restore function (#72) ([`c810ad7`](https://github.com/qaldak/docker-volume-backup/commit/c810ad7fcad4683813c37275e4ad72d6d4ff1d63))
+
+* BREAKING CHANGE: feat: implement restore function (#72) ([`e39d19d`](https://github.com/qaldak/docker-volume-backup/commit/e39d19d603260f996fb685d31029ab94bd03c375))
+
+* BREAKING CHANGE: feat: implement restore function (#72) ([`1c7842d`](https://github.com/qaldak/docker-volume-backup/commit/1c7842da1ca8626670bf85c6dd08c0a0326e8154))
+
+
 ## v0.9.8 (2024-03-26)
 
 ### Chore
@@ -20,6 +33,18 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`b42fb9b`](https://github.com/qaldak/docker-volume-backup/commit/b42fb9bb5ee98dc4afcfc1efcf45221ec051ffdf))
+
+### Feature
+
+* feat: implement restore function (#72) ([`3ce4a7f`](https://github.com/qaldak/docker-volume-backup/commit/3ce4a7fcde9d7cd5cd9a470737cd47899a54df33))
+
+* feat: implement restore function (#72) ([`fe41d87`](https://github.com/qaldak/docker-volume-backup/commit/fe41d87f46a2d1ba0fa8f47dd149a9bbe80d3c12))
+
+### Unknown
+
+* BREAKING CHANGE: feat: implement restore function (#72) ([`d689f18`](https://github.com/qaldak/docker-volume-backup/commit/d689f18c6112a4f6491eff8d541f81bbddd87931))
+
+* BREAKING CHANGE: feat: implement restore function (#72) ([`db2a6a9`](https://github.com/qaldak/docker-volume-backup/commit/db2a6a9913305fb16640d1f1dc12fe424dc57a6f))
 
 
 ## v0.9.7 (2024-03-11)
@@ -41,6 +66,10 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`4cea5af`](https://github.com/qaldak/docker-volume-backup/commit/4cea5af088c74d92b80582b5e821679a033f4e56))
 
+### Feature
+
+* feat: implement restore function (#72) ([`2c7ce58`](https://github.com/qaldak/docker-volume-backup/commit/2c7ce58ede5c5a5d7d5e181600fcaf712c43a29a))
+
 
 ## v0.9.6 (2024-03-04)
 
@@ -61,6 +90,16 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`f5d6b45`](https://github.com/qaldak/docker-volume-backup/commit/f5d6b45875a4012404181d690e62a0e3ce678f89))
+
+### Feature
+
+* feat: implement restore function (#72) ([`a8b4c88`](https://github.com/qaldak/docker-volume-backup/commit/a8b4c88078f4bce370c1ffa4ac4459fad2abfe5f))
+
+### Fix
+
+* fix: imports ([`29c0b1f`](https://github.com/qaldak/docker-volume-backup/commit/29c0b1f478abc330434051ffdc53f3e670364553))
+
+* fix: imports ([`628e85e`](https://github.com/qaldak/docker-volume-backup/commit/628e85e5353b81ff19f96ccb231eac6d793e6136))
 
 
 ## v0.9.5 (2024-02-20)
