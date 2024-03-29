@@ -130,6 +130,16 @@ class Alerting(Enum):
     UNDEFINED = 99
 
 
+class Compression(Enum):
+    BZIP2 = "-j"
+    GZIP = "-z"  # default
+
+
+class FileExtension(Enum):
+    BZIP2 = ".bz2"
+    GZIP = ".gz"
+
+
 class Receiver(Enum):
     SLACK = 1
     MQTT = 80

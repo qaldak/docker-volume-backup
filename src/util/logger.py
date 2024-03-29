@@ -6,9 +6,9 @@ from logging.handlers import RotatingFileHandler
 class Logger:
 
     @staticmethod
-    def init_logger(loglevel, container: str):
+    def init_logger(loglevel, identifier: str):
         logdir = os.getenv("LOG_DIR") if (os.getenv("LOG_DIR") not in (None, "")) else "./"
-        logfile = f"{container}-volume-backup.log"
+        logfile = f"{identifier}-volume-backup.log"
 
         if not os.path.isdir(logdir):
             os.makedirs(logdir)

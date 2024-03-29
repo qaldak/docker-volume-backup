@@ -5,7 +5,11 @@
 ## Description
 
 Creates a backup of a Docker volume to a target path.
-If an error occurs, a message is sent to a defined Slack channel.
+If an error occurs, a message is sent to a defined Slack channel and/or MQTT broker. </br>
+With option "--restore", it restores from existing volume backup file to a Docker volume. If Docker volume not already
+exists, new Docker volume will be created (e.g. for restoring on another host).
+
+It is also possible to restore a Docker volume from a backup file.
 
 ## Getting started
 
@@ -39,7 +43,9 @@ See example in [.env](.env)
 
 #### Command line
 
-`python3 -m src.main <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
+__create backup__
+
+`python3 -m src.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
 
 optional parameter:
 
@@ -47,9 +53,17 @@ optional parameter:
 * "-r" stops container for backup and restart after work
 * "--debug" set loglevel to DEBUG
 
+__restore backup__
+
+`python3 -m src.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [--debug]`
+
+optional parameter:
+
+* "--debug" set loglevel to DEBUG
+
 #### Cronjob
 
-`05 0 * * * cd <PATH> ; python3 -m src.main <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
+`05 0 * * * cd <PATH> ; python3 -m src.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
 
 optional parameter: see Command line
 

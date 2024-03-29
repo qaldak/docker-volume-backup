@@ -1,10 +1,13 @@
 import logging
+import os.path
+import sys
 import time
 
 from dotenv import load_dotenv
 
 from container.backup import Backup
 from container.container import Container
+from container.volume import Volume, Recovery
 from notification.dispatcher import Dispatcher
 from util import cfg
 from util.accessor import BackupDir, LocalHost, EnvSettings
@@ -14,7 +17,7 @@ from util.logger import Logger
 logger = logging.getLogger(__name__)
 
 
-def main(path, restart):
+def create_backup(path, restart):
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
     cfg.job_start_time = int(time.time())
@@ -78,6 +81,32 @@ def main(path, restart):
         logger.info(f"Volume backup done.")
 
 
+def restore_backup(docker_volume, target_path, backup_file):
+    print(f"Launching recovery process ...")
+    logger.info(f"Launching recovery process. Docker volume: {docker_volume}, target path: {target_path}, "
+                f"backup file to restore: {backup_file}")
+
+    if not os.path.exists(backup_file):
+        raise FileNotFoundError(f"Backup file not found: '{backup_file}'")
+
+    volume = Volume(docker_volume)
+    if volume.exists() and volume.in_use():
+        # Todo: input "Override existing volume? Continue: (Y/N)"
+        sys.exit()
+
+    elif not volume.exists():
+        new_volume = volume.create()
+        logger.info(f"New Docker volume created: {new_volume}")
+
+    recovery = Recovery(docker_volume=docker_volume, target_path=target_path, backup_file=backup_file)
+
+    recovery.restore_volume_backup()
+
+    recovery.check_recovery()
+
+    print("Recovery process done.")
+
+
 if __name__ == "__main__":
     # load .env
     load_dotenv()
@@ -86,9 +115,15 @@ if __name__ == "__main__":
     args = ArgParser.parse_cli_args()
 
     # initialize objects
-    Logger.init_logger(args.loglevel, args.container)
-    container = Container(args.container)
+    log_identifier = args.container if args.backup else "restore-" + args.dockervolume
+    Logger.init_logger(args.loglevel, log_identifier)
+
+    if args.backup:
+        container = Container(args.container)
 
     logger.debug(f"Start volume backup with args '{args}'")
 
-    main(args.path, args.restart)
+    if args.restore:
+        restore_backup(args.dockervolume, args.targetpath, args.backupfile)
+    else:
+        create_backup(args.path, args.restart)
