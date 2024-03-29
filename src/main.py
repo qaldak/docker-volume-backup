@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 
 from container.backup import Backup
 from container.container import Container
-from container.volume import Volume, Recovery
+from container.recovery import Recovery
+from container.volume import Volume
 from notification.dispatcher import Dispatcher
 from util import cfg
 from util.accessor import BackupDir, LocalHost, EnvSettings
