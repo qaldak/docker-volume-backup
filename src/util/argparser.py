@@ -47,3 +47,6 @@ class ArgParser:
             if not (args.backupfile and args.targetpath and args.dockervolume):
                 raise ValueError(
                     "Parameter --backupfile, --targetpath and --volume are mandatory in combination with --restore")
+
+            if not args.targetpath.startswith("/"):
+                raise ValueError(f"Parameter --targetpath has to start with '/' but given '{args.targetpath}'")

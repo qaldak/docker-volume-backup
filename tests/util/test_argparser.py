@@ -71,3 +71,13 @@ class TestArgParser(TestCase):
             args = ArgParser.parse_cli_args()
         self.assertEqual(str(err.exception),
                          "Parameter --backupfile, --targetpath and --volume are mandatory in combination with --restore")
+
+    def test_validate_backup_restore_targetpath(self):
+        sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "data/foo",
+                    "--volume", "foobarData"]
+
+        with self.assertRaises(ValueError) as err:
+            args = ArgParser.parse_cli_args()
+        self.assertEqual(str(err.exception),
+                         "Parameter --targetpath has to start with '/' but given 'data/foo'",
+                         "Error target path validation")

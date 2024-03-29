@@ -89,11 +89,9 @@ def restore_backup(docker_volume, target_path, backup_file):
     if not os.path.exists(backup_file):
         raise FileNotFoundError(f"Backup file not found: '{backup_file}'")
 
-    # Todo: validate target path beginning with /
-
     volume = Volume(docker_volume)
     if volume.exists() and volume.in_use():
-        # Todo: input "Continue: (Y/N)"
+        # Todo: input "Override existing volume? Continue: (Y/N)"
         sys.exit()
 
     elif not volume.exists():
@@ -107,9 +105,6 @@ def restore_backup(docker_volume, target_path, backup_file):
     recovery.check_recovery()
 
     print("Recovery process done.")
-
-    # Todo: Features
-    # Todo: printing info to console: stop container, docker volume already exists: overwrite?
 
 
 if __name__ == "__main__":
