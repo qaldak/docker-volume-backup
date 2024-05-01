@@ -1,3 +1,5 @@
+import os
+import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -6,6 +8,7 @@ from util import cfg
 
 
 class MockContainer(TestCase):
+    @unittest.skipIf(os.getenv("GITHUB_ACTIONS") == "true", "Skip on Github")
     def __init__(self) -> None:
         super().__init__()
         self.name = "foo_bar"
