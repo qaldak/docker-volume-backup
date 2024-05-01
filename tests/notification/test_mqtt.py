@@ -3,8 +3,9 @@ import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
-from notification.mqtt import MQTT
 from python_on_whales import DockerException
+
+from notification.mqtt import MQTT
 
 
 class MockContainer(TestCase):
@@ -18,7 +19,7 @@ class TestMQTT(TestCase):
     @unittest.skipIf(os.getenv("GITHUB_ACTIONS") == "true", "Skip on Github")
     @patch("src.notification.mqtt.docker.container.execute", return_value="Well done")
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "my_mosquitto_container")])
+           return_value=[MockContainer(uid="abc1", name="my_mosquitto_container")])
     @patch("src.notification.mqtt.MQTT.determine_mqtt_container", return_value="mock_container")
     @patch.dict("src.notification.mqtt.os.environ",
                 {"MQTT_BROKER": "my.mqtt.broker", "MQTT_PORT": "1883"})
@@ -30,7 +31,7 @@ class TestMQTT(TestCase):
     @patch("src.notification.mqtt.docker.container.remove", return_value=None)
     @patch("src.notification.mqtt.docker.container.exists", return_value=True)
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "foo")])
+           return_value=[MockContainer(uid="abc1", name="foo")])
     @patch.dict("src.notification.mqtt.os.environ",
                 {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
     def test_send_msg_create_container(self, mock_container, mock_exists, mock_remove, mock_run):
@@ -57,7 +58,7 @@ class TestMQTT(TestCase):
         return_code=125))
     @patch("src.notification.mqtt.docker.container.exists", return_value=True)
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "foo")])
+           return_value=[MockContainer(uid="abc1", name="foo")])
     @patch.dict("src.notification.mqtt.os.environ",
                 {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
     def test_send_msg_error_remove_temp_container(self, mock_container, mock_exists, mock_remove):
@@ -75,7 +76,7 @@ class TestMQTT(TestCase):
         return_code=115))
     @patch("src.notification.mqtt.docker.container.exists", return_value=False)
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "foo")])
+           return_value=[MockContainer(uid="abc1", name="foo")])
     @patch.dict("src.notification.mqtt.os.environ",
                 {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
     def test_send_msg_error_with_temp_container(self, mock_container, mock_exists, mock_remove):
@@ -85,19 +86,21 @@ class TestMQTT(TestCase):
             self.assertIn("It returned with code 115", str(log.output))
 
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "foo"), MockContainer("abc2", "my_mosquitto_container")])
+           return_value=[MockContainer(uid="abc1", name="foo"),
+                         MockContainer(uid="abc2", name="my_mosquitto_container")])
     def test_determine_mqtt_container_mosquitto(self, mock_list):
         mqtt_container = MQTT("foo", "bar").determine_mqtt_container()
         self.assertEqual("my_mosquitto_container", mqtt_container, "Mosquitto container not found, but expected.")
 
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "mqtt"), MockContainer("abc2", "my_mosquitto_container")])
+           return_value=[MockContainer(uid="abc1", name="mqtt"),
+                         MockContainer(uid="abc2", name="my_mosquitto_container")])
     def test_determine_mqtt_container_mqtt(self, mock_list):
         mqtt_container = MQTT("foo", "bar").determine_mqtt_container()
         self.assertEqual("mqtt", mqtt_container, "MQTT container not found, but expected.")
 
     @patch("src.notification.mqtt.docker.container.list",
-           return_value=[MockContainer("abc1", "ttqm"), MockContainer("abc2", "mojito")])
+           return_value=[MockContainer(uid="abc1", name="ttqm"), MockContainer(uid="abc2", name="mojito")])
     def test_determine_mqtt_container_notfound(self, mock_list):
         mqtt_container = MQTT("foo", "bar").determine_mqtt_container()
         self.assertEqual("", mqtt_container, "Container found, but not expected.")
