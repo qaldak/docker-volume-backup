@@ -9,8 +9,8 @@ from notification.mqtt import MQTT
 
 
 class MockContainer(TestCase):
-    @unittest.skipIf(os.getenv("GITHUB_ACTIONS") == "true", "Skip on Github")
-    def __init__(self, uid, name) -> None:
+    @unittest.expectedFailure
+    def __init__(self, uid=None, name=None) -> None:
         super().__init__()
         self.id = uid
         self.name = name
