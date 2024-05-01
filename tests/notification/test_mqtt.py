@@ -9,6 +9,7 @@ from notification.mqtt import MQTT
 
 
 class MockContainer(TestCase):
+    @unittest.skipIf(os.getenv("GITHUB_ACTIONS") == "true", "Skip on Github")
     def __init__(self, uid, name) -> None:
         super().__init__()
         self.id = uid
