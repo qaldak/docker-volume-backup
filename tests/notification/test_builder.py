@@ -1,4 +1,3 @@
-import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -6,8 +5,8 @@ from notification.builder import Builder
 from util import cfg
 
 
-class MockContainer(TestCase):
-    @unittest.expectedFailure
+class MockContainer:
+
     def __init__(self) -> None:
         super().__init__()
         self.name = "foo_bar"
