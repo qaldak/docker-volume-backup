@@ -2,13 +2,45 @@
 
 
 
+## v1.0.1 (2024-05-01)
+
+### Chore
+
+* chore: pip: bump python-on-whales from 0.70.1 to 0.71.0
+
+Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales) from 0.70.1 to 0.71.0.
+- [Release notes](https://github.com/gabrieldemarmiesse/python-on-whales/releases)
+- [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.70.1...v0.71.0)
+
+---
+updated-dependencies:
+- dependency-name: python-on-whales
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`3de4362`](https://github.com/qaldak/docker-volume-backup/commit/3de43628cf9b0ee81e16a1a30f23697ff28944c2))
+
+### Ci
+
+* ci: update pyproject.toml (undo &#39;break&#39; from allowed tags and major tags) ([`66c2a00`](https://github.com/qaldak/docker-volume-backup/commit/66c2a00a55a107cb45f474c573aaef6189ab2241))
+
+### Fix
+
+* fix: fix unittests ([`5ad4592`](https://github.com/qaldak/docker-volume-backup/commit/5ad4592f0d9c9bbdeebd233422c91120ca8ab794))
+
+* fix: fix unittests, undo skip ([`7ba2cac`](https://github.com/qaldak/docker-volume-backup/commit/7ba2cac967fc78be2d628a6c0f57e0295f01e275))
+
+* fix: fix unittests ([`b29e8e1`](https://github.com/qaldak/docker-volume-backup/commit/b29e8e12d02beffefc5cdc984aaf5079408af8c3))
+
+* fix: skip tests on Github ([`2424c91`](https://github.com/qaldak/docker-volume-backup/commit/2424c9143d6e4da42549b448f9717dca9b59b355))
+
+* fix: test_mqtt.py ([`be4997e`](https://github.com/qaldak/docker-volume-backup/commit/be4997e6d8f33a9196d3087050bf65619674ffa6))
+
+* fix: test_mqtt.py ([`6938521`](https://github.com/qaldak/docker-volume-backup/commit/6938521d557750db2680a1ca8c7376c4b0bdd491))
+
+
 ## v1.0.0 (2024-03-29)
-
-### Break
-
-* break: BREAKING CHANGE: force by refactor ([`a7a1101`](https://github.com/qaldak/docker-volume-backup/commit/a7a1101e055af462303fabbcc356d1f650c4a2bc))
-
-* break: change pyproject.toml to force BREAKING CHANGE ([`647c8c6`](https://github.com/qaldak/docker-volume-backup/commit/647c8c66d36e730e1b7e9eba326464b045c7c83e))
 
 ### Breaking
 
@@ -26,20 +58,8 @@ feat!: force new release version
 
 BREAKING CHANGE: changed command line parameters for backup ([`7435bab`](https://github.com/qaldak/docker-volume-backup/commit/7435babf64eaf11190a493fcab437816d6c6e78b))
 
-* BREAKING CHANGE: force new release ([`06ef747`](https://github.com/qaldak/docker-volume-backup/commit/06ef7471641542ed63f71a23ee285f9b074f97c1))
-
 
 ## v0.10.0 (2024-03-29)
-
-### Unknown
-
-* BREAKING CHANGE: feat: implement restore function (#72) ([`eccb464`](https://github.com/qaldak/docker-volume-backup/commit/eccb464c90ac6f39233844474b49fb2e92894a98))
-
-* BREAKING CHANGE: feat: implement restore function (#72) ([`c810ad7`](https://github.com/qaldak/docker-volume-backup/commit/c810ad7fcad4683813c37275e4ad72d6d4ff1d63))
-
-* BREAKING CHANGE: feat: implement restore function (#72) ([`e39d19d`](https://github.com/qaldak/docker-volume-backup/commit/e39d19d603260f996fb685d31029ab94bd03c375))
-
-* BREAKING CHANGE: feat: implement restore function (#72) ([`1c7842d`](https://github.com/qaldak/docker-volume-backup/commit/1c7842da1ca8626670bf85c6dd08c0a0326e8154))
 
 
 ## v0.9.8 (2024-03-26)
@@ -66,12 +86,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`b42fb9b`](https://g
 * feat: implement restore function (#72) ([`3ce4a7f`](https://github.com/qaldak/docker-volume-backup/commit/3ce4a7fcde9d7cd5cd9a470737cd47899a54df33))
 
 * feat: implement restore function (#72) ([`fe41d87`](https://github.com/qaldak/docker-volume-backup/commit/fe41d87f46a2d1ba0fa8f47dd149a9bbe80d3c12))
-
-### Unknown
-
-* BREAKING CHANGE: feat: implement restore function (#72) ([`d689f18`](https://github.com/qaldak/docker-volume-backup/commit/d689f18c6112a4f6491eff8d541f81bbddd87931))
-
-* BREAKING CHANGE: feat: implement restore function (#72) ([`db2a6a9`](https://github.com/qaldak/docker-volume-backup/commit/db2a6a9913305fb16640d1f1dc12fe424dc57a6f))
 
 
 ## v0.9.7 (2024-03-11)
