@@ -5,7 +5,8 @@ from notification.builder import Builder
 from util import cfg
 
 
-class MockContainer(TestCase):
+class MockContainer:
+
     def __init__(self) -> None:
         super().__init__()
         self.name = "foo_bar"

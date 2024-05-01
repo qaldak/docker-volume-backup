@@ -6,7 +6,8 @@ from python_on_whales import DockerException
 from container.backup import Backup
 
 
-class MockContainer(TestCase):
+class MockContainer:
+
     def __init__(self) -> None:
         super().__init__()
         self.name = "foo_bar"
@@ -16,7 +17,8 @@ class MockContainer(TestCase):
         self.has_docker_bindings = True
 
 
-class MockBackupDir(TestCase):
+class MockBackupDir:
+
     def __init__(self) -> None:
         super().__init__()
         self.path = "/foo/backup"
