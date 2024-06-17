@@ -1,6 +1,24 @@
 # CHANGELOG
 
+## v1.0.3 (2024-06-17)
 
+### Chore
+
+* chore: pip: bump slack-sdk from 3.27.2 to 3.29.0
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.2 to 3.29.0.
+- [Release notes](https://github.com/slackapi/python-slack-sdk/releases)
+- [Changelog](https://github.com/slackapi/python-slack-sdk/blob/main/docs-v2/changelog.html)
+- [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.27.2...v3.29.0)
+
+---
+updated-dependencies:
+- dependency-name: slack-sdk
+  dependency-type: direct:production
+  update-type: version-update:semver-minor
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`9febb04`](https://github.com/qaldak/docker-volume-backup/commit/9febb04afa84ac8cb6afdb72b0e11cc4af6242fb))
 
 ## v1.0.2 (2024-05-21)
 
@@ -21,7 +39,6 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`bb5306c`](https://github.com/qaldak/docker-volume-backup/commit/bb5306c612c2d1cb71b2046cdc9e8d467adf4ed0))
-
 
 ## v1.0.1 (2024-05-01)
 
@@ -60,7 +77,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`3de4362`](https://g
 
 * fix: test_mqtt.py ([`6938521`](https://github.com/qaldak/docker-volume-backup/commit/6938521d557750db2680a1ca8c7376c4b0bdd491))
 
-
 ## v1.0.0 (2024-03-29)
 
 ### Breaking
@@ -79,9 +95,7 @@ feat!: force new release version
 
 BREAKING CHANGE: changed command line parameters for backup ([`7435bab`](https://github.com/qaldak/docker-volume-backup/commit/7435babf64eaf11190a493fcab437816d6c6e78b))
 
-
 ## v0.10.0 (2024-03-29)
-
 
 ## v0.9.8 (2024-03-26)
 
@@ -108,7 +122,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`b42fb9b`](https://g
 
 * feat: implement restore function (#72) ([`fe41d87`](https://github.com/qaldak/docker-volume-backup/commit/fe41d87f46a2d1ba0fa8f47dd149a9bbe80d3c12))
 
-
 ## v0.9.7 (2024-03-11)
 
 ### Chore
@@ -131,7 +144,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`4cea5af`](https://g
 ### Feature
 
 * feat: implement restore function (#72) ([`2c7ce58`](https://github.com/qaldak/docker-volume-backup/commit/2c7ce58ede5c5a5d7d5e181600fcaf712c43a29a))
-
 
 ## v0.9.6 (2024-03-04)
 
@@ -163,13 +175,11 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`f5d6b45`](https://g
 
 * fix: imports ([`628e85e`](https://github.com/qaldak/docker-volume-backup/commit/628e85e5353b81ff19f96ccb231eac6d793e6136))
 
-
 ## v0.9.5 (2024-02-20)
 
 ### Refactor
 
 * refactor: stabilize ([`9a80651`](https://github.com/qaldak/docker-volume-backup/commit/9a806519456ddcec83463bd9e61d5a21dde046a7))
-
 
 ## v0.9.4 (2024-02-20)
 
@@ -177,13 +187,11 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`f5d6b45`](https://g
 
 * fix: determine backup file size ([`543bdc9`](https://github.com/qaldak/docker-volume-backup/commit/543bdc9dd1ddcd49910a7b39131fca533f1899e1))
 
-
 ## v0.9.3 (2024-02-19)
 
 ### Refactor
 
 * refactor: fix tests ([`d57796e`](https://github.com/qaldak/docker-volume-backup/commit/d57796ef09812ecfa5ae1cf2cc65bee0275c24b9))
-
 
 ## v0.9.2 (2024-02-19)
 
@@ -205,7 +213,6 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`5addd6f`](https://github.com/qaldak/docker-volume-backup/commit/5addd6f3d45bf42a9131ab007ad97db6ef611931))
 
-
 ## v0.9.1 (2024-02-19)
 
 ### Chore
@@ -224,7 +231,6 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`76f1a5e`](https://github.com/qaldak/docker-volume-backup/commit/76f1a5efbb3d5568f94a7584716bc9d387f00bc0))
-
 
 ## v0.9.0 (2024-02-17)
 
@@ -276,7 +282,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`76f1a5e`](https://g
 
 * fix: tests structure in github actions ([`817fe33`](https://github.com/qaldak/docker-volume-backup/commit/817fe33cdb2daf9213802c4eb48136fcb99dec0c))
 
-
 ## v0.8.4 (2024-01-29)
 
 ### Chore
@@ -297,14 +302,12 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`11e75a4`](https://github.com/qaldak/docker-volume-backup/commit/11e75a448432467815cc13a465c2b4511b69fa33))
 
-
 ## v0.8.3 (2024-01-23)
 
 ### Refactor
 
 * refactor: is_volume_available
 test: add tests ([`6d51d0c`](https://github.com/qaldak/docker-volume-backup/commit/6d51d0c6d7526eca89d47d49874dcbadf6b479f6))
-
 
 ## v0.8.2 (2024-01-16)
 
@@ -326,7 +329,6 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`fef665c`](https://github.com/qaldak/docker-volume-backup/commit/fef665c026e83221fd668cf962dd50291ccd14b3))
 
-
 ## v0.8.1 (2024-01-12)
 
 ### Refactor
@@ -336,7 +338,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`fef665c`](https://g
 ### Test
 
 * test: add tests (#56) ([`b97c42a`](https://github.com/qaldak/docker-volume-backup/commit/b97c42af253424e764601dc5aaf10d0f376e5ee5))
-
 
 ## v0.8.0 (2024-01-12)
 
@@ -351,7 +352,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`fef665c`](https://g
 ### Refactor
 
 * refactor: param name ([`4ba8e80`](https://github.com/qaldak/docker-volume-backup/commit/4ba8e80f8ea8addd46933c3b11c2606e58b618a4))
-
 
 ## v0.7.0 (2024-01-04)
 
@@ -384,7 +384,6 @@ This reverts commit 235cc39d207010427b34af486aaee86a46c3fc48. ([`5f90c5e`](https
 
 This reverts commit 235cc39d207010427b34af486aaee86a46c3fc48. ([`34ae367`](https://github.com/qaldak/docker-volume-backup/commit/34ae3676b04c1f5f2b317eb239722ce7c7cf2ecb))
 
-
 ## v0.6.0 (2023-12-23)
 
 ### Documentation
@@ -396,7 +395,6 @@ This reverts commit 235cc39d207010427b34af486aaee86a46c3fc48. ([`34ae367`](https
 * feat: implement mqtt #39 ([`3b707ec`](https://github.com/qaldak/docker-volume-backup/commit/3b707ec9a415fd692c851844dd11a9e57e036ec2))
 
 * feat: calc job and backup duration ([`58b4932`](https://github.com/qaldak/docker-volume-backup/commit/58b4932424d7447624793c0a34177fe04f6d48a9))
-
 
 ## v0.5.3 (2023-12-18)
 
@@ -416,7 +414,6 @@ updated-dependencies:
 ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`7e55134`](https://github.com/qaldak/docker-volume-backup/commit/7e551343a8acddfd14bb3eb50abd17ad4f19bb42))
-
 
 ## v0.5.2 (2023-12-04)
 
@@ -464,13 +461,11 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d9d50b6`](https://github.com/qaldak/docker-volume-backup/commit/d9d50b6bab2601facec9fb633d4b1f15d6444882))
 
-
 ## v0.5.1 (2023-11-26)
 
 ### Refactor
 
 * refactor: pyproject.toml: add version, add exclude pattern (#48) ([`470d64c`](https://github.com/qaldak/docker-volume-backup/commit/470d64c4ab9e622b181889ef74be446ee5b16c2d))
-
 
 ## v0.5.0 (2023-11-25)
 
@@ -488,7 +483,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d9d50b6`](https://g
 
 * refactor: optimize log info ([`247cee9`](https://github.com/qaldak/docker-volume-backup/commit/247cee924c2b7ba37c5b6f5fe2b8fd45f769fba7))
 
-
 ## v0.4.0 (2023-11-25)
 
 ### Feature
@@ -501,13 +495,11 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d9d50b6`](https://g
 
 * refactor: optimize log info ([`f285d2e`](https://github.com/qaldak/docker-volume-backup/commit/f285d2e20c1e51f444637ef334d8049681471fa9))
 
-
 ## v0.3.3 (2023-11-22)
 
 ### Refactor
 
 * refactor: ready for Python3.9, changes for running on target hosts ([`1000096`](https://github.com/qaldak/docker-volume-backup/commit/1000096ca683b076428de238dfe1f6baa57226ca))
-
 
 ## v0.3.2 (2023-11-21)
 
@@ -521,9 +513,7 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`d9d50b6`](https://g
 
 * chore: change .env to .env_example ([`ab17d91`](https://github.com/qaldak/docker-volume-backup/commit/ab17d91825f6064b1b72e8188a79c7edcaad9aa4))
 
-
 ## v0.3.1 (2023-11-21)
-
 
 ## v0.3.0 (2023-11-20)
 
@@ -555,7 +545,6 @@ updated-dependencies:
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`3ad21d2`](https://github.com/qaldak/docker-volume-backup/commit/3ad21d2366f00539b79098ecaee108f31b3ee7e5))
 
-
 ## v0.2.6 (2023-11-19)
 
 ### Chore
@@ -574,25 +563,19 @@ pip: bump python-on-whales from 0.66.0 to 0.67.0 ([`bb6ead0`](https://github.com
 
 * refactor: commit for test only ([`b4ce3d1`](https://github.com/qaldak/docker-volume-backup/commit/b4ce3d1d9fcf941b67b92727120e54ebbffdf37d))
 
-
 ## v0.2.5 (2023-11-17)
 
 ### Fix
 
 * fix: semantic relesae ([`10f7225`](https://github.com/qaldak/docker-volume-backup/commit/10f72259fabe1ccffae525e78f83ae88018ee4c4))
 
-
 ## v0.2.4 (2023-11-17)
-
 
 ## v0.2.3 (2023-11-17)
 
-
 ## v0.2.2 (2023-11-17)
 
-
 ## v0.2.1 (2023-11-17)
-
 
 ## v0.2.0 (2023-11-17)
 
@@ -601,7 +584,6 @@ pip: bump python-on-whales from 0.66.0 to 0.67.0 ([`bb6ead0`](https://github.com
 * Update README.md
 
 fix: typo for tests ([`2c5acc0`](https://github.com/qaldak/docker-volume-backup/commit/2c5acc07e8f3fca640dd24872b966a074a128c70))
-
 
 ## v0.1.1 (2023-11-17)
 
@@ -667,7 +649,6 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt; ([`f676385`](https://g
 * fix test ([`4b03ff9`](https://github.com/qaldak/docker-volume-backup/commit/4b03ff968e12c5b5db8e19ad0cc284bd24acc120))
 
 * set up github-actions ([`4985135`](https://github.com/qaldak/docker-volume-backup/commit/49851357c84362c5e977722126711b4a373377ca))
-
 
 ## v0.1.0 (2023-11-07)
 
