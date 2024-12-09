@@ -1,6 +1,26 @@
 # CHANGELOG
 
 
+## v1.0.14 (2024-12-09)
+
+### Chores
+
+- Pip: bump slack-sdk from 3.33.4 to 3.33.5
+  ([`70bf9a5`](https://github.com/qaldak/docker-volume-backup/commit/70bf9a5433c04dcd279703988d39b74952ca9ebf))
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.4 to 3.33.5. - [Release
+  notes](https://github.com/slackapi/python-slack-sdk/releases) -
+  [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.33.4...v3.33.5)
+
+--- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
+
+update-type: version-update:semver-patch
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+
 ## v1.0.13 (2024-11-28)
 
 ### Chores
@@ -13,7 +33,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.3 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.33.3...v3.33.4)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -30,7 +53,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.73.0...v0.74.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -47,7 +73,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.2 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.33.2...v3.33.3)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -64,7 +93,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.1 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.33.1...v3.33.2)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -81,7 +113,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.32.0 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.32.0...v3.33.1)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -98,7 +133,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.72.0...v0.73.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -115,7 +153,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.31.0 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.31.0...v3.32.0)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -133,7 +174,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.30.0 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.30.0...v3.31.0)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -150,7 +194,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.71.0...v0.72.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -168,7 +215,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.29.0 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.29.0...v3.30.0)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -186,7 +236,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.2 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.27.2...v3.29.0)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -204,7 +257,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.1 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.27.1...v3.27.2)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -216,11 +272,11 @@ Signed-off-by: dependabot[bot] <support@github.com>
 - Fix unittests
   ([`5ad4592`](https://github.com/qaldak/docker-volume-backup/commit/5ad4592f0d9c9bbdeebd233422c91120ca8ab794))
 
-- Fix unittests, undo skip
-  ([`7ba2cac`](https://github.com/qaldak/docker-volume-backup/commit/7ba2cac967fc78be2d628a6c0f57e0295f01e275))
-
 - Fix unittests
   ([`b29e8e1`](https://github.com/qaldak/docker-volume-backup/commit/b29e8e12d02beffefc5cdc984aaf5079408af8c3))
+
+- Fix unittests, undo skip
+  ([`7ba2cac`](https://github.com/qaldak/docker-volume-backup/commit/7ba2cac967fc78be2d628a6c0f57e0295f01e275))
 
 - Skip tests on Github
   ([`2424c91`](https://github.com/qaldak/docker-volume-backup/commit/2424c9143d6e4da42549b448f9717dca9b59b355))
@@ -241,7 +297,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.70.1...v0.71.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -262,6 +321,10 @@ feat!: force new major version
 
 BREAKING CHANGE: change command line parameters for backup (--backup)
 
+### BREAKING CHANGES
+
+- Change command line parameters for backup (--backup)
+
 
 ## v0.10.0 (2024-03-29)
 
@@ -278,7 +341,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.70.0...v0.70.1)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -303,7 +369,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.69.0...v0.70.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -329,7 +398,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.0 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.27.0...v3.27.1)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -379,7 +451,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.2 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.26.2...v3.27.0)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -396,7 +471,10 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.68.0...v0.69.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -456,11 +534,11 @@ Signed-off-by: dependabot[bot] <support@github.com>
 - Github actions: python tests
   ([`6349be2`](https://github.com/qaldak/docker-volume-backup/commit/6349be2fa854a25471521ec3f18604ef120584c5))
 
-- Undo
-  ([`5eef5c8`](https://github.com/qaldak/docker-volume-backup/commit/5eef5c8fe54fe833e718e54390ac73d1beb65220))
-
 - Tests structure in github actions
   ([`817fe33`](https://github.com/qaldak/docker-volume-backup/commit/817fe33cdb2daf9213802c4eb48136fcb99dec0c))
+
+- Undo
+  ([`5eef5c8`](https://github.com/qaldak/docker-volume-backup/commit/5eef5c8fe54fe833e718e54390ac73d1beb65220))
 
 ### Chores
 
@@ -486,7 +564,10 @@ Bumps [python-dotenv](https://github.com/theskumar/python-dotenv) from 1.0.0 to 
   [Commits](https://github.com/theskumar/python-dotenv/compare/v1.0.0...v1.0.1)
 
 --- updated-dependencies: - dependency-name: python-dotenv dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -512,7 +593,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.1 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.26.1...v3.26.2)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -564,17 +648,17 @@ Signed-off-by: dependabot[bot] <support@github.com>
 - Implement #52
   ([`fdece99`](https://github.com/qaldak/docker-volume-backup/commit/fdece99760a448ef78f901109c5891b47506ca07))
 
-- Implement mqtt #39
-  ([`aa4f43c`](https://github.com/qaldak/docker-volume-backup/commit/aa4f43c3ee65ff9121cf08038924ee3e698d0dd4))
-
-- Implement mqtt #39
-  ([`235cc39`](https://github.com/qaldak/docker-volume-backup/commit/235cc39d207010427b34af486aaee86a46c3fc48))
-
 - Implement #52
   ([`6bc81e4`](https://github.com/qaldak/docker-volume-backup/commit/6bc81e4af6047ac934b7082c6b11e89e35c5ea03))
 
 - Implement #52
   ([`10822d2`](https://github.com/qaldak/docker-volume-backup/commit/10822d246426ca3b621d71da7dc5ed05c7c3acf0))
+
+- Implement mqtt #39
+  ([`aa4f43c`](https://github.com/qaldak/docker-volume-backup/commit/aa4f43c3ee65ff9121cf08038924ee3e698d0dd4))
+
+- Implement mqtt #39
+  ([`235cc39`](https://github.com/qaldak/docker-volume-backup/commit/235cc39d207010427b34af486aaee86a46c3fc48))
 
 
 ## v0.6.0 (2023-12-23)
@@ -597,17 +681,20 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
   [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.67.0...v0.68.0)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
-  update-type: version-update:semver-minor ...
+
+update-type: version-update:semver-minor
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
 ### Features
 
-- Implement mqtt #39
-  ([`3b707ec`](https://github.com/qaldak/docker-volume-backup/commit/3b707ec9a415fd692c851844dd11a9e57e036ec2))
-
 - Calc job and backup duration
   ([`58b4932`](https://github.com/qaldak/docker-volume-backup/commit/58b4932424d7447624793c0a34177fe04f6d48a9))
+
+- Implement mqtt #39
+  ([`3b707ec`](https://github.com/qaldak/docker-volume-backup/commit/3b707ec9a415fd692c851844dd11a9e57e036ec2))
 
 
 ## v0.5.2 (2023-12-04)
@@ -628,7 +715,10 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.0 to 3
   [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.26.0...v3.26.1)
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
-  update-type: version-update:semver-patch ...
+
+update-type: version-update:semver-patch
+
+...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -661,11 +751,11 @@ Signed-off-by: dependabot[bot] <support@github.com>
 
 ### Refactoring
 
-- Optimize setup
-  ([`207e5db`](https://github.com/qaldak/docker-volume-backup/commit/207e5dbe9dc78688aea2632f9091d7d45b99d8cf))
-
 - Optimize log info
   ([`247cee9`](https://github.com/qaldak/docker-volume-backup/commit/247cee924c2b7ba37c5b6f5fe2b8fd45f769fba7))
+
+- Optimize setup
+  ([`207e5db`](https://github.com/qaldak/docker-volume-backup/commit/207e5dbe9dc78688aea2632f9091d7d45b99d8cf))
 
 
 ## v0.4.0 (2023-11-25)
@@ -720,11 +810,11 @@ Signed-off-by: dependabot[bot] <support@github.com>
 
 ### Build System
 
-- Update dependabot.yml
-  ([`50c589a`](https://github.com/qaldak/docker-volume-backup/commit/50c589a891ffd6d1b0808463780d46aa1ff5f5e7))
-
 - Add exclude_commit_patterns
   ([`aec0a37`](https://github.com/qaldak/docker-volume-backup/commit/aec0a3798bf8c9716416769e1d4fde276d1734ee))
+
+- Update dependabot.yml
+  ([`50c589a`](https://github.com/qaldak/docker-volume-backup/commit/50c589a891ffd6d1b0808463780d46aa1ff5f5e7))
 
 ### Features
 
@@ -741,35 +831,35 @@ Signed-off-by: dependabot[bot] <support@github.com>
 
 chore: GitHub actions
 
+- Merge pull request #8 from qaldak/dependabot/pip/python-on-whales-0.67.0
+  ([`bb6ead0`](https://github.com/qaldak/docker-volume-backup/commit/bb6ead0d48066727158433a9171f6e7eb4786a5c))
+
+pip: bump python-on-whales from 0.66.0 to 0.67.0
+
+- Optimize semantic-release
+  ([`96947dd`](https://github.com/qaldak/docker-volume-backup/commit/96947dde260aed3e576f71f3d1d8a62b7c553222))
+
 - Semantic-release.yml
   ([`b87a3c4`](https://github.com/qaldak/docker-volume-backup/commit/b87a3c4c68a0d8aa92d5a615db137911b92eb7e5))
 
 - Semantic-release.yml
   ([`ffb9670`](https://github.com/qaldak/docker-volume-backup/commit/ffb96704a399ef4572e560d9a1a5cf5540d14b5a))
 
-- Optimize semantic-release
-  ([`96947dd`](https://github.com/qaldak/docker-volume-backup/commit/96947dde260aed3e576f71f3d1d8a62b7c553222))
-
-- Merge pull request #8 from qaldak/dependabot/pip/python-on-whales-0.67.0
-  ([`bb6ead0`](https://github.com/qaldak/docker-volume-backup/commit/bb6ead0d48066727158433a9171f6e7eb4786a5c))
-
-pip: bump python-on-whales from 0.66.0 to 0.67.0
-
 ### Documentation
-
-- Update CHANGELOG.md
-  ([`da13737`](https://github.com/qaldak/docker-volume-backup/commit/da1373777a814755bd7a1ecaab6461a4070d69a7))
 
 - Update Changelog
   ([`ef9dceb`](https://github.com/qaldak/docker-volume-backup/commit/ef9dceb88fbacf90528944fc759ce83f3110ba3f))
 
-### Refactoring
+- Update CHANGELOG.md
+  ([`da13737`](https://github.com/qaldak/docker-volume-backup/commit/da1373777a814755bd7a1ecaab6461a4070d69a7))
 
-- Config file for semantic-release
-  ([`4c48200`](https://github.com/qaldak/docker-volume-backup/commit/4c482001e25507ba7ed0a33394396f11e7854439))
+### Refactoring
 
 - Commit for test only
   ([`b4ce3d1`](https://github.com/qaldak/docker-volume-backup/commit/b4ce3d1d9fcf941b67b92727120e54ebbffdf37d))
+
+- Config file for semantic-release
+  ([`4c48200`](https://github.com/qaldak/docker-volume-backup/commit/4c482001e25507ba7ed0a33394396f11e7854439))
 
 - Semantic-release
   ([`0e36e4d`](https://github.com/qaldak/docker-volume-backup/commit/0e36e4df680cbaea1af4d96b63f538da6f33f115))
@@ -862,28 +952,28 @@ refactor: semantic-release
 
 ### Bug Fixes
 
-- Typo
-  ([`c5bbe26`](https://github.com/qaldak/docker-volume-backup/commit/c5bbe26a0b5640e57af45cf5a61f8c90844bde14))
-
-- Typo
-  ([`bf0050c`](https://github.com/qaldak/docker-volume-backup/commit/bf0050cd3450642e4919eb562b58a15e244e7846))
-
 - Type
   ([`2bb3620`](https://github.com/qaldak/docker-volume-backup/commit/2bb3620c5763466e049ee0c6d80273871cf8a772))
 
 - Type
   ([`962b0a7`](https://github.com/qaldak/docker-volume-backup/commit/962b0a73e34d302f389b2f759ba520e65db86283))
 
+- Typo
+  ([`c5bbe26`](https://github.com/qaldak/docker-volume-backup/commit/c5bbe26a0b5640e57af45cf5a61f8c90844bde14))
+
+- Typo
+  ([`bf0050c`](https://github.com/qaldak/docker-volume-backup/commit/bf0050cd3450642e4919eb562b58a15e244e7846))
+
 ### Refactoring
+
+- Outputs on workflow_call
+  ([`85de53b`](https://github.com/qaldak/docker-volume-backup/commit/85de53b5135acc863bfb5892ccdfb90c1a7fc7a0))
 
 - Semantic-release
   ([`71c0dcf`](https://github.com/qaldak/docker-volume-backup/commit/71c0dcf0686c851a4a67c8faa8ced8616480ee13))
 
 - Semantic-release
   ([`fc6f830`](https://github.com/qaldak/docker-volume-backup/commit/fc6f83007b8d64be5cffbecefd043ea0fc28e7ae))
-
-- Outputs on workflow_call
-  ([`85de53b`](https://github.com/qaldak/docker-volume-backup/commit/85de53b5135acc863bfb5892ccdfb90c1a7fc7a0))
 
 
 ## v0.1.0 (2023-11-07)
