@@ -1,6 +1,26 @@
 # CHANGELOG
 
 
+## v1.0.15 (2024-12-27)
+
+### Chores
+
+- Pip: bump slack-sdk from 3.33.5 to 3.34.0
+  ([`0fd81c1`](https://github.com/qaldak/docker-volume-backup/commit/0fd81c1aabf95b8a872c65304f67abbba820dd04))
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.5 to 3.34.0. - [Release
+  notes](https://github.com/slackapi/python-slack-sdk/releases) -
+  [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.33.5...v3.34.0)
+
+--- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
+
+update-type: version-update:semver-minor
+
+...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+
 ## v1.0.14 (2024-12-09)
 
 ### Chores
