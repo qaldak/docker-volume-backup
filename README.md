@@ -37,7 +37,7 @@ It is also possible to restore a Docker volume from a backup file.
 | MQTT_PORT          | Port of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                                    |
 | MQTT_TOPIC         | Topic for MQTT message. Mandatory, if MQTT_ALERTING is enabled. <br> Wildcards {HOSTNAME} and {CONTAINER} will be replaced at runtime      |
 
-See example in [.env](.env)
+See example in [.env_example](.env_example)
 
 ### Execute
 
