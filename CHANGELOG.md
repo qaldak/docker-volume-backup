@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.0.17 (2025-03-24)
+
+### Chores
+
+- Pip: bump slack-sdk from 3.34.0 to 3.35.0
+  ([`3489fdc`](https://github.com/qaldak/docker-volume-backup/commit/3489fdcd0524fa8c9901ad5394b4181fc92a8806))
+
+Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.34.0 to 3.35.0. - [Release
+  notes](https://github.com/slackapi/python-slack-sdk/releases) -
+  [Commits](https://github.com/slackapi/python-slack-sdk/compare/v3.34.0...v3.35.0)
+
+--- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
+
+update-type: version-update:semver-minor ...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+
 ## v1.0.16 (2025-01-13)
 
 ### Chores
@@ -14,9 +32,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -34,9 +50,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.5 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -54,9 +68,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.4 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -74,9 +86,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.3 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -94,9 +104,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -114,9 +122,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.2 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -134,9 +140,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.33.1 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -154,9 +158,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.32.0 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -174,9 +176,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -194,9 +194,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.31.0 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -215,9 +213,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.30.0 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -235,9 +231,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -256,9 +250,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.29.0 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -277,9 +269,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.2 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -298,9 +288,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.1 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -338,9 +326,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -361,7 +347,7 @@ feat!: force new major version
 
 BREAKING CHANGE: change command line parameters for backup (--backup)
 
-### BREAKING CHANGES
+### Breaking Changes
 
 - Change command line parameters for backup (--backup)
 
@@ -382,9 +368,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -410,9 +394,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -439,9 +421,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.27.0 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -492,9 +472,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.2 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -512,9 +490,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -605,9 +581,7 @@ Bumps [python-dotenv](https://github.com/theskumar/python-dotenv) from 1.0.0 to 
 
 --- updated-dependencies: - dependency-name: python-dotenv dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -634,9 +608,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.1 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -722,9 +694,7 @@ Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
 
 --- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
 
-update-type: version-update:semver-minor
-
-...
+update-type: version-update:semver-minor ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
@@ -756,9 +726,7 @@ Bumps [slack-sdk](https://github.com/slackapi/python-slack-sdk) from 3.26.0 to 3
 
 --- updated-dependencies: - dependency-name: slack-sdk dependency-type: direct:production
 
-update-type: version-update:semver-patch
-
-...
+update-type: version-update:semver-patch ...
 
 Signed-off-by: dependabot[bot] <support@github.com>
 
