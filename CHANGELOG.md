@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v1.0.18 (2025-03-31)
+
+### Chores
+
+- Pip: bump python-on-whales from 0.75.1 to 0.76.1
+  ([`0944f5f`](https://github.com/qaldak/docker-volume-backup/commit/0944f5f5bf0a10ad68cc6af6e282973eb41490df))
+
+Bumps [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales) from 0.75.1 to
+  0.76.1. - [Release notes](https://github.com/gabrieldemarmiesse/python-on-whales/releases) -
+  [Commits](https://github.com/gabrieldemarmiesse/python-on-whales/compare/v0.75.1...v0.76.1)
+
+--- updated-dependencies: - dependency-name: python-on-whales dependency-type: direct:production
+
+update-type: version-update:semver-minor ...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+### Documentation
+
+- Update README.md
+  ([`b9eb0c9`](https://github.com/qaldak/docker-volume-backup/commit/b9eb0c93c04f9f925639b1bed261539561a54021))
+
+
 ## v1.0.17 (2025-03-24)
 
 ### Chores
