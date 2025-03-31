@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v1.0.19 (2025-03-31)
+
+### Chores
+
+- Pip: bump python-dotenv from 1.0.1 to 1.1.0
+  ([`74d922a`](https://github.com/qaldak/docker-volume-backup/commit/74d922a9d588d45850a3df2c9bbf5ed9718cbfe4))
+
+Bumps [python-dotenv](https://github.com/theskumar/python-dotenv) from 1.0.1 to 1.1.0. - [Release
+  notes](https://github.com/theskumar/python-dotenv/releases) -
+  [Changelog](https://github.com/theskumar/python-dotenv/blob/main/CHANGELOG.md) -
+  [Commits](https://github.com/theskumar/python-dotenv/compare/v1.0.1...v1.1.0)
+
+--- updated-dependencies: - dependency-name: python-dotenv dependency-type: direct:production
+
+update-type: version-update:semver-minor ...
+
+Signed-off-by: dependabot[bot] <support@github.com>
+
+
 ## v1.0.18 (2025-03-31)
 
 ### Chores
