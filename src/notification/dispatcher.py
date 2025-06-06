@@ -62,7 +62,7 @@ class Dispatcher:
         if receiver == Receiver.SLACK:
             Slack().post_message(self.msg)
 
-        if receiver == Receiver.MQTT:
+        elif receiver == Receiver.MQTT:
             mqtt_msg = Builder.build_mqtt_msg(self.container)
 
             mqtt_topic = Builder.build_mqtt_topic(self.container)

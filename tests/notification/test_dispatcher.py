@@ -39,6 +39,20 @@ class TestDispatcher(TestCase):
         self.assertEqual("", Dispatcher("Foo").msg)  # Todo: check
 
     @patch.dict("src.notification.dispatcher.os.environ",
+                {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SLACK", "COMM_ALERTING": "NEVER"})
+    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
+    @patch("src.notification.dispatcher.Slack.post_message", return_value="")
+    def test_dispatcher_notify_receiver_slack_onfailure(self, msg, post):
+        cfg.hasError = True
+        dispatcher = Dispatcher("Foo")
+        with self.assertLogs("notification.dispatcher", level="DEBUG") as log:
+            dispatcher.notify_chat_receiver()
+            self.assertEqual(
+                ["DEBUG:notification.dispatcher:ready to build the chat message",
+                 "DEBUG:notification.dispatcher:post message to chat tool: Foobar..."],
+                log.output)
+
+    @patch.dict("src.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SIGNAL", "COMM_ALERTING": "NEVER"})
     @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
     def test_dispatcher_notify_receiver_onfailure(self, msg):
