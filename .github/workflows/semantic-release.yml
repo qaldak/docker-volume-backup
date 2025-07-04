@@ -8,6 +8,8 @@ on:
 jobs:
   quality:
     name: Run project test set
+    permissions:
+      contents: read
     uses: ./.github/workflows/python-tests.yml
     with:
       target_workflow: ./.github/workflows/python-tests.yml
