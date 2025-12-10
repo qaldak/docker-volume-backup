@@ -30,6 +30,13 @@ jobs:
       matrix:
         python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        ports:
+          - 2375:2375
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -64,7 +71,7 @@ jobs:
           # python -m unittest tests/*/test_*.py
           pytest tests/ --doctest-modules --junitxml=tests/junit/test-results-${{ matrix.python-version }}.xml
         env:
-          DOCKER_HOST: tcp://docker:2375
+          DOCKER_HOST: tcp://localhost:2375
     
     outputs:
       tests-results: ${{ steps.build.outputs.tests-results }}
