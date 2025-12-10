@@ -69,8 +69,7 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Wait for Docker to be ready
-        run: |
-          timeout 30 sh -c 'until docker info; do echo "Waiting for Docker..."; sleep 2; done'
+        run: sleep 10
 
       - name: Run Tests
         run: |
