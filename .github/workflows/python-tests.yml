@@ -30,6 +30,15 @@ jobs:
       matrix:
         python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        ports:
+          - 2375:2375
+        env:
+          DOCKER_TLS_CERTDIR: ""
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -59,10 +68,15 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
+      - name: Wait for Docker to be ready
+        run: sleep 10
+
       - name: Run Tests
         run: |
           # python -m unittest tests/*/test_*.py
           pytest tests/ --doctest-modules --junitxml=tests/junit/test-results-${{ matrix.python-version }}.xml
-
+        env:
+          DOCKER_HOST: tcp://localhost:2375
+    
     outputs:
       tests-results: ${{ steps.build.outputs.tests-results }}
