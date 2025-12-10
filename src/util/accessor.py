@@ -104,7 +104,8 @@ class LocalHost:
         :return: True if running, False if error occurred
         """
         try:
-            client = docker.from_env()
+            client = docker.from_env(version="auto")
+            logger.debug(f"Docker client API version: {client.api_version}")
             client.ping()
 
         except docker.errors.DockerException as err:
