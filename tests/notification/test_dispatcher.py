@@ -1,13 +1,13 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from notification.dispatcher import Dispatcher
-from util import cfg
-from util.accessor import Alerting, Receiver
+from docker_volume_backup.notification.dispatcher import Dispatcher
+from docker_volume_backup.util import cfg
+from docker_volume_backup.util.accessor import Alerting, Receiver
 
 
 class TestDispatcher(TestCase):
-    @patch.dict("src.notification.dispatcher.os.environ",
+    @patch.dict("docker_volume_backup.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "FOO", "CHAT_SERVICE": "MESSENGER", "COMM_ALERTING": ""})
     def test_dispatcher_init_env_undefined(self):
         dispatcher = Dispatcher("Foo")
@@ -15,7 +15,7 @@ class TestDispatcher(TestCase):
         self.assertEqual(dispatcher.receiver, Receiver.UNDEFINED)
         self.assertEqual(dispatcher.container, "Foo")
 
-    @patch.dict("src.notification.dispatcher.os.environ",
+    @patch.dict("docker_volume_backup.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ALWAYS", "CHAT_SERVICE": "SLACK"})
     def test_dispatcher_init_env_successful(self):
         dispatcher = Dispatcher("Foo")
@@ -23,46 +23,46 @@ class TestDispatcher(TestCase):
         self.assertEqual(Receiver.SLACK, dispatcher.receiver)
         self.assertEqual("Foo", dispatcher.container)
 
-    @patch.dict("src.notification.dispatcher.os.environ",
+    @patch.dict("docker_volume_backup.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "NEVER", "CHAT_SERVICE": "SLACK", "COMM_ALERTING": "NEVER"})
-    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foo")
+    @patch("docker_volume_backup.notification.dispatcher.Builder.build_chat_message", return_value="Foo")
     def test_dispatcher_notify_receiver_unknown(self, msg):
         Dispatcher("Foo").notify_chat_receiver()
         self.assertEqual("", Dispatcher("Foo").msg)  # Todo: check
 
-    @patch.dict("src.notification.dispatcher.os.environ",
+    @patch.dict("docker_volume_backup.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SLACK", "COMM_ALERTING": "NEVER"})
-    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Bar")
+    @patch("docker_volume_backup.notification.dispatcher.Builder.build_chat_message", return_value="Bar")
     def test_dispatcher_notify_receiver_onfailure_noerror(self, msg):
         cfg.hasError = False
         Dispatcher("Foo").notify_chat_receiver()
         self.assertEqual("", Dispatcher("Foo").msg)  # Todo: check
 
-    @patch.dict("src.notification.dispatcher.os.environ",
+    @patch.dict("docker_volume_backup.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SLACK", "COMM_ALERTING": "NEVER"})
-    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
-    @patch("src.notification.dispatcher.Slack.post_message", return_value="")
+    @patch("docker_volume_backup.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
+    @patch("docker_volume_backup.notification.dispatcher.Slack.post_message", return_value="")
     def test_dispatcher_notify_receiver_slack_onfailure(self, msg, post):
         cfg.hasError = True
         dispatcher = Dispatcher("Foo")
-        with self.assertLogs("notification.dispatcher", level="DEBUG") as log:
+        with self.assertLogs("docker_volume_backup.notification.dispatcher", level="DEBUG") as log:
             dispatcher.notify_chat_receiver()
             self.assertEqual(
-                ["DEBUG:notification.dispatcher:ready to build the chat message",
-                 "DEBUG:notification.dispatcher:post message to chat tool: Foobar..."],
+                ["DEBUG:docker_volume_backup.notification.dispatcher:ready to build the chat message",
+                 "DEBUG:docker_volume_backup.notification.dispatcher:post message to chat tool: Foobar..."],
                 log.output)
 
-    @patch.dict("src.notification.dispatcher.os.environ",
+    @patch.dict("docker_volume_backup.notification.dispatcher.os.environ",
                 {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SIGNAL", "COMM_ALERTING": "NEVER"})
-    @patch("src.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
+    @patch("docker_volume_backup.notification.dispatcher.Builder.build_chat_message", return_value="Foobar")
     def test_dispatcher_notify_receiver_onfailure(self, msg):
         cfg.hasError = True
         dispatcher = Dispatcher("Foo")
-        with self.assertLogs("notification.dispatcher", level="DEBUG") as log:
+        with self.assertLogs("docker_volume_backup.notification.dispatcher", level="DEBUG") as log:
             dispatcher.notify_chat_receiver()
             self.assertEqual("Foobar", dispatcher.msg)
             self.assertEqual(
-                ["DEBUG:notification.dispatcher:ready to build the chat message",
-                 "DEBUG:notification.dispatcher:post message to chat tool: Foobar...",
-                 "ERROR:notification.dispatcher:Receiver 'SIGNAL' not implemented yet."],
+                ["DEBUG:docker_volume_backup.notification.dispatcher:ready to build the chat message",
+                 "DEBUG:docker_volume_backup.notification.dispatcher:post message to chat tool: Foobar...",
+                 "ERROR:docker_volume_backup.notification.dispatcher:Receiver 'SIGNAL' not implemented yet."],
                 log.output)

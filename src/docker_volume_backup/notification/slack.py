@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from util import cfg
+from docker_volume_backup.util import cfg
 
 logger = logging.getLogger(__name__)
 

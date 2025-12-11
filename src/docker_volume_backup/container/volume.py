@@ -2,7 +2,7 @@ import logging
 
 from python_on_whales import docker, DockerException
 
-from util import cfg
+from docker_volume_backup.util import cfg
 
 logger = logging.getLogger(__name__)
 

@@ -3,13 +3,13 @@ import subprocess
 from unittest import TestCase
 from unittest.mock import patch
 
-from container.container import Container
+from docker_volume_backup.container.container import Container
 
 
 class TestContainer(TestCase):
 
-    @patch("src.container.container.docker.container.exists", return_value=True)
-    @patch("src.container.container.docker.container.inspect", return_value="00001234")
+    @patch("docker_volume_backup.container.container.docker.container.exists", return_value=True)
+    @patch("docker_volume_backup.container.container.docker.container.inspect", return_value="00001234")
     def test_container_valid(self, mock_container_id, mock_container_state):
         container = Container("Foo")
         self.assertTrue(container.exists(), "Container not exist! Expected: 'True'")
@@ -55,7 +55,7 @@ class TestContainer(TestCase):
             "Command '['docker', 'inspect', '-f', '{{json .Mounts}}', 'Foo']' returned non-zero exit status 1.",
             str(err.exception))
 
-    @patch("src.container.container.docker_cli.from_env")
+    @patch("docker_volume_backup.container.container.docker_cli.from_env")
     def test_is_container_started_by_compose(self, mock_from_env):
         mock_client = mock_from_env.return_value
         container = Container("foo")
@@ -66,7 +66,7 @@ class TestContainer(TestCase):
 
         self.assertEqual((True, "/docker/foo/docker-compose.yml"), container._is_container_started_by_compose())
 
-    @patch("src.container.container.docker_cli.from_env")
+    @patch("docker_volume_backup.container.container.docker_cli.from_env")
     def test_is_container_started_by_compose_false(self, mock_from_env):
         mock_client = mock_from_env.return_value
         container = Container("foo")

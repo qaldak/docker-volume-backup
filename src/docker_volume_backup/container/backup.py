@@ -4,8 +4,8 @@ import time
 
 from python_on_whales import docker, DockerException
 
-from util import cfg
-from util.accessor import LocalHost, calc_duration, Compression, FileExtension
+from docker_volume_backup.util import cfg
+from docker_volume_backup.util.accessor import LocalHost, calc_duration, Compression, FileExtension
 
 logger = logging.getLogger(__name__)
 

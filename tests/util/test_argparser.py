@@ -2,7 +2,7 @@ import logging
 import sys
 from unittest import TestCase
 
-from src.util.argparser import ArgParser
+from docker_volume_backup.util.argparser import ArgParser
 
 
 class TestArgParser(TestCase):

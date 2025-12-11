@@ -2,8 +2,8 @@ import logging
 import os
 import time
 
-from util import cfg
-from util.accessor import LocalHost, calc_duration
+from docker_volume_backup.util import cfg
+from docker_volume_backup.util.accessor import LocalHost, calc_duration
 
 logger = logging.getLogger(__name__)
 
