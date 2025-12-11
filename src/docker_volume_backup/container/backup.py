@@ -81,7 +81,9 @@ class Backup:
 
     def _exec_docker_run(self, cmd: list[str]):
         logger.debug("Execute docker run command")
-        return docker.run("busybox:latest", cmd, remove=True, volumes_from=self.container.name,
+        logger.debug(cmd)
+        logger.debug(self.container.name)
+        return docker.run("busybox:latest", cmd, remove=True, volumes_from=[self.container.name],
                           volumes=self.volume_mapping, detach=False)
 
     def _get_backup_filename(self) -> str:
