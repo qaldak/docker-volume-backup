@@ -55,22 +55,24 @@ class TestContainer(TestCase):
             "Command '['docker', 'inspect', '-f', '{{json .Mounts}}', 'Foo']' returned non-zero exit status 1.",
             str(err.exception))
 
-    @patch("src.container.container.docker_cli.client.Client.inspect_container")
-    def test_is_container_started_by_compose(self, mock_inspect_container):
+    @patch("src.container.container.docker_cli.from_env")
+    def test_is_container_started_by_compose(self, mock_from_env):
+        mock_client = mock_from_env.return_value
         container = Container("foo")
 
         # Mocking the return value
         with open("tests/fixtures/docker_inspect_with_compose.json") as file:
-            mock_inspect_container.return_value = json.load(file)
+            mock_client.containers.client.inspect_container.return_value = json.load(file)
 
         self.assertEqual((True, "/docker/foo/docker-compose.yml"), container._is_container_started_by_compose())
 
-    @patch("src.container.container.docker_cli.client.Client.inspect_container")
-    def test_is_container_started_by_compose_false(self, mock_inspect_container):
+    @patch("src.container.container.docker_cli.from_env")
+    def test_is_container_started_by_compose_false(self, mock_from_env):
+        mock_client = mock_from_env.return_value
         container = Container("foo")
 
         # Mocking the return value
         with open("tests/fixtures/docker_inspect_without_compose.json") as file:
-            mock_inspect_container.return_value = json.load(file)
+            mock_client.containers.client.inspect_container.return_value = json.load(file)
 
         self.assertEqual((False, None), container._is_container_started_by_compose())

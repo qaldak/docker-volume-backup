@@ -181,7 +181,7 @@ class Container:
     def _is_container_started_by_compose(self):
         try:
             client = docker_cli.from_env()
-            response = client.inspect_container(container=self.name)
+            response = client.containers.client.inspect_container(container=self.name)
 
             response_json = json.loads(json.dumps(response))
             logger.debug(f"response_json: {response_json}")
