@@ -16,7 +16,7 @@ It is also possible to restore a Docker volume from a backup file.
 ### Install
 
 1. Clone code from GitHub https://github.com/qaldak/docker-volume-backup.git (or Download it)
-2. Install Python libs `pip install .`
+2. Run **[setup.sh](setup.sh)** to install with venv (recommended)
 
 ### Configuration (.env file)
 
@@ -45,7 +45,7 @@ See example in [.env_example](.env_example)
 
 __create backup__
 
-`python3 -m src.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
+`python3 -m docker_volume_backup.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
 
 optional parameter:
 
@@ -55,7 +55,7 @@ optional parameter:
 
 __restore backup__
 
-`python3 -m src.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [--debug]`
+`python3 -m docker_volume_backup.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [--debug]`
 
 optional parameter:
 
@@ -63,13 +63,13 @@ optional parameter:
 
 #### Cronjob
 
-`05 0 * * * cd <PATH> ; python3 -m src.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
+`05 0 * * * cd <PATH> ; python3 -m docker_volume_backup.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
 
 optional parameter: see Command line
 
 ### Requirements
 
-* Python 3.09 or higher
+* Python 3.10 or higher
 * Python modules, see [requirements.txt](requirements.txt)
 
 ### Links

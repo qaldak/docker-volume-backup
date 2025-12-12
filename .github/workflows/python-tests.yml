@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13", "3.14" ]
 
     services:
       docker:
@@ -49,13 +49,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest
+          pip install flake8 pytest setuptools
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      # temporary only until distutils provided in Python 3.12
-      - name: Install setuptools for Python3.12
-        run: |
-          if [ "${{ matrix.python-version }}" == "3.12" ]; then pip install setuptools; fi
 
       - name: Install python project
         run: |
