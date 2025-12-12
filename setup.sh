@@ -140,6 +140,11 @@ else
     echo "WARNING: requirements.txt not found"
 fi
 
+# Install/Update docker_volume_backup
+echo ""
+echo "Install docker_volume_backup ..."
+pip install .
+
 echo ""
 echo ""
 echo "=== Setup completed successfully ==="
