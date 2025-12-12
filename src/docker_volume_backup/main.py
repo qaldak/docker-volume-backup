@@ -5,15 +5,15 @@ import time
 
 from dotenv import load_dotenv
 
-from container.backup import Backup
-from container.container import Container
-from container.recovery import Recovery
-from container.volume import Volume
-from notification.dispatcher import Dispatcher
-from util import cfg
-from util.accessor import BackupDir, LocalHost, EnvSettings
-from util.argparser import ArgParser
-from util.logger import Logger
+from docker_volume_backup.container.backup import Backup
+from docker_volume_backup.container.container import Container
+from docker_volume_backup.container.recovery import Recovery
+from docker_volume_backup.container.volume import Volume
+from docker_volume_backup.notification.dispatcher import Dispatcher
+from docker_volume_backup.util import cfg
+from docker_volume_backup.util.accessor import BackupDir, LocalHost, EnvSettings
+from docker_volume_backup.util.argparser import ArgParser
+from docker_volume_backup.util.logger import Logger
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@ import warnings
 from unittest import TestCase
 from unittest.mock import patch
 
-from container.recovery import Recovery
+from docker_volume_backup.container.recovery import Recovery
 
 
 class TestRecovery(TestCase):
@@ -34,7 +34,7 @@ class TestRecovery(TestCase):
                          "Tar command failed")
 
     @patch("builtins.print")
-    @patch("src.container.recovery.docker.run", return_value="4")
+    @patch("docker_volume_backup.container.recovery.docker.run", return_value="4")
     def test_check_recovery_successful(self, mock_docker_vol_content, mock_print):
         recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")
@@ -43,7 +43,7 @@ class TestRecovery(TestCase):
         mock_print.assert_called_with("Recovery successful. Number of restored files matches: 4 vs 4")
 
     @patch("warnings.warn")
-    @patch("src.container.recovery.docker.run", return_value="7")
+    @patch("docker_volume_backup.container.recovery.docker.run", return_value="7")
     def test_check_recovery_failed(self, mock_docker_vol_content, mock_warning):
         recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")
@@ -53,7 +53,7 @@ class TestRecovery(TestCase):
             mock_warning.assert_called_with(
                 "Number of restored files does not match the content of tar file: 7 vs 4. Check manually or run again in debug mode for more details.")
 
-    @patch("src.container.recovery.docker.run", return_value="Foobar")
+    @patch("docker_volume_backup.container.recovery.docker.run", return_value="Foobar")
     def test_check_recovery_error(self, mock_docker_vol_content):
         recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")

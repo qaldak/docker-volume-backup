@@ -2,11 +2,11 @@ import logging
 import os
 from enum import Enum
 
-from notification.builder import Builder
-from notification.mqtt import MQTT
-from notification.slack import Slack
-from util import cfg
-from util.accessor import Alerting, Receiver
+from docker_volume_backup.notification.builder import Builder
+from docker_volume_backup.notification.mqtt import MQTT
+from docker_volume_backup.notification.slack import Slack
+from docker_volume_backup.util import cfg
+from docker_volume_backup.util.accessor import Alerting, Receiver
 
 logger = logging.getLogger(__name__)
 

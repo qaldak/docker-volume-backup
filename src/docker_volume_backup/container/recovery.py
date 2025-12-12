@@ -4,8 +4,8 @@ import warnings
 
 from python_on_whales import DockerException, docker
 
-from container.volume import logger
-from util.accessor import Compression, FileExtension
+from docker_volume_backup.container.volume import logger
+from docker_volume_backup.util.accessor import Compression, FileExtension
 
 
 class Recovery:

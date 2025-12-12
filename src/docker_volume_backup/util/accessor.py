@@ -105,7 +105,7 @@ class LocalHost:
         """
         try:
             client = docker.from_env(version="auto")
-            logger.debug(f"Docker client API version: {client.api_version}")
+            logger.debug(f"Docker client API version: {client.api.api_version}")
             client.ping()
 
         except docker.errors.DockerException as err:
