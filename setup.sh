@@ -35,7 +35,7 @@ show_version_info() {
             ;;
         3.11|3.12)
             echo ""
-            echo "✓ Python $version is a stable and recommended version."
+            echo "✓ venv installed with Python $version (stable and recommended version)."
             ;;
         *)
             echo ""
