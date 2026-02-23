@@ -1,6 +1,6 @@
 docker==7.1.0
 python-dotenv==1.2.1
 python-on-whales==0.80.0
-slack_sdk==3.40.0
+slack_sdk==3.40.1
 # urllib3<2 # Todo: check https://github.com/docker/docker-py/issues/3113
 pydantic>=2,<3,!=2.0.* # Todo: check https://github.com/gabrieldemarmiesse/python-on-whales/blob/master/requirements.txt
