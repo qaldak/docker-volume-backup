@@ -1,6 +1,6 @@
 [project]
 name = "docker-volume-backup"
-version = "3.0.5"
+version = "3.0.6"
 authors = [{ name = "Qaldak" }]
 readme = "README.md"
 requires-python = ">=3.10"
