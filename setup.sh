@@ -116,6 +116,12 @@ echo "Python command: $PYTHON_CMD"
 
 # Setup venv
 echo ""
+if [ -d "$VENV_DIR" ] && [ ! -x "$VENV_DIR/bin/python" ]; then
+    echo "Existing venv at '$VENV_DIR' has no working Python interpreter (its original Python "
+    echo "installation was likely removed or upgraded). Recreating it ..."
+    rm -rf "$VENV_DIR"
+fi
+
 if [ ! -d "$VENV_DIR" ]; then
     echo "Setup new virtual environment (venv) ..."
     $PYTHON_CMD -m venv "$VENV_DIR"
