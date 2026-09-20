@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from datetime import datetime
 
 from python_on_whales import docker, DockerException
 
@@ -11,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class Backup:
+
+    BASE_IMAGE = "busybox:latest"
+    DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
 
     def __init__(self, container, backup_dir):
         """
@@ -79,12 +83,50 @@ class Backup:
         logger.debug(f"tar command created: {tar_cmd}")
         return tar_cmd
 
+    @staticmethod
+    def _get_image_refresh_day() -> int:
+        """
+        determine the day of month on which the base image should be pulled from the registry,
+        according to IMAGE_REFRESH_DAY in .env.
+
+        :return: day of month (1-31) (int)
+        """
+        raw = os.getenv("IMAGE_REFRESH_DAY") or Backup.DEFAULT_IMAGE_REFRESH_DAY
+
+        try:
+            day = int(raw)
+
+            if not 1 <= day <= 31:
+                raise ValueError(f"Day must be between 1 and 31, got: '{raw}'")
+
+            return day
+
+        except ValueError as err:
+            logger.warning(f"IMAGE_REFRESH_DAY not defined properly: '{raw}'. {err} "
+                           f"Using default: '{Backup.DEFAULT_IMAGE_REFRESH_DAY}'")
+            return Backup.DEFAULT_IMAGE_REFRESH_DAY
+
+    @staticmethod
+    def _should_refresh_image() -> bool:
+        """
+        Limits explicit registry pulls of the base image to the configured day of month, so
+        the image stays reasonably up to date without checking the registry on every run.
+
+        :return: True if today is the configured refresh day of the month (bool)
+        """
+        return datetime.now().day == Backup._get_image_refresh_day()
+
     def _exec_docker_run(self, cmd: list[str]):
         logger.debug("Execute docker run command")
         logger.debug(cmd)
         logger.debug(self.container.name)
-        return docker.run("busybox:latest", cmd, remove=True, volumes_from=[self.container.name],
-                          volumes=self.volume_mapping, detach=False)
+
+        pull = "always" if self._should_refresh_image() else "missing"
+        if pull == "always":
+            logger.info(f"Scheduled refresh day: pulling '{self.BASE_IMAGE}' from registry before backup run.")
+
+        return docker.run(self.BASE_IMAGE, cmd, remove=True, volumes_from=[self.container.name],
+                          volumes=self.volume_mapping, detach=False, pull=pull)
 
     def _get_backup_filename(self) -> str:
         """
