@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Backup:
 
     BASE_IMAGE = "busybox:latest"
-    IMAGE_REFRESH_DAY = 1  # day of month on which the base image is pulled from the registry
+    DEFAULT_IMAGE_REFRESH_DAYS = "1"  # fallback if IMAGE_REFRESH_DAYS is undefined or invalid
 
     def __init__(self, container, backup_dir):
         """
@@ -84,14 +84,37 @@ class Backup:
         return tar_cmd
 
     @staticmethod
+    def _get_image_refresh_days() -> set[int]:
+        """
+        determine the days of month on which the base image should be pulled from the registry,
+        according to IMAGE_REFRESH_DAYS in .env (comma separated, e.g. "1,15").
+
+        :return: set of days of month (1-31) (set[int])
+        """
+        raw = os.getenv("IMAGE_REFRESH_DAYS") or Backup.DEFAULT_IMAGE_REFRESH_DAYS
+
+        try:
+            days = {int(day.strip()) for day in raw.split(",") if day.strip()}
+
+            if not days or any(day < 1 or day > 31 for day in days):
+                raise ValueError(f"Days must be between 1 and 31, got: '{raw}'")
+
+            return days
+
+        except ValueError as err:
+            logger.warning(f"IMAGE_REFRESH_DAYS not defined properly: '{raw}'. {err} "
+                           f"Using default: '{Backup.DEFAULT_IMAGE_REFRESH_DAYS}'")
+            return {int(Backup.DEFAULT_IMAGE_REFRESH_DAYS)}
+
+    @staticmethod
     def _should_refresh_image() -> bool:
         """
-        Limits explicit registry pulls of the base image to once a month, so the image
-        stays reasonably up to date without checking the registry on every run.
+        Limits explicit registry pulls of the base image to the configured days of month, so
+        the image stays reasonably up to date without checking the registry on every run.
 
-        :return: True if today is the configured refresh day of the month (bool)
+        :return: True if today is one of the configured refresh days of the month (bool)
         """
-        return datetime.now().day == Backup.IMAGE_REFRESH_DAY
+        return datetime.now().day in Backup._get_image_refresh_days()
 
     def _exec_docker_run(self, cmd: list[str]):
         logger.debug("Execute docker run command")
@@ -100,7 +123,7 @@ class Backup:
 
         pull = "always" if self._should_refresh_image() else "missing"
         if pull == "always":
-            logger.info(f"Monthly refresh due: pulling '{self.BASE_IMAGE}' from registry before backup run.")
+            logger.info(f"Scheduled refresh day: pulling '{self.BASE_IMAGE}' from registry before backup run.")
 
         return docker.run(self.BASE_IMAGE, cmd, remove=True, volumes_from=[self.container.name],
                           volumes=self.volume_mapping, detach=False, pull=pull)

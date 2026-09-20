@@ -28,6 +28,7 @@ It is also possible to restore a Docker volume from a backup file.
 | BACKUP_FILE_PERMS  | (optional) Define permissions for created backup file, numeric mode only, e.g. 741                                                         |
 | LOG_DIR            | Path for log directory                                                                                                                     |
 | COMPRESSION_METHOD | (optional) Define the compression method for tar file. Possible values are: <br> GZIP (default, if undefined) <br> BZIP2                   |
+| IMAGE_REFRESH_DAYS | (optional) Comma separated day(s) of month on which the `busybox` base image is pulled from the registry, e.g. `1,15`. <br> Default (if undefined or invalid): `1`. On all other days the locally cached image is reused. |
 | CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                                 |
 | CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                                          |
 | SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                             |
