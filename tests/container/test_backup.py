@@ -175,30 +175,30 @@ class TestBackup(TestCase):
         backup = Backup(container=container, backup_dir=backup_dir)
         self.assertFalse(backup._should_refresh_image())
 
-    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAYS": "1, 15"})
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAY": "15"})
     @patch("docker_volume_backup.container.backup.datetime")
-    def test_should_refresh_image_true_on_configured_second_day(self, mock_datetime):
+    def test_should_refresh_image_true_on_configured_day(self, mock_datetime):
         mock_datetime.now.return_value = datetime(2026, 3, 15)
         container = MockContainer()
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
         self.assertTrue(backup._should_refresh_image())
 
-    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAYS": "1,15"})
-    def test_get_image_refresh_days_multiple(self):
-        self.assertEqual({1, 15}, Backup._get_image_refresh_days())
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAY": "15"})
+    def test_get_image_refresh_day_configured(self):
+        self.assertEqual(15, Backup._get_image_refresh_day())
 
     @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
-    def test_get_image_refresh_days_default_when_unset(self):
-        self.assertEqual({1}, Backup._get_image_refresh_days())
+    def test_get_image_refresh_day_default_when_unset(self):
+        self.assertEqual(1, Backup._get_image_refresh_day())
 
-    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAYS": "5,foo"})
-    def test_get_image_refresh_days_falls_back_on_invalid_value(self):
-        self.assertEqual({1}, Backup._get_image_refresh_days())
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAY": "foo"})
+    def test_get_image_refresh_day_falls_back_on_invalid_value(self):
+        self.assertEqual(1, Backup._get_image_refresh_day())
 
-    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAYS": "0,45"})
-    def test_get_image_refresh_days_falls_back_on_out_of_range_value(self):
-        self.assertEqual({1}, Backup._get_image_refresh_days())
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAY": "45"})
+    def test_get_image_refresh_day_falls_back_on_out_of_range_value(self):
+        self.assertEqual(1, Backup._get_image_refresh_day())
 
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=True)
     @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
