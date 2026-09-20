@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -46,10 +47,11 @@ class TestBackup(TestCase):
             Backup(container=container, backup_dir=backup_dir).run_backup()
         self.assertEqual(115, err.exception.return_code)
 
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
     @patch("docker_volume_backup.container.backup.os.path.getsize", return_value=987654321)
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
     @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
-    def test_run_backup_successful(self, tmp, hostname, filesize):
+    def test_run_backup_successful(self, tmp, hostname, filesize, should_refresh):
         backup_dir = MockBackupDir()
         container = MockContainer()
         with self.assertLogs("docker_volume_backup.container.backup", level="INFO") as log:
@@ -156,3 +158,37 @@ class TestBackup(TestCase):
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
         self.assertEqual(987654321, backup._get_backup_file_size())
+
+    @patch("docker_volume_backup.container.backup.datetime")
+    def test_should_refresh_image_true_on_refresh_day(self, mock_datetime):
+        mock_datetime.now.return_value = datetime(2026, 3, 1)
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertTrue(backup._should_refresh_image())
+
+    @patch("docker_volume_backup.container.backup.datetime")
+    def test_should_refresh_image_false_on_other_days(self, mock_datetime):
+        mock_datetime.now.return_value = datetime(2026, 3, 15)
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        self.assertFalse(backup._should_refresh_image())
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=True)
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
+    def test_exec_docker_run_pulls_on_refresh_day(self, docker_run, should_refresh):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        backup._exec_docker_run(["chown", "1000", backup.backup_file])
+        self.assertEqual("always", docker_run.call_args.kwargs["pull"])
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
+    def test_exec_docker_run_skips_pull_on_other_days(self, docker_run, should_refresh):
+        container = MockContainer()
+        backup_dir = MockBackupDir()
+        backup = Backup(container=container, backup_dir=backup_dir)
+        backup._exec_docker_run(["chown", "1000", backup.backup_file])
+        self.assertEqual("missing", docker_run.call_args.kwargs["pull"])
