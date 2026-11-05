@@ -69,15 +69,17 @@ class Backup:
         cmp_method, file_ext = self._determine_compression_method()
         backup_filepath = self._get_backup_filepath()
 
+        # "-C /" + paths without leading "/" gives identical archive member names as before,
+        # but avoids the "tar: removing leading '/' from member names" message on stderr (cron mail).
         tar_cmd = ["tar", "c", f"{cmp_method}", "-f",
-                   f"{backup_filepath}"]
+                   f"{backup_filepath}", "-C", "/"]
 
         for volume in self.container.docker_volumes:
-            tar_cmd.append(f"{volume}")
+            tar_cmd.append(f"{volume}".lstrip("/"))
             logger.debug(f"Add volume {volume} to tar command")
 
         for binding in self.container.docker_bindings:
-            tar_cmd.append(f"{binding}")
+            tar_cmd.append(f"{binding}".lstrip("/"))
             logger.debug(f"Add binding {binding} to tar command")
 
         logger.debug(f"tar command created: {tar_cmd}")
