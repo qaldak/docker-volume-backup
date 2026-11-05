@@ -59,8 +59,8 @@ class TestBackup(TestCase):
             self.assertEqual([
                 "INFO:docker_volume_backup.container.backup:Execute Volume backup for container 'foo_bar'. tar "
                 "command: ['tar', 'c', '-z', '-f', "
-                "'/backup/groot-foo_bar-volume-backup.tar.gz', '/foo/data', '/foo/config', "
-                "'/bar/log']",
+                "'/backup/groot-foo_bar-volume-backup.tar.gz', '-C', '/', 'foo/data', 'foo/config', "
+                "'bar/log']",
                 "INFO:docker_volume_backup.container.backup:Volume backup for container 'foo_bar' successful. "
                 'Duration: 0:00:00, Backup size: 987654321'],
                 log.output)
@@ -71,8 +71,8 @@ class TestBackup(TestCase):
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
         tar_cmd = backup._create_tar_cmd()
-        assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz", "/foo/data", "/foo/config",
-                "/bar/log"] == tar_cmd
+        assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz", "-C", "/", "foo/data", "foo/config",
+                "bar/log"] == tar_cmd
 
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
     def test_create_tar_cmd_default_bz2(self, host):
@@ -82,8 +82,8 @@ class TestBackup(TestCase):
             backup_dir = MockBackupDir()
             backup = Backup(container=container, backup_dir=backup_dir)
             tar_cmd = backup._create_tar_cmd()
-            assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2", "/foo/data", "/foo/config",
-                    "/bar/log"] == tar_cmd
+            assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2", "-C", "/", "foo/data", "foo/config",
+                    "bar/log"] == tar_cmd
 
     @patch("docker_volume_backup.container.backup.os.getenv", return_value="GZIP")
     def test_determine_compression_method_gz(self, env):
