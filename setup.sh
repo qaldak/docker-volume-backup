@@ -4,7 +4,7 @@ set -euo pipefail
 # === Configuration ===
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_DIR/venv"
-REQ_FILE="$PROJECT_DIR/requirements.txt"
+MIN_PYTHON="3.10"  # keep in sync with requires-python in pyproject.toml
 
 # === Helpers ===
 get_python_version() {
@@ -20,27 +20,19 @@ get_python_version() {
 show_version_info() {
   local version=$1
   case $version in
-    3.13|3.14|3.15)
-      echo
-      echo "⚠ WARNING: Python $version may not be fully tested yet."
-      echo "Proceed with caution."
-      ;;
-    3.9)
-      echo
-      echo "⚠ WARNING: Python $version reached End-of-Life in October 2025."
-      echo "Consider upgrading to a supported version."
-      ;;
     3.10)
       echo
-      echo "ℹ INFO: Python $version will reach End-of-Life in October 2026."
+      echo "⚠ WARNING: Python $version reached End-of-Life in October 2026."
+      echo "Consider upgrading to a supported version."
       ;;
-    3.11|3.12)
+    3.11|3.12|3.13|3.14)
       echo
-      echo "✓ venv installed with Python $version (stable and recommended)."
+      echo "✓ venv installed with Python $version (covered by the CI test matrix)."
       ;;
     *)
       echo
-      echo "⚠ WARNING: Python $version not supported. Install a supported version or proceed at your own risk."
+      echo "⚠ WARNING: Python $version is not covered by the CI test matrix (3.10 - 3.14)."
+      echo "Proceed with caution."
       ;;
   esac
 }
@@ -90,7 +82,7 @@ echo "----------------------------------------"
 # Prompt user for selection
 while true; do
   echo
-  read -p "Select Python version (1-${#PYTHON_COMMANDS[@]}): " selection
+  read -r -p "Select Python version (1-${#PYTHON_COMMANDS[@]}): " selection
 
   # Validate input
   if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#PYTHON_COMMANDS[@]}" ]; then
@@ -105,6 +97,13 @@ index=$((selection - 1))
 PYTHON_CMD="${PYTHON_COMMANDS[$index]}"
 PYTHON_VERSION_SHORT="${PYTHON_VERSIONS[$index]}"
 PYTHON_VERSION_FULL=$($PYTHON_CMD --version 2>&1)
+
+# Reject Python versions below the minimum required by the project
+if ! "$PYTHON_CMD" -c "import sys; sys.exit(0 if sys.version_info >= tuple(map(int, '$MIN_PYTHON'.split('.'))) else 1)"; then
+  echo
+  echo "ERROR: $PYTHON_VERSION_FULL is not supported. Python $MIN_PYTHON or higher is required."
+  exit 1
+fi
 
 echo
 echo "Selected: $PYTHON_VERSION_FULL"
@@ -129,36 +128,23 @@ fi
 # shellcheck disable=SC1090
 source "$VENV_DIR/bin/activate"
 
-# Upgrade packaging tools
+# Update pip
 echo
-echo "Upgrade pip, setuptools and wheel ..."
-python -m pip install --upgrade pip setuptools wheel build
+echo "Update pip ..."
+python -m pip install --upgrade pip
 
-# Install/Update dependencies
+# Install/Update docker_volume_backup including its dependencies (pinned in requirements.txt).
+# No separate 'pip install -r requirements.txt': it caused false dependency conflict
+# messages when an older installed version still pinned other dependency versions.
 echo
-if [ -f "$REQ_FILE" ]; then
-  echo "Install or update dependencies ..."
-  pip install --upgrade -r "$REQ_FILE"
-else
-  echo "WARNING: requirements.txt not found"
-fi
+echo "Install docker_volume_backup and dependencies ..."
+pip install --upgrade "$PROJECT_DIR"
 
-# Build and install package reproducibly
+# Verify dependency graph (warning only)
 echo
-echo "Install package ..."
-pip install --upgrade .
-
-
-# Verify dependency graph
-echo
-echo "Verify installed packages and dependency consistency ..."
-pip check || true
-
-# Optional: run tests if pytest present
-if command -v pytest > /dev/null 2>&1; then
-  echo
-  echo "Running test suite (pytest) ..."
-  pytest || echo "Tests failed or returned non-zero exit code"
+echo "Verify installed packages ..."
+if ! pip check; then
+  echo "⚠ WARNING: pip reports dependency problems (see above)."
 fi
 
 echo
