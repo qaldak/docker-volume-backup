@@ -9,7 +9,33 @@ import docker
 logger = logging.getLogger(__name__)
 
 
+def parse_file_mode(value, default: int, name: str) -> int:
+    """
+    Parse a permission setting in octal notation, e.g. "640".
+
+    :param value: setting from .env (None or empty: use default)
+    :param default: mode to use if the setting is undefined or invalid
+    :param name: name of the setting for the log message
+    :return: file mode (int)
+    """
+    value = str(value).strip() if value else ""
+    if not value:
+        return default
+
+    try:
+        mode = int(value, 8)
+        if not value.isdigit() or mode > 0o7777:
+            raise ValueError("not an octal mode")
+        return mode
+
+    except ValueError:
+        logger.warning(f"{name} not defined properly: '{value}'. Octal mode like '{default:o}' expected. "
+                       f"Using default: '{default:o}'")
+        return default
+
+
 class BackupDir:
+    DEFAULT_PERMS = 0o750  # permissions of a created backup directory, if BACKUP_DIR_PERMS is undefined or invalid
 
     def __init__(self, path):
         """
@@ -42,8 +68,10 @@ class BackupDir:
             return
 
         try:
-            os.makedirs(self.path, 0o777)
-            logger.info(f"Backup directory created: {self.path}")
+            perms = parse_file_mode(os.getenv("BACKUP_DIR_PERMS"), self.DEFAULT_PERMS, "BACKUP_DIR_PERMS")
+            os.makedirs(self.path, perms)
+            os.chmod(self.path, perms)  # makedirs mode is reduced by the umask
+            logger.info(f"Backup directory created: {self.path}, permissions: {perms:o}")
 
         except FileExistsError as err:
             msg = f"Backup directory '{self.path}' exists. {err}"
