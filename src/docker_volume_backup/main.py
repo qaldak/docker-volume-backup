@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os.path
 import sys
@@ -139,20 +140,30 @@ def restore_backup(docker_volume, target_path, backup_file):
     print("Recovery process done.")
 
 
-def main() -> int:
+def init_environment() -> argparse.Namespace:
     """
-    :return: process exit code: 0 on success, 1 if the backup failed
+    Administrative part of the start: load and validate the .env settings, parse the command line
+    and initialize logging. Kept out of main() so that main() only runs the actual backup/restore.
+
+    :return: parsed command line arguments
     """
-    # load .env
     load_dotenv()
     EnvSettings().validate()
 
     args = ArgParser.parse_cli_args()
 
-    # initialize objects
     log_identifier = args.container if args.backup else "restore-" + args.dockervolume
     Logger.init_logger(args.loglevel, log_identifier)
 
+    return args
+
+
+def main(args: argparse.Namespace) -> int:
+    """
+    Run backup or restore according to the command line arguments.
+
+    :return: process exit code: 0 on success, 1 if the backup failed
+    """
     logger.debug(f"Start volume backup with args '{args}'")
 
     if args.restore:
@@ -163,4 +174,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(init_environment()))
