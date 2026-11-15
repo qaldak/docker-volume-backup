@@ -51,7 +51,7 @@ __create backup__
 optional parameter:
 
 * "-p" set backup directory path, e.g. "-p /backup/container/foo"
-* "-r" stops container for backup and restart after work
+* "-r" stops container for backup and restart after work (the container is also restarted if the backup fails)
 * "--debug" set loglevel to DEBUG
 
 __restore backup__
@@ -67,6 +67,16 @@ optional parameter:
 `05 0 * * * cd <PATH> ; python3 -m docker_volume_backup.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
 
 optional parameter: see Command line
+
+#### Exit codes
+
+| Exit code | Meaning                                                                                                   |
+|:----------|:----------------------------------------------------------------------------------------------------------|
+| 0         | Backup completed successfully (no output on stdout/stderr)                                                |
+| 1         | Backup failed, e.g. Docker daemon/container not available, tar error or container could not be restarted. The error is written to the log file and reported via the configured notifications. |
+
+Other errors (e.g. invalid `.env` settings or command line parameters) end with a Python error message and a non-zero exit code.
+The exit code of `--restore` is not yet covered by this table.
 
 ### Requirements
 
