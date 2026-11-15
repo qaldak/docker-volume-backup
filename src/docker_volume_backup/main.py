@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os.path
 import sys
@@ -18,10 +19,36 @@ from docker_volume_backup.util.logger import Logger
 logger = logging.getLogger(__name__)
 
 
-def create_backup(path, restart):
+def _restart_container(container):
+    """
+    Start a container that was stopped for the backup. A failing start is flagged as error and
+    added to an already existing backup error instead of replacing it.
+    """
+    previous_error = cfg.errorMsg if cfg.hasError else None
+
+    try:
+        container.start()
+
+    except Exception as err:
+        logger.exception(err)
+
+        cfg.hasError = True
+        if previous_error:
+            cfg.errorMsg = f"{previous_error}. Additionally, container '{container.name}' could not be restarted: {err}"
+        else:
+            cfg.errorMsg = err
+
+
+def create_backup(container, path, restart) -> bool:
+    """
+    Run the volume backup of a container and send the configured notifications.
+
+    :return: True if the backup (including the container restart) completed without error
+    """
     logger.info(f"Start volume backup for container '{container.name}'")
     logger.debug(f"Container: {container.name}, Backup path: {path}")
     cfg.job_start_time = int(time.time())
+    container_stopped = False
 
     try:
         # check Docker daemon is running!
@@ -43,6 +70,8 @@ def create_backup(path, restart):
             raise ValueError(f"No volumes to backup in container '{container.name}'")
 
         if restart:
+            # set before stop(): a failing stop() may leave the container (or parts of it) stopped
+            container_stopped = True
             container.stop()
 
         # init Backup object and run backup tasks
@@ -57,22 +86,23 @@ def create_backup(path, restart):
         if should_change_permissions:
             backup.change_file_permissions()
 
-        # restart stopped container
-        if restart:
-            container.start()
-            # Todo: check container
-
     except Exception as err:
         cfg.hasError = True
         cfg.errorMsg = err
 
         logger.exception(err)
 
-    else:
-        logger.info(f"Volume backup for container '{args.container}' completed successfully")
-
     finally:
+        # always restart a container stopped for the backup, also if the backup failed
+        if container_stopped:
+            _restart_container(container)
+
         cfg.job_end_time = int(time.time())
+
+        # determine the result before notifying: a failing notification must not change the backup result
+        success = not cfg.hasError
+        if success:
+            logger.info(f"Volume backup for container '{container.name}' completed successfully")
 
         # send notification
         dispatcher = Dispatcher(container.name)
@@ -80,6 +110,8 @@ def create_backup(path, restart):
         dispatcher.notify_mqtt_receiver()
 
         logger.info(f"Volume backup done.")
+
+    return success
 
 
 def restore_backup(docker_volume, target_path, backup_file):
@@ -108,23 +140,38 @@ def restore_backup(docker_volume, target_path, backup_file):
     print("Recovery process done.")
 
 
-if __name__ == "__main__":
-    # load .env
+def init_environment() -> argparse.Namespace:
+    """
+    Administrative part of the start: load and validate the .env settings, parse the command line
+    and initialize logging. Kept out of main() so that main() only runs the actual backup/restore.
+
+    :return: parsed command line arguments
+    """
     load_dotenv()
     EnvSettings().validate()
 
     args = ArgParser.parse_cli_args()
 
-    # initialize objects
     log_identifier = args.container if args.backup else "restore-" + args.dockervolume
     Logger.init_logger(args.loglevel, log_identifier)
 
-    if args.backup:
-        container = Container(args.container)
+    return args
 
+
+def main(args: argparse.Namespace) -> int:
+    """
+    Run backup or restore according to the command line arguments.
+
+    :return: process exit code: 0 on success, 1 if the backup failed
+    """
     logger.debug(f"Start volume backup with args '{args}'")
 
     if args.restore:
         restore_backup(args.dockervolume, args.targetpath, args.backupfile)
-    else:
-        create_backup(args.path, args.restart)
+        return 0
+
+    return 0 if create_backup(Container(args.container), args.path, args.restart) else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(init_environment()))
