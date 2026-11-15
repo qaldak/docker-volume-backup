@@ -1,12 +1,14 @@
 import datetime
 import os
+import stat
+import tempfile
 from unittest import TestCase
 from unittest.mock import patch
 
 import docker.errors
 from dotenv import load_dotenv
 
-from docker_volume_backup.util.accessor import BackupDir, LocalHost, calc_duration, EnvSettings
+from docker_volume_backup.util.accessor import BackupDir, LocalHost, calc_duration, EnvSettings, parse_file_mode
 
 
 class TestAccessorBackupDir(TestCase):
@@ -24,11 +26,37 @@ class TestAccessorBackupDir(TestCase):
         backup_dir = BackupDir("/Foo")
         self.assertIsNone(backup_dir.create(), "Directory not found, but should")
 
+    @patch("docker_volume_backup.util.accessor.os.chmod")
     @patch("docker_volume_backup.util.accessor.os.path.isdir", return_value=False)
     @patch("docker_volume_backup.util.accessor.os.makedirs", return_value=None)
-    def test_backup_dir_created(self, mock_dir, mock_makedirs):
+    def test_backup_dir_created(self, mock_dir, mock_makedirs, mock_chmod):
         backup_dir = BackupDir("/Foo")
         self.assertIsNone(backup_dir.create(), "Directory not found, but should")
+
+    @patch.dict("docker_volume_backup.util.accessor.os.environ", {}, clear=True)
+    def test_backup_dir_created_with_default_permissions(self):
+        previous_umask = os.umask(0)  # permissions must not depend on the umask
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                path = os.path.join(directory, "backup")
+                BackupDir(path).create()
+                self.assertEqual(0o750, stat.S_IMODE(os.stat(path).st_mode))
+        finally:
+            os.umask(previous_umask)
+
+    @patch.dict("docker_volume_backup.util.accessor.os.environ", {"BACKUP_DIR_PERMS": "700"}, clear=True)
+    def test_backup_dir_created_with_configured_permissions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "backup")
+            BackupDir(path).create()
+            self.assertEqual(0o700, stat.S_IMODE(os.stat(path).st_mode))
+
+    @patch.dict("docker_volume_backup.util.accessor.os.environ", {"BACKUP_DIR_PERMS": "700"}, clear=True)
+    def test_existing_backup_dir_permissions_are_not_changed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            os.chmod(directory, 0o755)
+            BackupDir(directory).create()
+            self.assertEqual(0o755, stat.S_IMODE(os.stat(directory).st_mode))
 
     @patch("docker_volume_backup.util.accessor.os.path.isdir", return_value=False)
     @patch("docker_volume_backup.util.accessor.os.makedirs",
@@ -112,3 +140,22 @@ class TestAccessorLocalhost(TestCase):
 def test_calc_duration():
     assert calc_duration(1924945200, 1924952402) == datetime.timedelta(seconds=7202)
     assert str(calc_duration(1924945200, 1924952402)) == "2:00:02"
+
+
+class TestParseFileMode(TestCase):
+
+    def test_valid_modes(self):
+        self.assertEqual(0o640, parse_file_mode("640", 0o600, "FOO"))
+        self.assertEqual(0o2750, parse_file_mode("2750", 0o600, "FOO"))
+        self.assertEqual(0o741, parse_file_mode(" 741 ", 0o600, "FOO"))
+
+    def test_undefined_or_empty_uses_default_without_warning(self):
+        self.assertEqual(0o640, parse_file_mode(None, 0o640, "FOO"))
+        self.assertEqual(0o640, parse_file_mode("", 0o640, "FOO"))
+
+    def test_invalid_modes_use_default_with_warning(self):
+        for value in ("rwx", "999", "-1", "0o640", "12345", "64 0"):
+            with self.subTest(value=value):
+                with self.assertLogs("docker_volume_backup.util.accessor", level="WARNING") as log:
+                    self.assertEqual(0o640, parse_file_mode(value, 0o640, "FOO"))
+                self.assertIn("FOO not defined properly", log.output[0])
