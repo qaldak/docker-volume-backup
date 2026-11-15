@@ -15,6 +15,7 @@ class Backup:
 
     BASE_IMAGE = "busybox:latest"
     DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
+    TMP_FILE_SUFFIX = ".tmp"  # suffix of the file tar writes to, before it replaces the backup file
 
     def __init__(self, container, backup_dir):
         """
@@ -67,12 +68,13 @@ class Backup:
         """
 
         cmp_method, file_ext = self._determine_compression_method()
-        backup_filepath = self._get_backup_filepath()
 
+        # tar writes to a temporary file, which replaces the backup file only after tar succeeded
+        # (see _publish_backup_file). So a failing run never destroys the last good backup.
         # "-C /" + paths without leading "/" gives identical archive member names as before,
         # but avoids the "tar: removing leading '/' from member names" message on stderr (cron mail).
         tar_cmd = ["tar", "c", f"{cmp_method}", "-f",
-                   f"{backup_filepath}", "-C", "/"]
+                   f"{self._get_backup_tmp_filepath()}", "-C", "/"]
 
         for volume in self.container.docker_volumes:
             tar_cmd.append(f"{volume}".lstrip("/"))
@@ -149,6 +151,32 @@ class Backup:
         :return: string of backup file path
         """
         return f"/backup/{self._get_backup_filename()}"
+
+    def _get_backup_tmp_filepath(self) -> str:
+        """
+        :return: path of the temporary file tar writes to, in the same directory as the backup file (string)
+        """
+        return f"{self._get_backup_filepath()}{self.TMP_FILE_SUFFIX}"
+
+    def _publish_backup_file(self):
+        """
+        Replace the backup file by the finished temporary file. Both files are in the same directory,
+        so mv is an atomic rename.
+        """
+        tmp_file = self._get_backup_tmp_filepath()
+        logger.debug(f"Replace backup file '{self._get_backup_filepath()}' by '{tmp_file}'")
+        self._exec_docker_run(["mv", "-f", tmp_file, self._get_backup_filepath()])
+
+    def _remove_tmp_file(self):
+        """
+        Best effort removal of the temporary file after a failed run. Never raises, so the original
+        error of the backup is not masked.
+        """
+        try:
+            self._exec_docker_run(["rm", "-f", self._get_backup_tmp_filepath()])
+
+        except Exception as err:
+            logger.warning(f"Temporary backup file '{self._get_backup_tmp_filepath()}' could not be removed: {err}")
 
     def _get_backup_file_size(self) -> int:
         """
@@ -242,6 +270,8 @@ class Backup:
 
             tmp = self._exec_docker_run(tar_cmd)
 
+            self._publish_backup_file()
+
             cfg.backup_size = self._get_backup_file_size()
             cfg.backup_end_time = int(time.time())
             logger.debug(f"Return value running backup: {tmp}")
@@ -249,12 +279,9 @@ class Backup:
                         f"{calc_duration(cfg.backup_start_time, cfg.backup_end_time)}, "
                         f"Backup size: {cfg.backup_size}")
 
-        except DockerException as err:
-            logger.exception(err)
-            raise
-
         except Exception as err:
             logger.exception(err)
+            self._remove_tmp_file()
             raise
 
     def should_change_filesettings(self) -> tuple[bool, bool]:

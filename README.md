@@ -54,6 +54,8 @@ optional parameter:
 * "-r" stops container for backup and restart after work (the container is also restarted if the backup fails)
 * "--debug" set loglevel to DEBUG
 
+The backup is first written to `<backup file>.tmp` and replaces the existing backup file only after `tar` finished successfully. A failed run leaves the last good backup untouched.
+
 __restore backup__
 
 `python3 -m docker_volume_backup.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [--debug]`

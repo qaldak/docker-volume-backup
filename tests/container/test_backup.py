@@ -59,11 +59,67 @@ class TestBackup(TestCase):
             self.assertEqual([
                 "INFO:docker_volume_backup.container.backup:Execute Volume backup for container 'foo_bar'. tar "
                 "command: ['tar', 'c', '-z', '-f', "
-                "'/backup/groot-foo_bar-volume-backup.tar.gz', '-C', '/', 'foo/data', 'foo/config', "
+                "'/backup/groot-foo_bar-volume-backup.tar.gz.tmp', '-C', '/', 'foo/data', 'foo/config', "
                 "'bar/log']",
                 "INFO:docker_volume_backup.container.backup:Volume backup for container 'foo_bar' successful. "
                 'Duration: 0:00:00, Backup size: 987654321'],
                 log.output)
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.os.path.getsize", return_value=1234)
+    @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="")
+    def test_run_backup_replaces_backup_file_only_after_tar(self, docker_run, hostname, filesize, should_refresh):
+        Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
+
+        commands = [call.args[1] for call in docker_run.call_args_list]
+        self.assertEqual(2, len(commands), commands)
+        self.assertEqual("tar", commands[0][0])
+        self.assertEqual("/backup/groot-foo_bar-volume-backup.tar.gz.tmp", commands[0][commands[0].index("-f") + 1])
+        self.assertEqual(["mv", "-f", "/backup/groot-foo_bar-volume-backup.tar.gz.tmp",
+                          "/backup/groot-foo_bar-volume-backup.tar.gz"], commands[1])
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
+    @patch("docker_volume_backup.container.backup.docker.run")
+    def test_run_backup_failing_tar_keeps_last_backup_and_removes_tmp_file(self, docker_run, hostname, should_refresh):
+        docker_run.side_effect = [DockerException(command_launched=["tar"], return_code=1), ""]
+
+        with self.assertRaises(DockerException) as err:
+            Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
+
+        self.assertEqual(1, err.exception.return_code)
+        commands = [call.args[1] for call in docker_run.call_args_list]
+        self.assertEqual(2, len(commands), commands)
+        self.assertEqual("tar", commands[0][0])
+        self.assertEqual(["rm", "-f", "/backup/groot-foo_bar-volume-backup.tar.gz.tmp"], commands[1])
+        self.assertNotIn("mv", [command[0] for command in commands])
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
+    @patch("docker_volume_backup.container.backup.docker.run")
+    def test_run_backup_failing_replace_removes_tmp_file(self, docker_run, hostname, should_refresh):
+        docker_run.side_effect = ["", DockerException(command_launched=["mv"], return_code=1), ""]
+
+        with self.assertRaises(DockerException):
+            Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
+
+        commands = [call.args[1][0] for call in docker_run.call_args_list]
+        self.assertEqual(["tar", "mv", "rm"], commands)
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
+    @patch("docker_volume_backup.container.backup.docker.run")
+    def test_run_backup_failing_cleanup_does_not_mask_backup_error(self, docker_run, hostname, should_refresh):
+        docker_run.side_effect = [DockerException(command_launched=["tar"], return_code=2),
+                                  DockerException(command_launched=["rm"], return_code=125)]
+
+        with self.assertLogs("docker_volume_backup.container.backup", level="WARNING") as log:
+            with self.assertRaises(DockerException) as err:
+                Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
+
+        self.assertEqual(2, err.exception.return_code)
+        self.assertTrue(any("could not be removed" in line for line in log.output), log.output)
 
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
     def test_create_tar_cmd_default(self, host):
@@ -71,7 +127,7 @@ class TestBackup(TestCase):
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
         tar_cmd = backup._create_tar_cmd()
-        assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz", "-C", "/", "foo/data", "foo/config",
+        assert ["tar", "c", "-z", "-f", f"/backup/groot-foo_bar-volume-backup.tar.gz.tmp", "-C", "/", "foo/data", "foo/config",
                 "bar/log"] == tar_cmd
 
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
@@ -82,7 +138,7 @@ class TestBackup(TestCase):
             backup_dir = MockBackupDir()
             backup = Backup(container=container, backup_dir=backup_dir)
             tar_cmd = backup._create_tar_cmd()
-            assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2", "-C", "/", "foo/data", "foo/config",
+            assert ["tar", "c", "-j", "-f", f"/backup/groot-foo_bar-volume-backup.tar.bz2.tmp", "-C", "/", "foo/data", "foo/config",
                     "bar/log"] == tar_cmd
 
     @patch("docker_volume_backup.container.backup.os.getenv", return_value="GZIP")
