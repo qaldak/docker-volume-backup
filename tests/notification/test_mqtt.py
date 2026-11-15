@@ -108,3 +108,16 @@ class TestMQTT(TestCase):
     def test_determine_mqtt_container_notfound(self, mock_list):
         mqtt_container = MQTT("foo", "bar").determine_mqtt_container()
         self.assertEqual("", mqtt_container, "Container found, but not expected.")
+
+    @patch("docker_volume_backup.notification.mqtt.docker.container.run", side_effect=RuntimeError("boom"))
+    @patch("docker_volume_backup.notification.mqtt.docker.container.exists", return_value=False)
+    @patch("docker_volume_backup.notification.mqtt.docker.container.list",
+           return_value=[MockContainer(uid="abc1", name="foo")])
+    @patch.dict("docker_volume_backup.notification.mqtt.os.environ",
+                {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
+    def test_send_msg_unexpected_error_is_logged_with_message(self, mock_container, mock_exists, mock_run):
+        with self.assertLogs("docker_volume_backup.notification.mqtt", level="ERROR") as log:
+            with self.assertRaises(RuntimeError):
+                MQTT("testing/topic", "error occurred").send_msg()
+
+        self.assertIn("Error occurred while sending MQTT message: boom", log.output[0])

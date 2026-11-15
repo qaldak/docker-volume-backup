@@ -273,7 +273,7 @@ class TestCheckRecovery(TestCase):
         recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")
 
-        with self.assertLogs("docker_volume_backup.container.volume", level="ERROR") as log:
+        with self.assertLogs("docker_volume_backup.container.recovery", level="ERROR") as log:
             self.assertFalse(recovery.check_recovery())
 
         self.assertIn("1 of 2 entries of the backup file are missing in Docker volume 'foo_data': mosquitto.db",
@@ -284,7 +284,7 @@ class TestCheckRecovery(TestCase):
         recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
                             target_path="/foo/bar/baz")
 
-        with self.assertLogs("docker_volume_backup.container.volume", level="ERROR"):
+        with self.assertLogs("docker_volume_backup.container.recovery", level="ERROR"):
             self.assertFalse(recovery.check_recovery())
 
     @patch("docker_volume_backup.container.recovery.docker.run",
@@ -339,7 +339,7 @@ class TestCheckRecovery(TestCase):
         recovery, volume = self._restore(backup_file, "/volume", "/foo/data")
         os.remove(os.path.join(volume, "sub", "s"))
 
-        with self.assertLogs("docker_volume_backup.container.volume", level="ERROR") as log:
+        with self.assertLogs("docker_volume_backup.container.recovery", level="ERROR") as log:
             self.assertFalse(self._check(recovery, volume))
 
         self.assertIn("1 of 3 entries", log.output[0])

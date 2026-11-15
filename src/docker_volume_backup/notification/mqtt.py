@@ -42,7 +42,7 @@ class MQTT:
             return False
 
         except Exception as err:
-            logger.error("Error occurred while sending MQTT message.", {err})
+            logger.error(f"Error occurred while sending MQTT message: {err}")
             raise
 
     @staticmethod

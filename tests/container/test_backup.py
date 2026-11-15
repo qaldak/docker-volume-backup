@@ -273,3 +273,13 @@ class TestBackup(TestCase):
         backup = Backup(container=container, backup_dir=backup_dir)
         backup._exec_docker_run(["chown", "1000", backup.backup_file])
         self.assertEqual("missing", docker_run.call_args.kwargs["pull"])
+
+    @patch("docker_volume_backup.container.backup.os.path.getsize", side_effect=FileNotFoundError("no such file"))
+    def test_get_backup_file_size_missing_file_is_logged(self, filesize):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        with self.assertLogs("docker_volume_backup.container.backup", level="ERROR") as log:
+            with self.assertRaises(FileNotFoundError):
+                backup._get_backup_file_size()
+
+        self.assertIn("Not able to determine file size. Backup file not found: /foo/backup/", log.output[0])
