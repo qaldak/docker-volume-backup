@@ -65,7 +65,7 @@ class Container:
                 self.has_docker_volume = True
 
             if mount["Type"] == "bind":
-                regex_pattern = "[^\/]+?(?=\.\w+$).*"
+                regex_pattern = r"[^\/]+?(?=\.\w+$).*"
 
                 filename = re.search(regex_pattern, mount["Destination"])
                 if filename is None:
@@ -146,11 +146,11 @@ class Container:
                 self._is_container_running(counter)
 
         except python_on_whales.exceptions.NoSuchContainer as err:
-            logger.error(f"No such container found: {self.name}. Error:", err)
+            logger.error(f"No such container found: {self.name}. Error: {err}")
             raise
 
         except Exception as err:
-            logger.error(f"Error occurred while check {self.name} is running. Error:", err)
+            logger.error(f"Error occurred while check {self.name} is running. Error: {err}")
             raise
 
     def _is_container_stopped(self, counter: int = 0):
@@ -171,11 +171,11 @@ class Container:
                 self._is_container_running(counter)
 
         except python_on_whales.exceptions.NoSuchContainer as err:
-            logger.error(f"No such container found: {self.name}. Error:", err)
+            logger.error(f"No such container found: {self.name}. Error: {err}")
             raise
 
         except Exception as err:
-            logger.error(f"Error occurred while check {self.name} is stopped. Error:", err)
+            logger.error(f"Error occurred while check {self.name} is stopped. Error: {err}")
             raise
 
     def _is_container_started_by_compose(self):

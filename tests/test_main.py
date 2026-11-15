@@ -126,6 +126,64 @@ class TestCreateBackup(TestCase):
         self.assertTrue(main.create_backup(self.container, "/backup", restart=False))
 
 
+class TestCreateBackupMissingBackupFile(TestCase):
+    """
+    The real Backup class is used: if the backup file is not found on the host after the backup, the error has to
+    arrive in cfg (result, exit code and notifications depend on it)
+    """
+
+    def setUp(self):
+        _reset_cfg()
+        self.addCleanup(_reset_cfg)
+
+        self.container = MagicMock()
+        self.container.name = "foo_bar"
+        self.container.exists.return_value = True
+        self.container.is_volume_available.return_value = True
+        self.container.docker_volumes = ["/foo/data"]
+        self.container.docker_bindings = []
+        self.container.has_docker_volume = True
+        self.container.has_docker_bindings = False
+
+        backup_dir = MagicMock()
+        backup_dir.path = "/nonexistent_backup_dir"
+
+        # state that the notifications see
+        self.notified = {}
+
+        def notify():
+            self.notified.update(has_error=cfg.hasError, error_msg=cfg.errorMsg)
+
+        patches = [
+            patch.object(main.LocalHost, "is_docker_daemon_running", return_value=True),
+            patch.object(main, "BackupDir", return_value=backup_dir),
+            patch.object(main, "Dispatcher"),
+            patch("docker_volume_backup.container.backup.docker.run", return_value=""),
+            patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False),
+        ]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+        main.Dispatcher.return_value.notify_chat_receiver.side_effect = notify
+
+    def test_missing_backup_file_sets_error_in_cfg(self):
+        with self.assertLogs("docker_volume_backup", level="ERROR"):
+            result = main.create_backup(self.container, "/backup", restart=False)
+
+        self.assertFalse(result)
+        self.assertTrue(cfg.hasError)
+        self.assertIsInstance(cfg.errorMsg, FileNotFoundError)
+        self.assertIn("/nonexistent_backup_dir/", str(cfg.errorMsg))
+        self.assertIn("No such file or directory", str(cfg.errorMsg))
+
+    def test_missing_backup_file_error_is_known_when_notifications_are_sent(self):
+        with self.assertLogs("docker_volume_backup", level="ERROR"):
+            main.create_backup(self.container, "/backup", restart=False)
+
+        self.assertTrue(self.notified["has_error"])
+        self.assertIn("/nonexistent_backup_dir/", str(self.notified["error_msg"]))
+
+
 class TestMain(TestCase):
 
     def setUp(self):

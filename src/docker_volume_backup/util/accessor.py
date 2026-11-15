@@ -1,6 +1,6 @@
 import logging
 import os
-from _socket import gethostname
+from socket import gethostname
 from datetime import datetime, timedelta
 from enum import Enum
 
@@ -127,9 +127,9 @@ class LocalHost:
     def is_docker_daemon_running() -> bool:
         """
         Determines whether Docker daemon is running on the local host.
-        Raises an exception on DockerException.
+        Raises an exception on DockerException (e.g. daemon not reachable).
 
-        :return: True if running, False if error occurred
+        :return: True if running, False if another error occurred
         """
         try:
             client = docker.from_env(version="auto")
