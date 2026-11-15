@@ -151,14 +151,51 @@ class TestMain(TestCase):
         main.Container.assert_called_once_with("foo_bar")
 
     def test_restore_is_run_for_restore_args(self):
-        args = MagicMock(backup=False, restore=True, dockervolume="foo_data", targetpath="/foo", backupfile="b.tar.gz")
+        args = MagicMock(backup=False, restore=True, dockervolume="foo_data", targetpath="/foo", backupfile="b.tar.gz",
+                         sourcepath=None)
 
         with patch.object(main, "restore_backup") as restore_backup, \
                 patch.object(main, "create_backup") as create_backup:
             self.assertEqual(0, main.main(args))
 
-        restore_backup.assert_called_once_with("foo_data", "/foo", "b.tar.gz")
+        restore_backup.assert_called_once_with("foo_data", "/foo", "b.tar.gz", None)
         create_backup.assert_not_called()
+
+
+class TestRestoreBackup(TestCase):
+
+    def setUp(self):
+        patches = [
+            patch.object(main.os.path, "exists", return_value=True),
+            patch.object(main, "Recovery"),
+            patch.object(main, "Volume"),
+            patch("builtins.print"),
+        ]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_source_path_is_checked_before_docker_volume_is_touched(self):
+        main.Recovery.return_value.resolve_source_path.side_effect = ValueError("contains 2 paths")
+
+        with self.assertRaises(ValueError):
+            main.restore_backup("foo_data", "/foo", "b.tar.gz")
+
+        main.Volume.assert_not_called()
+        main.Recovery.return_value.restore_volume_backup.assert_not_called()
+
+    def test_restore_passes_source_path_and_works_without_it(self):
+        main.Volume.return_value.exists.return_value = True
+        main.Volume.return_value.in_use.return_value = False
+
+        main.restore_backup("foo_data", "/foo", "b.tar.gz")
+        main.Recovery.assert_called_with(docker_volume="foo_data", target_path="/foo", backup_file="b.tar.gz",
+                                         source_path=None)
+
+        main.restore_backup("foo_data", "/foo", "b.tar.gz", "/foo/data")
+        main.Recovery.assert_called_with(docker_volume="foo_data", target_path="/foo", backup_file="b.tar.gz",
+                                         source_path="/foo/data")
+        self.assertEqual(2, main.Recovery.return_value.restore_volume_backup.call_count)
 
 
 class TestInitEnvironment(TestCase):

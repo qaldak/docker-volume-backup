@@ -81,3 +81,35 @@ class TestArgParser(TestCase):
         self.assertEqual(str(err.exception),
                          "Parameter --targetpath has to start with '/' but given 'data/foo'",
                          "Error target path validation")
+
+    def test_parse_restore_without_sourcepath_as_before(self):
+        sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/data/foo",
+                    "--volume", "foobarData"]
+
+        args = ArgParser.parse_cli_args()
+        self.assertIsNone(args.sourcepath, "Error: sourcepath should be optional")
+
+    def test_parse_restore_with_sourcepath(self):
+        sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/data/foo",
+                    "--volume", "foobarData", "--sourcepath", "/foo/data"]
+
+        args = ArgParser.parse_cli_args()
+        self.assertEqual("/foo/data", args.sourcepath, "Error: sourcepath param not matched")
+
+    def test_validate_restore_sourcepath_not_absolute(self):
+        sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/data/foo",
+                    "--volume", "foobarData", "-sp", "foo/data"]
+
+        with self.assertRaises(ValueError) as err:
+            ArgParser.parse_cli_args()
+
+        self.assertEqual("Parameter --sourcepath has to start with '/' but given 'foo/data'", str(err.exception))
+
+    def test_validate_restore_targetpath_root(self):
+        sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/",
+                    "--volume", "foobarData"]
+
+        with self.assertRaises(ValueError) as err:
+            ArgParser.parse_cli_args()
+
+        self.assertEqual("Parameter --targetpath must not be the root path '/'", str(err.exception))
