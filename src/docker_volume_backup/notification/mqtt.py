@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -11,9 +12,20 @@ class MQTT:
         self.topic = topic
         self.msg = msg
 
+    @staticmethod
+    def _build_payload(msg) -> str:
+        """
+        :param msg: message to send. A dict or list is sent as JSON, everything else as text.
+        :return: payload of the MQTT message (str)
+        """
+        if isinstance(msg, (dict, list)):
+            return json.dumps(msg, default=str)
+
+        return str(msg)
+
     def send_msg(self):
         mqtt_cmd = ["mosquitto_pub", "-h", f"{os.getenv('MQTT_BROKER')}", "-p", f"{os.getenv('MQTT_PORT')}", "-t",
-                    f"{self.topic}", "-m", f"{self.msg}"]
+                    f"{self.topic}", "-m", self._build_payload(self.msg)]
 
         logger.debug(f"MQTT command: {mqtt_cmd}")
 

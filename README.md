@@ -96,6 +96,28 @@ Known limitation: a restore that is skipped because the Docker volume is in use 
 
 After a restore, every restored entry of the backup file is looked up in the Docker volume. Entries that already existed in the volume and are not part of the backup file are ignored.
 
+#### MQTT message
+
+The message is published to `MQTT_TOPIC` as **JSON**, e.g.:
+
+```json
+{"time": 1793000000, "host": "myhost", "container": "foo_bar", "backupFile": "myhost-foo_bar-volume-backup.tar.gz",
+ "backupSize": 987654321, "duration": "0:02:13", "hasError": false, "msg": "Docker volume backup successful"}
+```
+
+| Field      | Description                                                                      |
+|:-----------|:---------------------------------------------------------------------------------|
+| time       | Unix time (seconds) when the message was created                                 |
+| host       | Host name (lower case)                                                           |
+| container  | Name of the backed up container                                                  |
+| backupFile | Name of the backup file                                                          |
+| backupSize | Size of the backup file in bytes (`null` if it could not be determined)          |
+| duration   | Duration of the job as `H:MM:SS`                                                 |
+| hasError   | `true` if an error occurred                                                      |
+| msg        | `Docker volume backup successful` or the error message                           |
+
+Note: older versions sent the message as Python dict text (single quotes, `True`/`False`), which is not valid JSON.
+
 ### Requirements
 
 * Python 3.10 or higher
