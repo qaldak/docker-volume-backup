@@ -19,7 +19,7 @@ class Volume:
             return False
 
         except DockerException as err:
-            logger.error("Error check volume exists.", err)
+            logger.error(f"Error check volume exists: {err}")
             raise
 
     def in_use(self) -> bool:
@@ -33,7 +33,7 @@ class Volume:
             return False
 
         except DockerException as err:
-            logger.error("Error check volume is in use.", err)
+            logger.error(f"Error check volume is in use: {err}")
             raise
 
     def create(self):

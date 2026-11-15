@@ -1,3 +1,4 @@
+import logging
 import os
 import posixpath
 import sys
@@ -5,8 +6,9 @@ import tarfile
 
 from python_on_whales import DockerException, docker
 
-from docker_volume_backup.container.volume import logger
 from docker_volume_backup.util.accessor import Compression, FileExtension
+
+logger = logging.getLogger(__name__)
 
 
 class Recovery:
@@ -190,14 +192,6 @@ class Recovery:
         list_cmd = ["find", f"{self.target_path}", "-mindepth", "1"]
         logger.debug(f"created list command: {list_cmd}")
         return list_cmd
-
-    def _create_tar_list_cmd(self) -> list[str]:
-        # t?vf /backup/fedora-mosquitto_fedora-volume-backup.tar.gz | wc -l
-        cmp_method = self._determine_cmp_method()
-        tar_cmd = ["ash", "-c",
-                   f"tar -t {cmp_method} -v -f /backup/{self.container_backup_file} | wc -l"]
-        logger.debug(f"command for tar list content: {tar_cmd}")
-        return tar_cmd
 
     def _create_tar_cmd(self) -> list[str]:
         cmp_method = self._determine_cmp_method()

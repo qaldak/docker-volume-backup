@@ -3,6 +3,8 @@ import subprocess
 from unittest import TestCase
 from unittest.mock import patch
 
+import python_on_whales.exceptions
+
 from docker_volume_backup.container.container import Container
 
 
@@ -76,3 +78,46 @@ class TestContainer(TestCase):
             mock_client.containers.client.inspect_container.return_value = json.load(file)
 
         self.assertEqual((False, None), container._is_container_started_by_compose())
+
+
+class TestContainerStateCheckLogging(TestCase):
+    """errors of the state checks have to be logged with their message (a stray logger argument breaks logging)"""
+
+    def _inspect_error(self, error):
+        return patch("docker_volume_backup.container.container.docker.container.inspect", side_effect=error)
+
+    def test_is_container_running_no_such_container(self):
+        error = python_on_whales.exceptions.NoSuchContainer(command_launched=["docker container inspect Foo"],
+                                                            return_code=1)
+        with self._inspect_error(error), \
+                self.assertLogs("docker_volume_backup.container.container", level="ERROR") as log:
+            with self.assertRaises(python_on_whales.exceptions.NoSuchContainer):
+                Container("Foo")._is_container_running()
+
+        self.assertIn("No such container found: Foo. Error: ", log.output[0])
+
+    def test_is_container_running_other_error(self):
+        with self._inspect_error(RuntimeError("boom")), \
+                self.assertLogs("docker_volume_backup.container.container", level="ERROR") as log:
+            with self.assertRaises(RuntimeError):
+                Container("Foo")._is_container_running()
+
+        self.assertIn("Error occurred while check Foo is running. Error: boom", log.output[0])
+
+    def test_is_container_stopped_no_such_container(self):
+        error = python_on_whales.exceptions.NoSuchContainer(command_launched=["docker container inspect Foo"],
+                                                            return_code=1)
+        with self._inspect_error(error), \
+                self.assertLogs("docker_volume_backup.container.container", level="ERROR") as log:
+            with self.assertRaises(python_on_whales.exceptions.NoSuchContainer):
+                Container("Foo")._is_container_stopped()
+
+        self.assertIn("No such container found: Foo. Error: ", log.output[0])
+
+    def test_is_container_stopped_other_error(self):
+        with self._inspect_error(RuntimeError("boom")), \
+                self.assertLogs("docker_volume_backup.container.container", level="ERROR") as log:
+            with self.assertRaises(RuntimeError):
+                Container("Foo")._is_container_stopped()
+
+        self.assertIn("Error occurred while check Foo is stopped. Error: boom", log.output[0])

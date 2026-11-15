@@ -56,3 +56,23 @@ class TestVolume(TestCase):
     @patch("docker_volume_backup.container.volume.docker.volume.list", return_value=[])
     def test_docker_volume_not_in_use(self, mock_volume):
         self.assertFalse(Volume("foo").in_use(), "Volume not in use, but should.")
+
+    @patch("docker_volume_backup.container.volume.docker.volume.exists",
+           side_effect=DockerException(command_launched=["docker volume inspect foo"], return_code=1))
+    def test_exists_error_is_logged_with_message(self, mock_volume):
+        with self.assertLogs("docker_volume_backup.container.volume", level="ERROR") as log:
+            with self.assertRaises(DockerException):
+                Volume("foo").exists()
+
+        self.assertIn("Error check volume exists: ", log.output[0])
+        self.assertIn("It returned with code 1", log.output[0])
+
+    @patch("docker_volume_backup.container.volume.docker.volume.list",
+           side_effect=DockerException(command_launched=["docker volume ls"], return_code=1))
+    def test_in_use_error_is_logged_with_message(self, mock_volume):
+        with self.assertLogs("docker_volume_backup.container.volume", level="ERROR") as log:
+            with self.assertRaises(DockerException):
+                Volume("foo").in_use()
+
+        self.assertIn("Error check volume is in use: ", log.output[0])
+        self.assertIn("It returned with code 1", log.output[0])

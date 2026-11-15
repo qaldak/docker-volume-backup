@@ -1,5 +1,10 @@
+import os
+import shutil
+import stat
+import subprocess
+import tempfile
 from datetime import datetime
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from unittest.mock import patch
 
 from python_on_whales import DockerException
@@ -23,6 +28,14 @@ class MockBackupDir:
     def __init__(self) -> None:
         super().__init__()
         self.path = "/foo/backup"
+
+
+def _unwrap(cmd):
+    """command of the helper container without the umask wrapper: sh -c 'umask ...; exec "$@"' sh <cmd>"""
+    if cmd[0] == "sh":
+        assert cmd[1] == "-c" and cmd[2].startswith("umask ") and cmd[3] == "sh", cmd
+        return cmd[4:]
+    return cmd
 
 
 class TestBackup(TestCase):
@@ -65,6 +78,7 @@ class TestBackup(TestCase):
                 'Duration: 0:00:00, Backup size: 987654321'],
                 log.output)
 
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
     @patch("docker_volume_backup.container.backup.os.path.getsize", return_value=1234)
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
@@ -72,7 +86,10 @@ class TestBackup(TestCase):
     def test_run_backup_replaces_backup_file_only_after_tar(self, docker_run, hostname, filesize, should_refresh):
         Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
 
-        commands = [call.args[1] for call in docker_run.call_args_list]
+        # tar runs with the umask of the backup file permissions, so the file is never created wider
+        self.assertEqual(["sh", "-c", 'umask 0137; exec "$@"', "sh", "tar"], docker_run.call_args_list[0].args[1][:5])
+
+        commands = [_unwrap(call.args[1]) for call in docker_run.call_args_list]
         self.assertEqual(2, len(commands), commands)
         self.assertEqual("tar", commands[0][0])
         self.assertEqual("/backup/groot-foo_bar-volume-backup.tar.gz.tmp", commands[0][commands[0].index("-f") + 1])
@@ -89,7 +106,7 @@ class TestBackup(TestCase):
             Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
 
         self.assertEqual(1, err.exception.return_code)
-        commands = [call.args[1] for call in docker_run.call_args_list]
+        commands = [_unwrap(call.args[1]) for call in docker_run.call_args_list]
         self.assertEqual(2, len(commands), commands)
         self.assertEqual("tar", commands[0][0])
         self.assertEqual(["rm", "-f", "/backup/groot-foo_bar-volume-backup.tar.gz.tmp"], commands[1])
@@ -104,7 +121,7 @@ class TestBackup(TestCase):
         with self.assertRaises(DockerException):
             Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
 
-        commands = [call.args[1][0] for call in docker_run.call_args_list]
+        commands = [_unwrap(call.args[1])[0] for call in docker_run.call_args_list]
         self.assertEqual(["tar", "mv", "rm"], commands)
 
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
@@ -180,13 +197,15 @@ class TestBackup(TestCase):
 
     @patch.dict("docker_volume_backup.container.backup.os.environ",
                 {"BACKUP_FILE_OWNER": "", "BACKUP_FILE_PERMS": "741"})
-    def test_should_change_filesettings_false_true(self):
+    @patch("docker_volume_backup.container.backup.os.getuid", return_value=0)
+    def test_should_change_filesettings_false_true(self, getuid):
         container = MockContainer()
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
         self.assertEqual((False, True), backup.should_change_filesettings())
 
-    def test_should_change_filesettings_false_false(self):
+    @patch("docker_volume_backup.container.backup.os.getuid", return_value=0)
+    def test_should_change_filesettings_false_false(self, getuid):
         container = MockContainer()
         backup_dir = MockBackupDir()
         backup = Backup(container=container, backup_dir=backup_dir)
@@ -273,3 +292,111 @@ class TestBackup(TestCase):
         backup = Backup(container=container, backup_dir=backup_dir)
         backup._exec_docker_run(["chown", "1000", backup.backup_file])
         self.assertEqual("missing", docker_run.call_args.kwargs["pull"])
+
+    @patch("docker_volume_backup.container.backup.os.path.getsize", side_effect=FileNotFoundError("no such file"))
+    def test_get_backup_file_size_missing_file_is_logged(self, filesize):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        with self.assertLogs("docker_volume_backup.container.backup", level="ERROR") as log:
+            with self.assertRaises(FileNotFoundError):
+                backup._get_backup_file_size()
+
+        self.assertIn("Not able to determine file size. Backup file not found: /foo/backup/", log.output[0])
+
+    @patch("docker_volume_backup.container.backup.os.getgid", return_value=1001)
+    @patch("docker_volume_backup.container.backup.os.getuid", return_value=1000)
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
+    def test_file_owner_defaults_to_user_running_the_backup(self, getuid, getgid):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        self.assertEqual(("1000", "1001"), (backup.new_user_id, backup.new_group_id))
+        self.assertEqual((True, False), backup.should_change_filesettings())
+
+    @patch("docker_volume_backup.container.backup.os.getuid", return_value=0)
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
+    def test_file_owner_not_changed_if_backup_runs_as_root(self, getuid):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        self.assertEqual((None, None), (backup.new_user_id, backup.new_group_id))
+        self.assertEqual((False, False), backup.should_change_filesettings())
+
+    @patch("docker_volume_backup.container.backup.os.getgid", return_value=1001)
+    @patch("docker_volume_backup.container.backup.os.getuid", return_value=1000)
+    @patch.dict("docker_volume_backup.container.backup.os.environ",
+                {"BACKUP_FILE_OWNER": "0", "BACKUP_FILE_GROUP": "0"}, clear=True)
+    def test_file_owner_from_env_wins_over_default(self, getuid, getgid):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        self.assertEqual(("0", "0"), (backup.new_user_id, backup.new_group_id))
+
+    @patch("docker_volume_backup.container.backup.os.getgid", return_value=1001)
+    @patch("docker_volume_backup.container.backup.os.getuid", return_value=1000)
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"BACKUP_FILE_OWNER": "4711"}, clear=True)
+    def test_file_group_not_defaulted_if_owner_is_configured(self, getuid, getgid):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        self.assertEqual(("4711", None), (backup.new_user_id, backup.new_group_id))
+
+    def _chown_command(self, env, uid=1000, gid=1001):
+        with patch.dict("docker_volume_backup.container.backup.os.environ", env, clear=True), \
+                patch("docker_volume_backup.container.backup.os.getuid", return_value=uid), \
+                patch("docker_volume_backup.container.backup.os.getgid", return_value=gid), \
+                patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot"), \
+                patch("docker_volume_backup.container.backup.Backup._exec_docker_run") as run:
+            Backup(container=MockContainer(), backup_dir=MockBackupDir()).change_file_ownership()
+        return run.call_args.args[0]
+
+    def test_chown_command_default_owner_and_group(self):
+        self.assertEqual(["chown", "1000:1001", "/backup/groot-foo_bar-volume-backup.tar.gz"],
+                         self._chown_command({}))
+
+    def test_chown_command_group_only_changes_the_group(self):
+        self.assertEqual(["chown", ":9876", "/backup/groot-foo_bar-volume-backup.tar.gz"],
+                         self._chown_command({"BACKUP_FILE_GROUP": "9876"}))
+
+    def test_chown_command_owner_only(self):
+        self.assertEqual(["chown", "4711", "/backup/groot-foo_bar-volume-backup.tar.gz"],
+                         self._chown_command({"BACKUP_FILE_OWNER": "4711"}))
+
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
+    def test_umask_default_creates_0640(self):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        self.assertEqual("0137", backup._determine_file_umask())
+        self.assertEqual(["sh", "-c", 'umask 0137; exec "$@"', "sh", "tar", "c"], backup._with_umask(["tar", "c"]))
+
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"BACKUP_FILE_PERMS": "664"}, clear=True)
+    def test_umask_follows_configured_permissions(self):
+        self.assertEqual("0113", Backup(container=MockContainer(), backup_dir=MockBackupDir())._determine_file_umask())
+
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"BACKUP_FILE_PERMS": "rwx"}, clear=True)
+    def test_umask_invalid_permissions_fall_back_to_default(self):
+        with self.assertLogs("docker_volume_backup.util.accessor", level="WARNING"):
+            self.assertEqual("0137",
+                             Backup(container=MockContainer(), backup_dir=MockBackupDir())._determine_file_umask())
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="")
+    def test_volumes_of_container_are_mounted_read_only(self, docker_run, should_refresh):
+        Backup(container=MockContainer(), backup_dir=MockBackupDir())._exec_docker_run(["tar", "c"])
+
+        self.assertEqual(["foo_bar:ro"], docker_run.call_args.kwargs["volumes_from"])
+
+    @skipIf(shutil.which("tar") is None or shutil.which("sh") is None, "tar/sh not available")
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
+    def test_tar_creates_backup_file_with_0640_without_a_wider_phase(self):
+        """run the wrapped tar command on the host: the file is created with the final permissions"""
+        with tempfile.TemporaryDirectory() as directory:
+            os.makedirs(os.path.join(directory, "src"))
+            with open(os.path.join(directory, "src", "f"), "w") as f:
+                f.write("x")
+
+            cmd = Backup(container=MockContainer(), backup_dir=MockBackupDir())._with_umask(
+                ["tar", "c", "-z", "-f", os.path.join(directory, "b.tar.gz"), "-C", os.path.join(directory, "src"), "f"])
+            previous_umask = os.umask(0o022)
+            try:
+                subprocess.run(cmd, check=True)
+            finally:
+                os.umask(previous_umask)
+
+            self.assertEqual(0o640, stat.S_IMODE(os.stat(os.path.join(directory, "b.tar.gz")).st_mode))
