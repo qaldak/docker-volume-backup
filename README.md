@@ -88,11 +88,13 @@ optional parameter: see Command line
 
 | Exit code | Meaning                                                                                                   |
 |:----------|:----------------------------------------------------------------------------------------------------------|
-| 0         | Backup completed successfully (no output on stdout/stderr)                                                |
-| 1         | Backup failed, e.g. Docker daemon/container not available, tar error or container could not be restarted. The error is written to the log file and reported via the configured notifications. |
+| 0         | Backup: completed successfully (no output on stdout/stderr). <br> Restore: completed, all restored entries found in the volume |
+| 1         | Backup: failed, e.g. Docker daemon/container not available, tar error or container could not be restarted. The error is written to the log file and reported via the configured notifications. <br> Restore: finished, but entries of the backup file are missing in the Docker volume (listed in the error message) |
 
 Other errors (e.g. invalid `.env` settings or command line parameters) end with a Python error message and a non-zero exit code.
-The exit code of `--restore` is not yet covered by this table.
+Known limitation: a restore that is skipped because the Docker volume is in use currently ends without a message and exit code 0.
+
+After a restore, every restored entry of the backup file is looked up in the Docker volume. Entries that already existed in the volume and are not part of the backup file are ignored.
 
 ### Requirements
 

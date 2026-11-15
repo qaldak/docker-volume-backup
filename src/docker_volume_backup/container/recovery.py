@@ -1,7 +1,7 @@
 import os
 import posixpath
+import sys
 import tarfile
-import warnings
 
 from python_on_whales import DockerException, docker
 
@@ -124,26 +124,41 @@ class Recovery:
             logger.exception(err)
             raise
 
-    def check_recovery(self):
+    def check_recovery(self) -> bool:
+        """
+        Check the restored Docker volume: every entry of the backup file that was restored has to exist in the volume.
+        Entries that are not part of the backup file (e.g. in a volume that already had content) are ignored.
+
+        :return: True if no entry is missing in the volume
+        """
         print(f"Comparing restored files with tar content ...")
-        try:
-            volume_file_count = self._exec_docker_run(self._create_list_cmd())
-            tar_file_count = self._determine_tar_file_content()
 
-            logger.debug(f"Content Docker volume: {volume_file_count}, Content tar file: {tar_file_count}")
+        expected = self._determine_expected_entries()
+        restored = self._parse_volume_entries(self._exec_docker_run(self._create_list_cmd()))
+        missing = sorted(expected - restored)
 
-            if int(volume_file_count) != tar_file_count:
-                warn_msg = f"Number of restored files does not match the content of tar file: {volume_file_count} vs {tar_file_count}. Check manually or run again in debug mode for more details."
-                logger.warning(warn_msg)
-                warnings.warn(warn_msg)
-            else:
-                print(f"Recovery successful. Number of restored files matches: {volume_file_count} vs {tar_file_count}")
+        logger.debug(f"Entries expected from tar file: {len(expected)}, entries in Docker volume: {len(restored)}, "
+                     f"missing: {len(missing)}, additional: {len(restored - expected)}")
 
-        except ValueError as err:
-            print(f"Error occurred: {err}")
-            raise
+        if missing:
+            shown = ", ".join(missing[:10]) + (", ..." if len(missing) > 10 else "")
+            error_msg = (f"Recovery incomplete: {len(missing)} of {len(expected)} entries of the backup file are "
+                         f"missing in Docker volume '{self.docker_volume}': {shown}. Check manually or run again in "
+                         f"debug mode for more details.")
+            logger.error(error_msg)
+            print(error_msg, file=sys.stderr)
+            return False
 
-    def _determine_tar_file_content(self) -> int:
+        print(f"Recovery successful. All {len(expected)} entries of the backup file are in the Docker volume.")
+        return True
+
+    def _determine_expected_entries(self) -> set[str]:
+        """
+        Determine the entries that exist in the volume after a restore: the paths of the restored members of the
+        backup file without the path components that tar removes (--strip-components).
+
+        :return: set of paths relative to the root of the volume
+        """
         with tarfile.open(self.backup_file, 'r') as tar:
             names = tar.getnames()
 
@@ -152,13 +167,27 @@ class Recovery:
                      if self._normalize_member_name(name) == self._source
                      or self._normalize_member_name(name).startswith(f"{self._source}/")]
 
-        counter = len(names)
-        logger.debug(f"tar file content: {counter}, list: {names}")
-        return counter
+        strip_length = self._determine_strip_length()
+        expected = set()
+
+        for name in names:
+            parts = [part for part in name.split("/") if part]
+            if len(parts) > strip_length:
+                expected.add("/".join(parts[strip_length:]))
+
+        logger.debug(f"expected entries in volume: {len(expected)}, list: {sorted(expected)}")
+        return expected
+
+    def _parse_volume_entries(self, find_output) -> set[str]:
+        """
+        :param find_output: output of the list command
+        :return: set of the entries in the volume, relative to the root of the volume
+        """
+        prefix = f"{self.target_path}/"
+        return {line[len(prefix):] for line in str(find_output or "").splitlines() if line.startswith(prefix)}
 
     def _create_list_cmd(self) -> list[str]:
-        base_dir = "/" + str(self.target_path).split("/")[1]
-        list_cmd = ["ash", "-c", f"find {base_dir} -mindepth 1 | wc -l"]
+        list_cmd = ["find", f"{self.target_path}", "-mindepth", "1"]
         logger.debug(f"created list command: {list_cmd}")
         return list_cmd
 
