@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest import TestCase
@@ -108,6 +109,54 @@ class TestMQTT(TestCase):
     def test_determine_mqtt_container_notfound(self, mock_list):
         mqtt_container = MQTT("foo", "bar").determine_mqtt_container()
         self.assertEqual("", mqtt_container, "Container found, but not expected.")
+
+    def test_build_payload_dict_is_valid_json(self):
+        msg = {"time": 1, "hasError": False, "backupSize": None, "msg": "Docker volume backup successful"}
+
+        payload = MQTT._build_payload(msg)
+
+        self.assertEqual(msg, json.loads(payload))
+        self.assertIn('"hasError": false', payload)
+        self.assertIn('"backupSize": null', payload)
+
+    def test_build_payload_special_characters_survive(self):
+        msg = {"msg": 'quote " backslash \\ newline \n umlaut \u00e4 \'single\' {braces}'}
+
+        self.assertEqual(msg, json.loads(MQTT._build_payload(msg)))
+
+    def test_build_payload_not_serializable_value_is_converted_to_text(self):
+        payload = MQTT._build_payload({"msg": FileNotFoundError(2, "No such file")})
+
+        self.assertIn("No such file", json.loads(payload)["msg"])
+
+    def test_build_payload_text_is_sent_unchanged(self):
+        self.assertEqual("my message", MQTT._build_payload("my message"))
+
+    @patch("docker_volume_backup.notification.mqtt.docker.container.run", return_value="")
+    @patch("docker_volume_backup.notification.mqtt.docker.container.exists", return_value=False)
+    @patch("docker_volume_backup.notification.mqtt.MQTT.determine_mqtt_container", return_value="")
+    @patch.dict("docker_volume_backup.notification.mqtt.os.environ",
+                {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
+    def test_send_msg_dict_with_temp_container_is_sent_as_json(self, mock_container, mock_exists, mock_run):
+        msg = {"time": 1, "hasError": True, "msg": "it's broken"}
+
+        self.assertTrue(MQTT("testing/topic", msg).send_msg())
+
+        command = mock_run.call_args.kwargs["command"]
+        self.assertEqual("-m", command[-2])
+        self.assertEqual(msg, json.loads(command[-1]))
+
+    @patch("docker_volume_backup.notification.mqtt.docker.container.execute", return_value="")
+    @patch("docker_volume_backup.notification.mqtt.MQTT.determine_mqtt_container", return_value="my_mosquitto")
+    @patch.dict("docker_volume_backup.notification.mqtt.os.environ",
+                {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
+    def test_send_msg_dict_with_running_container_is_sent_as_json(self, mock_container, mock_execute):
+        msg = {"time": 1, "hasError": False, "msg": "Docker volume backup successful"}
+
+        self.assertTrue(MQTT("testing/topic", msg).send_msg())
+
+        command = mock_execute.call_args.args[1]
+        self.assertEqual(msg, json.loads(command[-1]))
 
     @patch("docker_volume_backup.notification.mqtt.docker.container.run", side_effect=RuntimeError("boom"))
     @patch("docker_volume_backup.notification.mqtt.docker.container.exists", return_value=False)

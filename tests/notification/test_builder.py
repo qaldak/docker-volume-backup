@@ -87,3 +87,17 @@ class TestBuilder(TestCase):
              "msg": "Docker volume backup successful"},
             mqtt_msg,
             "Invalid MQTT message object")
+
+    @patch("docker_volume_backup.notification.builder.time.time", return_value=4102398000)
+    @patch("docker_volume_backup.notification.builder.LocalHost.get_hostname", return_value="myHost")
+    def test_build_mqtt_msg_error_message_is_text(self, host, time):
+        cfg.hasError = True
+        cfg.errorMsg = FileNotFoundError(2, "No such file or directory")
+        self.addCleanup(setattr, cfg, "hasError", False)
+        self.addCleanup(setattr, cfg, "errorMsg", "")
+
+        mqtt_msg = Builder.build_mqtt_msg("Foo")
+
+        self.assertTrue(mqtt_msg["hasError"])
+        self.assertIsInstance(mqtt_msg["msg"], str)
+        self.assertIn("No such file or directory", mqtt_msg["msg"])

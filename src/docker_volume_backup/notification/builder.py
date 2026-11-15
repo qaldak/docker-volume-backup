@@ -29,7 +29,7 @@ class Builder:
     def build_mqtt_msg(container_name: str) -> dict:
 
         if cfg.hasError:
-            mqtt_msg = cfg.errorMsg
+            mqtt_msg = str(cfg.errorMsg)  # errorMsg can be an exception
 
         else:
             mqtt_msg = "Docker volume backup successful"
