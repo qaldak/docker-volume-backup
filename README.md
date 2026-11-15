@@ -23,9 +23,10 @@ It is also possible to restore a Docker volume from a backup file.
 | Param              | Description                                                                                                                                |
 |:-------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
 | BACKUP_DIR         | Target path to save the backup                                                                                                             |      
-| BACKUP_FILE_OWNER  | (optional) Define owner for created backup file. User id is needed, e.g. 1000 <br> Without this param, backup file created as root user.   |
-| BACKUP_FILE_GROUP  | (optional) Define group for created backup file. Group id is needed, e.g. 1000 <br> Without this param, backup file created as root group. |
-| BACKUP_FILE_PERMS  | (optional) Define permissions for created backup file, numeric mode only, e.g. 741                                                         |
+| BACKUP_FILE_OWNER  | (optional) Define owner for created backup file. User id is needed, e.g. 1000 <br> Default (if BACKUP_FILE_OWNER and BACKUP_FILE_GROUP are undefined): the user who runs the backup (the backup file is not owned by root). |
+| BACKUP_FILE_GROUP  | (optional) Define group for created backup file. Group id is needed, e.g. 1000 <br> Default (if BACKUP_FILE_OWNER and BACKUP_FILE_GROUP are undefined): the primary group of the user who runs the backup. |
+| BACKUP_FILE_PERMS  | (optional) Define permissions for created backup file, numeric mode only, e.g. 741 <br> Default: 640 (read/write for the owner, read for the group, nothing for others). The file is created with these permissions, it is never readable by others, not even for a short time. |
+| BACKUP_DIR_PERMS   | (optional) Define permissions for the backup directory, if it is created, numeric mode only, e.g. 700 <br> Default: 750. The permissions of an already existing directory are not changed. |
 | LOG_DIR            | Path for log directory                                                                                                                     |
 | COMPRESSION_METHOD | (optional) Define the compression method for tar file. Possible values are: <br> GZIP (default, if undefined) <br> BZIP2                   |
 | IMAGE_REFRESH_DAY  | (optional) Day of month on which the `busybox` base image is pulled from the registry, e.g. `1`. <br> Default (if undefined or invalid): `1`. On all other days the locally cached image is reused. |
@@ -39,6 +40,19 @@ It is also possible to restore a Docker volume from a backup file.
 | MQTT_TOPIC         | Topic for MQTT message. Mandatory, if MQTT_ALERTING is enabled. <br> Wildcards {HOSTNAME} and {CONTAINER} will be replaced at runtime      |
 
 See example in [.env_example](.env_example)
+
+#### File permissions and security
+
+Backups usually contain secrets (databases, tokens, certificates), so they are not readable by other users by default:
+the backup file is created with `640`, the backup directory with `750` and the file belongs to the user who runs the backup.
+The volumes of the container are mounted read-only for the backup, so a backup can not modify the data.
+
+* Restrict the permissions of the `.env` file as well, it contains the Slack token: `chmod 600 .env`
+* Other users or services that need to read the backups: add them to the group of the backup file (`BACKUP_FILE_GROUP`)
+  or set `BACKUP_FILE_PERMS`.
+* Behaviour of earlier versions: the backup file was owned by root and readable by everyone (`644`), the directory was created
+  with `777` (reduced by the umask). To get this behaviour back, set `BACKUP_FILE_OWNER=0`, `BACKUP_FILE_GROUP=0`,
+  `BACKUP_FILE_PERMS=644` and `BACKUP_DIR_PERMS=755`. Backup files created by older versions are not changed.
 
 ### Execute
 

@@ -6,7 +6,7 @@ from datetime import datetime
 from python_on_whales import docker, DockerException
 
 from docker_volume_backup.util import cfg
-from docker_volume_backup.util.accessor import LocalHost, calc_duration, Compression, FileExtension
+from docker_volume_backup.util.accessor import LocalHost, calc_duration, Compression, FileExtension, parse_file_mode
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,7 @@ class Backup:
     BASE_IMAGE = "busybox:latest"
     DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
     TMP_FILE_SUFFIX = ".tmp"  # suffix of the file tar writes to, before it replaces the backup file
+    DEFAULT_FILE_PERMS = 0o640  # permissions of the backup file, if BACKUP_FILE_PERMS is undefined or invalid
 
     def __init__(self, container, backup_dir):
         """
@@ -27,10 +28,40 @@ class Backup:
         self.backup_dir = backup_dir
         self.container = container
         self.backup_file = self._get_backup_filepath()
-        self.new_user_id = os.getenv("BACKUP_FILE_OWNER")
-        self.new_group_id = os.getenv("BACKUP_FILE_GROUP")
+        self.new_user_id, self.new_group_id = self._determine_file_owner()
         self.new_file_perms = os.getenv("BACKUP_FILE_PERMS")
         self.volume_mapping = [{f"{self.backup_dir.path}:/backup"}]
+
+    @staticmethod
+    def _determine_file_owner() -> tuple[str, str]:
+        """
+        determine user and group of the backup file: BACKUP_FILE_OWNER / BACKUP_FILE_GROUP from .env. If both are
+        undefined, the file belongs to the user who runs the backup (and not to root, who runs tar in the Docker
+        container). If the backup runs as root, nothing has to be changed.
+
+        :return: 1. user id, 2. group id (tuple[str, str]), None if the owner is not to be changed
+        """
+        user_id = os.getenv("BACKUP_FILE_OWNER") or None
+        group_id = os.getenv("BACKUP_FILE_GROUP") or None
+
+        if user_id or group_id or not hasattr(os, "getuid") or os.getuid() == 0:
+            return user_id, group_id
+
+        return str(os.getuid()), str(os.getgid())
+
+    def _determine_file_umask(self) -> str:
+        """
+        :return: umask for tar, so the backup file is created with the configured permissions and is never
+        readable by others, not even for a short time (octal string)
+        """
+        perms = parse_file_mode(self.new_file_perms, self.DEFAULT_FILE_PERMS, "BACKUP_FILE_PERMS")
+        return f"{~perms & 0o777:04o}"
+
+    def _with_umask(self, cmd: list[str]) -> list[str]:
+        """
+        :return: command that runs the given command with the umask for the backup file (list[str])
+        """
+        return ["sh", "-c", f'umask {self._determine_file_umask()}; exec "$@"', "sh", *cmd]
 
     @staticmethod
     def _determine_compression_method() -> tuple[str, str]:
@@ -129,7 +160,8 @@ class Backup:
         if pull == "always":
             logger.info(f"Scheduled refresh day: pulling '{self.BASE_IMAGE}' from registry before backup run.")
 
-        return docker.run(self.BASE_IMAGE, cmd, remove=True, volumes_from=[self.container.name],
+        # volumes of the container are read-only: a backup must never modify the data
+        return docker.run(self.BASE_IMAGE, cmd, remove=True, volumes_from=[f"{self.container.name}:ro"],
                           volumes=self.volume_mapping, detach=False, pull=pull)
 
     def _get_backup_filename(self) -> str:
@@ -201,7 +233,7 @@ class Backup:
         if not self.new_group_id:
             new_ownership = self.new_user_id
         elif not self.new_user_id:
-            new_ownership = self.new_group_id
+            new_ownership = f":{self.new_group_id}"  # "chown <id>" would change the user, not the group
         else:
             new_ownership = f"{self.new_user_id}:{self.new_group_id}"
 
@@ -268,7 +300,7 @@ class Backup:
             logger.info(f"Execute Volume backup for container '{self.container.name}'. tar command: {tar_cmd}")
             cfg.backup_start_time = int(time.time())
 
-            tmp = self._exec_docker_run(tar_cmd)
+            tmp = self._exec_docker_run(self._with_umask(tar_cmd))
 
             self._publish_backup_file()
 
@@ -294,8 +326,7 @@ class Backup:
         should_change_permissions = False
 
         if self.new_user_id or self.new_group_id:
-            logger.debug(f"new file ownership defined: user = {os.getenv('BACKUP_FILE_OWNER')}, "
-                         f"group = {os.getenv('BACKUP_FILE_GROUP')}")
+            logger.debug(f"new file ownership defined: user = {self.new_user_id}, group = {self.new_group_id}")
             should_change_ownership = True
 
         if self.new_file_perms:
