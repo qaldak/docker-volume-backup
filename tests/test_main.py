@@ -154,12 +154,19 @@ class TestMain(TestCase):
         args = MagicMock(backup=False, restore=True, dockervolume="foo_data", targetpath="/foo", backupfile="b.tar.gz",
                          sourcepath=None)
 
-        with patch.object(main, "restore_backup") as restore_backup, \
+        with patch.object(main, "restore_backup", return_value=True) as restore_backup, \
                 patch.object(main, "create_backup") as create_backup:
             self.assertEqual(0, main.main(args))
 
         restore_backup.assert_called_once_with("foo_data", "/foo", "b.tar.gz", None)
         create_backup.assert_not_called()
+
+    def test_exit_code_is_one_if_restored_volume_is_incomplete(self):
+        args = MagicMock(backup=False, restore=True, dockervolume="foo_data", targetpath="/foo", backupfile="b.tar.gz",
+                         sourcepath=None)
+
+        with patch.object(main, "restore_backup", return_value=False):
+            self.assertEqual(1, main.main(args))
 
 
 class TestRestoreBackup(TestCase):
@@ -196,6 +203,16 @@ class TestRestoreBackup(TestCase):
         main.Recovery.assert_called_with(docker_volume="foo_data", target_path="/foo", backup_file="b.tar.gz",
                                          source_path="/foo/data")
         self.assertEqual(2, main.Recovery.return_value.restore_volume_backup.call_count)
+
+    def test_restore_result_is_result_of_check(self):
+        main.Volume.return_value.exists.return_value = True
+        main.Volume.return_value.in_use.return_value = False
+
+        main.Recovery.return_value.check_recovery.return_value = True
+        self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        main.Recovery.return_value.check_recovery.return_value = False
+        self.assertFalse(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
 
 
 class TestInitEnvironment(TestCase):

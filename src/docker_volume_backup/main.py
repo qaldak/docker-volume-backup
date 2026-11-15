@@ -114,7 +114,7 @@ def create_backup(container, path, restart) -> bool:
     return success
 
 
-def restore_backup(docker_volume, target_path, backup_file, source_path=None):
+def restore_backup(docker_volume, target_path, backup_file, source_path=None) -> bool:
     print(f"Launching recovery process ...")
     logger.info(f"Launching recovery process. Docker volume: {docker_volume}, target path: {target_path}, "
                 f"backup file to restore: {backup_file}, source path: {source_path}")
@@ -139,9 +139,11 @@ def restore_backup(docker_volume, target_path, backup_file, source_path=None):
 
     recovery.restore_volume_backup()
 
-    recovery.check_recovery()
+    restored_completely = recovery.check_recovery()
 
     print("Recovery process done.")
+
+    return restored_completely
 
 
 def init_environment() -> argparse.Namespace:
@@ -166,13 +168,12 @@ def main(args: argparse.Namespace) -> int:
     """
     Run backup or restore according to the command line arguments.
 
-    :return: process exit code: 0 on success, 1 if the backup failed
+    :return: process exit code: 0 on success, 1 if the backup failed or the restored volume is incomplete
     """
     logger.debug(f"Start volume backup with args '{args}'")
 
     if args.restore:
-        restore_backup(args.dockervolume, args.targetpath, args.backupfile, args.sourcepath)
-        return 0
+        return 0 if restore_backup(args.dockervolume, args.targetpath, args.backupfile, args.sourcepath) else 1
 
     return 0 if create_backup(Container(args.container), args.path, args.restart) else 1
 
