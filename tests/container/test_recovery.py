@@ -1,5 +1,10 @@
+import os
+import shutil
+import subprocess
+import tarfile
+import tempfile
 import warnings
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from unittest.mock import patch
 
 from docker_volume_backup.container.recovery import Recovery
@@ -62,3 +67,189 @@ class TestRecovery(TestCase):
             recovery.check_recovery()
 
         self.assertEqual("invalid literal for int() with base 10: 'Foobar'", str(err.exception))
+
+
+def _create_backup_file(directory, files, compression="gz", roots=None, dot_prefix=False):
+    """
+    Create a backup file like the backup does: one tar file with a path per mount, names without leading '/'.
+
+    :param files: dict with file path in the container -> content
+    :param roots: paths of the mounts (default: all given files)
+    :param dot_prefix: store names with leading './' (as older backup files)
+    """
+    source_dir = os.path.join(directory, "src")
+    for file, content in files.items():
+        path = os.path.join(source_dir, file.lstrip("/"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(content)
+
+    backup_file = os.path.join(directory, f"backup.tar.{compression}")
+    with tarfile.open(backup_file, f"w:{compression}") as tar:
+        for root in roots if roots is not None else list(files):
+            arcname = ("./" if dot_prefix else "") + root.lstrip("/")
+            tar.add(os.path.join(source_dir, root.lstrip("/")), arcname=arcname)
+
+    return backup_file
+
+
+MULTI_MOUNT_FILES = {"/foo/data/a": "a", "/foo/data/sub/s": "s", "/foo/config/b": "b", "/bar/log/c": "c",
+                     "/foo/x.conf": "x"}
+MULTI_MOUNT_ROOTS = ["/foo/data", "/foo/config", "/bar/log", "/foo/x.conf"]
+
+
+class TestRecoverySourcePath(TestCase):
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.dir)
+
+    def _recovery(self, backup_file, target_path="/foo/data", source_path=None):
+        return Recovery(backup_file=backup_file, docker_volume="foo_data", target_path=target_path,
+                        source_path=source_path)
+
+    def test_determine_archive_roots(self):
+        roots = Recovery._determine_archive_roots(
+            ["foo/data", "foo/data/a", "foo/data/sub/s", "foo/config", "bar/log/c", "bar/log"])
+        self.assertEqual(["bar/log", "foo/config", "foo/data"], roots)
+
+    def test_determine_archive_roots_nested_mount_is_part_of_parent(self):
+        self.assertEqual(["data"], Recovery._determine_archive_roots(["data", "data/sub", "data/sub/f"]))
+
+    def test_single_mount_backup_keeps_legacy_command(self):
+        backup_file = _create_backup_file(self.dir, {"/foo/data/a": "a"}, roots=["/foo/data"])
+        recovery = self._recovery(backup_file, "/foo/data")
+
+        recovery.resolve_source_path()
+
+        self.assertEqual(["tar", "-x", "-z", "-v", "-f", "/backup/backup.tar.gz", "--strip-components=2", "-C",
+                          "/foo/data"], recovery._create_tar_cmd())
+
+    def test_legacy_fixture_without_source_path_keeps_legacy_command(self):
+        recovery = Recovery(backup_file="tests/fixtures/tst-backup.tar.gz", docker_volume="foo_data",
+                            target_path="/foo/bar/baz")
+
+        recovery.resolve_source_path()
+
+        self.assertEqual(["tar", "-x", "-z", "-v", "-f", "/backup/tst-backup.tar.gz", "--strip-components=3", "-C",
+                          "/foo/bar/baz"], recovery._create_tar_cmd())
+
+    def test_multi_mount_backup_without_source_path_is_rejected(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS)
+
+        with self.assertRaises(ValueError) as err:
+            self._recovery(backup_file).resolve_source_path()
+
+        message = str(err.exception)
+        self.assertIn("contains 4 paths", message)
+        self.assertIn("/bar/log, /foo/config, /foo/data, /foo/x.conf", message)
+        self.assertIn("--sourcepath", message)
+
+    def test_source_path_not_in_backup_file(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS)
+
+        with self.assertRaises(ValueError) as err:
+            self._recovery(backup_file, source_path="/foo/missing").resolve_source_path()
+
+        self.assertIn("'/foo/missing' not found", str(err.exception))
+        self.assertIn("/foo/data", str(err.exception))
+
+    def test_source_path_parent_of_mounts_is_rejected(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS)
+
+        with self.assertRaises(ValueError):
+            self._recovery(backup_file, source_path="/foo").resolve_source_path()
+
+    def test_invalid_backup_file(self):
+        invalid = os.path.join(self.dir, "invalid.tar.gz")
+        with open(invalid, "w") as f:
+            f.write("no tar")
+
+        with self.assertRaises(ValueError) as err:
+            self._recovery(invalid, source_path="/foo").resolve_source_path()
+
+        self.assertIn("can't be read as tar archive", str(err.exception))
+
+    def test_source_path_command(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS)
+        recovery = self._recovery(backup_file, "/restore", "/foo/config/")
+
+        recovery.resolve_source_path()
+
+        self.assertEqual(["tar", "-x", "-z", "-v", "-f", "/backup/backup.tar.gz", "--strip-components=2", "-C",
+                          "/restore", "foo/config"], recovery._create_tar_cmd())
+
+    def test_source_path_file_command(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS)
+        recovery = self._recovery(backup_file, "/restore", "/foo/x.conf")
+
+        recovery.resolve_source_path()
+
+        self.assertEqual("--strip-components=1", recovery._create_tar_cmd()[6])
+        self.assertEqual("foo/x.conf", recovery._create_tar_cmd()[-1])
+
+    def test_source_path_with_dot_prefix_in_backup_file(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS, dot_prefix=True)
+        recovery = self._recovery(backup_file, "/restore", "/foo/data")
+
+        recovery.resolve_source_path()
+
+        self.assertEqual("--strip-components=3", recovery._create_tar_cmd()[6])
+        self.assertEqual("./foo/data", recovery._create_tar_cmd()[-1])
+
+    def test_tar_file_content_counts_only_source(self):
+        backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, roots=MULTI_MOUNT_ROOTS)
+        recovery = self._recovery(backup_file, "/restore", "/foo/data")
+        recovery.resolve_source_path()
+
+        # foo/data, foo/data/a, foo/data/sub, foo/data/sub/s
+        self.assertEqual(4, recovery._determine_tar_file_content())
+
+    def test_target_path_trailing_slash_is_removed(self):
+        recovery = self._recovery("/backup/foo.tar.gz", "/foo/data/")
+        self.assertEqual("/foo/data", recovery.target_path)
+        self.assertEqual(2, recovery._determine_strip_length())
+
+    @skipIf(shutil.which("tar") is None, "tar not available")
+    def test_restore_each_mount_into_own_volume(self):
+        """run the created tar commands with tar of the host: each mount ends up alone in its volume"""
+        for compression in ("gz", "bz2"):
+            backup_file = _create_backup_file(self.dir, MULTI_MOUNT_FILES, compression=compression,
+                                              roots=MULTI_MOUNT_ROOTS)
+            expected = {"/foo/data": {"a": "a", "sub/s": "s"}, "/foo/config": {"b": "b"}, "/bar/log": {"c": "c"},
+                        "/foo/x.conf": {"x.conf": "x"}}
+
+            for source_path, content in expected.items():
+                with self.subTest(compression=compression, source_path=source_path):
+                    volume = tempfile.mkdtemp(dir=self.dir)
+                    recovery = self._recovery(backup_file, "/volume", source_path)
+                    recovery.resolve_source_path()
+
+                    cmd = recovery._create_tar_cmd()
+                    cmd[cmd.index("-f") + 1] = backup_file
+                    cmd[cmd.index("-C") + 1] = volume
+                    subprocess.run(cmd, check=True, capture_output=True)
+
+                    restored = {}
+                    for root, _, files in os.walk(volume):
+                        for file in files:
+                            full = os.path.join(root, file)
+                            with open(full) as f:
+                                restored[os.path.relpath(full, volume)] = f.read()
+
+                    self.assertEqual(content, restored)
+
+    @skipIf(shutil.which("tar") is None, "tar not available")
+    def test_restore_single_mount_without_source_path_as_before(self):
+        backup_file = _create_backup_file(self.dir, {"/foo/data/a": "a", "/foo/data/sub/s": "s"},
+                                          roots=["/foo/data"])
+        volume = tempfile.mkdtemp(dir=self.dir)
+        recovery = self._recovery(backup_file, "/volume/data")
+        recovery.resolve_source_path()
+
+        cmd = recovery._create_tar_cmd()
+        cmd[cmd.index("-f") + 1] = backup_file
+        cmd[cmd.index("-C") + 1] = volume
+        subprocess.run(cmd, check=True, capture_output=True)
+
+        self.assertEqual(["a", "sub"], sorted(os.listdir(volume)))

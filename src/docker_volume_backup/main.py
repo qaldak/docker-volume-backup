@@ -114,13 +114,19 @@ def create_backup(container, path, restart) -> bool:
     return success
 
 
-def restore_backup(docker_volume, target_path, backup_file):
+def restore_backup(docker_volume, target_path, backup_file, source_path=None):
     print(f"Launching recovery process ...")
     logger.info(f"Launching recovery process. Docker volume: {docker_volume}, target path: {target_path}, "
-                f"backup file to restore: {backup_file}")
+                f"backup file to restore: {backup_file}, source path: {source_path}")
 
     if not os.path.exists(backup_file):
         raise FileNotFoundError(f"Backup file not found: '{backup_file}'")
+
+    recovery = Recovery(docker_volume=docker_volume, target_path=target_path, backup_file=backup_file,
+                        source_path=source_path)
+
+    # check which part of the backup file is restored, before a Docker volume is touched or created
+    recovery.resolve_source_path()
 
     volume = Volume(docker_volume)
     if volume.exists() and volume.in_use():
@@ -130,8 +136,6 @@ def restore_backup(docker_volume, target_path, backup_file):
     elif not volume.exists():
         new_volume = volume.create()
         logger.info(f"New Docker volume created: {new_volume}")
-
-    recovery = Recovery(docker_volume=docker_volume, target_path=target_path, backup_file=backup_file)
 
     recovery.restore_volume_backup()
 
@@ -167,7 +171,7 @@ def main(args: argparse.Namespace) -> int:
     logger.debug(f"Start volume backup with args '{args}'")
 
     if args.restore:
-        restore_backup(args.dockervolume, args.targetpath, args.backupfile)
+        restore_backup(args.dockervolume, args.targetpath, args.backupfile, args.sourcepath)
         return 0
 
     return 0 if create_backup(Container(args.container), args.path, args.restart) else 1

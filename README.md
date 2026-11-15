@@ -58,11 +58,25 @@ The backup is first written to `<backup file>.tmp` and replaces the existing bac
 
 __restore backup__
 
-`python3 -m docker_volume_backup.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [--debug]`
+`python3 -m docker_volume_backup.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [-sp|--sourcepath <path in backup file>] [--debug]`
 
 optional parameter:
 
+* "-sp" / "--sourcepath" path of the mount in the backup file to restore, e.g. "-sp /foo/data". A backup file contains all
+  volumes and bindings of the container. If it contains more than one path, the restore is rejected without this
+  parameter (the error message lists the available paths), because otherwise the content of all paths would be mixed up
+  in one volume. Not needed if the backup file contains only one path.
 * "--debug" set loglevel to DEBUG
+
+Restore each path of a container into its own volume, e.g.:
+
+`python3 -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz --volume foo_data --targetpath /foo/data -sp /foo/data`
+
+`python3 -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz --volume foo_config --targetpath /foo/config -sp /foo/config`
+
+The content of the source path is restored directly into the root of the volume. Without `--sourcepath` the number of
+path components of `--targetpath` is removed from the paths in the backup file, so it has to match the depth of the
+original path.
 
 #### Cronjob
 
