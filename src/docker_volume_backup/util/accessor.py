@@ -22,10 +22,7 @@ def get_base_image() -> str:
     :return: image name, e.g. "busybox:latest" (default if BASE_IMAGE is undefined or empty)
     :raise ValueError: if BASE_IMAGE is not a valid image reference (e.g. contains spaces)
     """
-    image = (os.getenv("BASE_IMAGE") or "").strip()
-
-    if not image:
-        return DEFAULT_BASE_IMAGE
+    image = os.getenv("BASE_IMAGE", "").strip() or DEFAULT_BASE_IMAGE
 
     if not _IMAGE_REFERENCE.fullmatch(image):
         raise ValueError(f"BASE_IMAGE not defined properly: '{image}'. Image name expected, e.g. "
