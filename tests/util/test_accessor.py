@@ -8,7 +8,8 @@ from unittest.mock import patch
 import docker.errors
 from dotenv import load_dotenv
 
-from docker_volume_backup.util.accessor import BackupDir, LocalHost, calc_duration, EnvSettings, parse_file_mode
+from docker_volume_backup.util.accessor import (BackupDir, LocalHost, calc_duration, EnvSettings, parse_file_mode,
+                                                get_base_image, DEFAULT_BASE_IMAGE)
 
 
 class TestAccessorBackupDir(TestCase):
@@ -159,3 +160,53 @@ class TestParseFileMode(TestCase):
                 with self.assertLogs("docker_volume_backup.util.accessor", level="WARNING") as log:
                     self.assertEqual(0o640, parse_file_mode(value, 0o640, "FOO"))
                 self.assertIn("FOO not defined properly", log.output[0])
+
+
+class TestBaseImage(TestCase):
+
+    def test_default_if_undefined(self):
+        with patch.dict("docker_volume_backup.util.accessor.os.environ", {}, clear=True):
+            self.assertEqual("busybox:latest", get_base_image())
+            self.assertEqual(DEFAULT_BASE_IMAGE, get_base_image())
+
+    def test_default_if_empty(self):
+        for value in ("", "   "):
+            with self.subTest(value=value), \
+                    patch.dict("docker_volume_backup.util.accessor.os.environ", {"BASE_IMAGE": value}, clear=True):
+                self.assertEqual("busybox:latest", get_base_image())
+
+    def test_image_from_env(self):
+        images = ["alpine:3.20", "busybox", "registry.example.com:5000/team/tools:1.2-slim", " alpine:3.20 ",
+                  "alpine@sha256:" + "a" * 64, "alpine:3.20@sha256:" + "b" * 64]
+
+        for image in images:
+            with self.subTest(image=image), \
+                    patch.dict("docker_volume_backup.util.accessor.os.environ", {"BASE_IMAGE": image}, clear=True):
+                self.assertEqual(image.strip(), get_base_image())
+
+    def test_image_is_read_when_needed_not_at_import(self):
+        """the .env file is loaded after the modules are imported"""
+        with patch.dict("docker_volume_backup.util.accessor.os.environ", {}, clear=True):
+            self.assertEqual("busybox:latest", get_base_image())
+            os.environ["BASE_IMAGE"] = "alpine:3.20"
+            self.assertEqual("alpine:3.20", get_base_image())
+
+    def test_invalid_image(self):
+        for image in ("alpine 3.20", "-alpine", "alpine;rm -rf", "$(id)", "alp ine:latest", "--privileged"):
+            with self.subTest(image=image), \
+                    patch.dict("docker_volume_backup.util.accessor.os.environ", {"BASE_IMAGE": image}, clear=True):
+                with self.assertRaises(ValueError) as err:
+                    get_base_image()
+
+                self.assertIn("BASE_IMAGE not defined properly", str(err.exception))
+
+    def test_validate_env_settings_rejects_invalid_image(self):
+        with patch.dict("docker_volume_backup.util.accessor.os.environ", {"BASE_IMAGE": "alpine 3.20"}, clear=True), \
+                self.assertLogs("docker_volume_backup.util.accessor", level="ERROR"):
+            with self.assertRaises(ValueError):
+                EnvSettings().validate()
+
+    def test_validate_env_settings_accepts_image_and_default(self):
+        for env in ({}, {"BASE_IMAGE": "alpine:3.20"}):
+            with self.subTest(env=env), patch.dict("docker_volume_backup.util.accessor.os.environ", env, clear=True):
+                self.assertIsNone(EnvSettings().validate())

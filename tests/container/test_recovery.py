@@ -6,7 +6,6 @@ import tempfile
 from unittest import TestCase, skipIf
 from unittest.mock import patch
 
-from docker_volume_backup.container.backup import Backup
 from docker_volume_backup.container.recovery import Recovery
 
 
@@ -349,10 +348,20 @@ class TestCheckRecovery(TestCase):
 
 class TestRecoveryImage(TestCase):
 
+    @patch.dict("docker_volume_backup.util.accessor.os.environ", {}, clear=True)
     @patch("docker_volume_backup.container.recovery.docker.run", return_value="")
-    def test_restore_uses_same_image_as_backup(self, docker_run):
+    def test_restore_uses_default_image(self, docker_run):
         recovery = Recovery(backup_file="/backup/foo.tar.gz", docker_volume="foo_data", target_path="/foo/data")
 
         recovery._exec_docker_run(["find", "/foo/data"])
 
-        self.assertEqual(Backup.BASE_IMAGE, docker_run.call_args.args[0])
+        self.assertEqual("busybox:latest", docker_run.call_args.args[0])
+
+    @patch.dict("docker_volume_backup.util.accessor.os.environ", {"BASE_IMAGE": "alpine:3.20"}, clear=True)
+    @patch("docker_volume_backup.container.recovery.docker.run", return_value="")
+    def test_restore_uses_image_from_env(self, docker_run):
+        recovery = Recovery(backup_file="/backup/foo.tar.gz", docker_volume="foo_data", target_path="/foo/data")
+
+        recovery._exec_docker_run(["find", "/foo/data"])
+
+        self.assertEqual("alpine:3.20", docker_run.call_args.args[0])

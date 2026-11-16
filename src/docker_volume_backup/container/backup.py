@@ -8,14 +8,13 @@ from python_on_whales import docker, DockerException
 
 from docker_volume_backup.util import cfg
 from docker_volume_backup.util.accessor import (LocalHost, calc_duration, Compression, FileExtension, parse_file_mode,
-                                                BASE_IMAGE)
+                                                get_base_image)
 
 logger = logging.getLogger(__name__)
 
 
 class Backup:
 
-    BASE_IMAGE = BASE_IMAGE
     DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
     TMP_FILE_SUFFIX = ".tmp"  # suffix of the file tar writes to, before it replaces the backup file
     DEFAULT_FILE_PERMS = 0o640  # permissions of the backup file, if BACKUP_FILE_PERMS is undefined or invalid
@@ -33,6 +32,7 @@ class Backup:
         self.new_user_id, self.new_group_id = self._determine_file_owner()
         self.new_file_perms = os.getenv("BACKUP_FILE_PERMS")
         self.volume_mapping = [{f"{self.backup_dir.path}:/backup"}]
+        self.base_image = get_base_image()
         self._image_refresh_checked = False
 
     @staticmethod
@@ -171,13 +171,13 @@ class Backup:
         if not self._should_refresh_image():
             return
 
-        logger.info(f"Scheduled refresh day: pulling '{self.BASE_IMAGE}' from registry.")
+        logger.info(f"Scheduled refresh day: pulling '{self.base_image}' from registry.")
 
         try:
-            docker.image.pull(self.BASE_IMAGE, quiet=True)
+            docker.image.pull(self.base_image, quiet=True)
 
         except DockerException as err:
-            warning_msg = (f"Base image '{self.BASE_IMAGE}' could not be refreshed from the registry. "
+            warning_msg = (f"Base image '{self.base_image}' could not be refreshed from the registry. "
                            f"Continue with the cached image. {err}")
             cfg.hasWarning = True
             cfg.warningMsg = warning_msg
@@ -191,7 +191,7 @@ class Backup:
         self._refresh_image()
 
         # volumes of the container are read-only: a backup must never modify the data
-        return docker.run(self.BASE_IMAGE, cmd, remove=True, volumes_from=[f"{self.container.name}:ro"],
+        return docker.run(self.base_image, cmd, remove=True, volumes_from=[f"{self.container.name}:ro"],
                           volumes=self.volume_mapping, detach=False, pull="missing")
 
     def _get_backup_filename(self) -> str:

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from socket import gethostname
 from datetime import datetime, timedelta
 from enum import Enum
@@ -8,7 +9,29 @@ import docker
 
 logger = logging.getLogger(__name__)
 
-BASE_IMAGE = "busybox:latest"  # image of the helper container for backup and restore
+DEFAULT_BASE_IMAGE = "busybox:latest"  # image of the helper container for backup and restore, if BASE_IMAGE is undefined
+_IMAGE_REFERENCE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/:@-]*")
+
+
+def get_base_image() -> str:
+    """
+    Image of the helper container for backup and restore: BASE_IMAGE from .env. The setting is read when it is
+    needed, not at import: the .env file is loaded after the modules are imported.
+    The image needs the commands tar, mv, rm, chown, chmod, find and sh.
+
+    :return: image name, e.g. "busybox:latest" (default if BASE_IMAGE is undefined or empty)
+    :raise ValueError: if BASE_IMAGE is not a valid image reference (e.g. contains spaces)
+    """
+    image = (os.getenv("BASE_IMAGE") or "").strip()
+
+    if not image:
+        return DEFAULT_BASE_IMAGE
+
+    if not _IMAGE_REFERENCE.fullmatch(image):
+        raise ValueError(f"BASE_IMAGE not defined properly: '{image}'. Image name expected, e.g. "
+                         f"'{DEFAULT_BASE_IMAGE}' or 'alpine:3.20'. Check .env config.")
+
+    return image
 
 
 def parse_file_mode(value, default: int, name: str) -> int:
@@ -111,9 +134,19 @@ class EnvSettings:
                 err = "MQTT_ALERTING enabled but MQTT config not correct. Check .env config."
                 raise ValueError(err)
 
+    @staticmethod
+    def __validate_base_image():
+        try:
+            get_base_image()
+
+        except ValueError as err:
+            logger.error(err)
+            raise
+
     def validate(self):
         self.__validate_chat_settings()
         self.__validate_mqtt_settings()
+        self.__validate_base_image()
         return
 
 

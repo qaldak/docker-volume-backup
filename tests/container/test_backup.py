@@ -337,6 +337,28 @@ class TestBackup(TestCase):
         self.assertEqual(["tar", "mv"], [_unwrap(call.args[1])[0] for call in docker_run.call_args_list])
         image_pull.assert_called_once()
 
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {"BASE_IMAGE": "alpine:3.20"}, clear=True)
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=True)
+    @patch("docker_volume_backup.container.backup.docker.image.pull")
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="")
+    def test_image_from_env_is_pulled_and_used(self, docker_run, image_pull, should_refresh):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        backup._exec_docker_run(["chown", "1000", backup.backup_file])
+
+        image_pull.assert_called_once_with("alpine:3.20", quiet=True)
+        self.assertEqual("alpine:3.20", docker_run.call_args.args[0])
+
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="")
+    def test_default_image_without_env_setting(self, docker_run, should_refresh):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        backup._exec_docker_run(["chown", "1000", backup.backup_file])
+
+        self.assertEqual("busybox:latest", docker_run.call_args.args[0])
+
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
     @patch("docker_volume_backup.container.backup.docker.image.pull")
     @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
