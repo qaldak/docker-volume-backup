@@ -1,3 +1,4 @@
+import calendar
 import os
 import shutil
 import stat
@@ -10,6 +11,7 @@ from unittest.mock import patch
 from python_on_whales import DockerException
 
 from docker_volume_backup.container.backup import Backup
+from docker_volume_backup.util import cfg
 
 
 class MockContainer:
@@ -28,6 +30,10 @@ class MockBackupDir:
     def __init__(self) -> None:
         super().__init__()
         self.path = "/foo/backup"
+
+
+def calendar_days(year, month):
+    return calendar.monthrange(year, month)[1]
 
 
 def _unwrap(cmd):
@@ -276,22 +282,100 @@ class TestBackup(TestCase):
         self.assertEqual(1, Backup._get_image_refresh_day())
 
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=True)
+    @patch("docker_volume_backup.container.backup.docker.image.pull")
     @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
-    def test_exec_docker_run_pulls_on_refresh_day(self, docker_run, should_refresh):
-        container = MockContainer()
-        backup_dir = MockBackupDir()
-        backup = Backup(container=container, backup_dir=backup_dir)
-        backup._exec_docker_run(["chown", "1000", backup.backup_file])
-        self.assertEqual("always", docker_run.call_args.kwargs["pull"])
+    def test_exec_docker_run_pulls_once_on_refresh_day(self, docker_run, image_pull, should_refresh):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        for _ in range(3):  # tar, chown, chmod, ... of one run
+            backup._exec_docker_run(["chown", "1000", backup.backup_file])
+
+        image_pull.assert_called_once_with("busybox:latest", quiet=True)  # quiet: no progress output in cron mail
+        self.assertEqual(3, docker_run.call_count)
+        for call in docker_run.call_args_list:
+            self.assertEqual("missing", call.kwargs["pull"])
+
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=True)
+    @patch("docker_volume_backup.container.backup.docker.image.pull",
+           side_effect=DockerException(command_launched=["docker image pull busybox:latest"], return_code=1,
+                                       stderr=b"dial tcp: lookup registry-1.docker.io: no such host"))
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
+    def test_exec_docker_run_continues_with_cached_image_if_pull_fails(self, docker_run, image_pull, should_refresh):
+        cfg.hasWarning = False
+        cfg.warningMsg = ""
+        self.addCleanup(setattr, cfg, "hasWarning", False)
+        self.addCleanup(setattr, cfg, "warningMsg", "")
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
+        with self.assertLogs("docker_volume_backup.container.backup", level="WARNING") as log:
+            self.assertEqual("Everything is allright", backup._exec_docker_run(["chown", "1000", backup.backup_file]))
+            backup._exec_docker_run(["chmod", "640", backup.backup_file])
+
+        self.assertEqual(1, len(log.output), log.output)
+        self.assertIn("could not be refreshed from the registry. Continue with the cached image", log.output[0])
+        self.assertIn("no such host", log.output[0])
+        self.assertTrue(cfg.hasWarning)
+        self.assertIn("Continue with the cached image", cfg.warningMsg)
+        image_pull.assert_called_once()  # no retry for every helper run
+        self.assertEqual(2, docker_run.call_count)
+
+    @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
+    @patch("docker_volume_backup.container.backup.os.path.getsize", return_value=1234)
+    @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
+    @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=True)
+    @patch("docker_volume_backup.container.backup.docker.image.pull",
+           side_effect=DockerException(command_launched=["docker image pull busybox:latest"], return_code=1))
+    @patch("docker_volume_backup.container.backup.docker.run", return_value="")
+    def test_run_backup_succeeds_if_registry_is_not_reachable_on_refresh_day(self, docker_run, image_pull,
+                                                                             should_refresh, hostname, filesize):
+        self.addCleanup(setattr, cfg, "hasWarning", False)
+        self.addCleanup(setattr, cfg, "warningMsg", "")
+
+        with self.assertLogs("docker_volume_backup.container.backup", level="WARNING"):
+            Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
+
+        self.assertEqual(["tar", "mv"], [_unwrap(call.args[1])[0] for call in docker_run.call_args_list])
+        image_pull.assert_called_once()
 
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
+    @patch("docker_volume_backup.container.backup.docker.image.pull")
     @patch("docker_volume_backup.container.backup.docker.run", return_value="Everything is allright")
-    def test_exec_docker_run_skips_pull_on_other_days(self, docker_run, should_refresh):
-        container = MockContainer()
-        backup_dir = MockBackupDir()
-        backup = Backup(container=container, backup_dir=backup_dir)
+    def test_exec_docker_run_does_not_pull_on_other_days(self, docker_run, image_pull, should_refresh):
+        backup = Backup(container=MockContainer(), backup_dir=MockBackupDir())
+
         backup._exec_docker_run(["chown", "1000", backup.backup_file])
-        self.assertEqual("missing", docker_run.call_args.kwargs["pull"])
+
+        image_pull.assert_not_called()
+
+    def _should_refresh_on(self, refresh_day, today):
+        with patch.dict("docker_volume_backup.container.backup.os.environ", {"IMAGE_REFRESH_DAY": refresh_day}), \
+                patch("docker_volume_backup.container.backup.datetime") as mock_datetime:
+            mock_datetime.now.return_value = today
+            return Backup._should_refresh_image()
+
+    def test_refresh_day_beyond_end_of_month_uses_last_day_of_month(self):
+        cases = [("31", datetime(2026, 1, 31), True), ("31", datetime(2026, 4, 30), True),
+                 ("31", datetime(2026, 4, 29), False), ("31", datetime(2026, 2, 28), True),
+                 ("31", datetime(2026, 2, 27), False), ("30", datetime(2026, 2, 28), True),
+                 ("29", datetime(2026, 2, 28), True), ("29", datetime(2028, 2, 29), True),
+                 ("29", datetime(2028, 2, 28), False)]
+
+        for refresh_day, today, expected in cases:
+            with self.subTest(refresh_day=refresh_day, today=today.date()):
+                self.assertEqual(expected, self._should_refresh_on(refresh_day, today))
+
+    def test_refresh_day_within_month_is_unchanged(self):
+        self.assertTrue(self._should_refresh_on("15", datetime(2026, 4, 15)))
+        self.assertFalse(self._should_refresh_on("15", datetime(2026, 4, 30)))
+        self.assertFalse(self._should_refresh_on("1", datetime(2026, 4, 30)))
+
+    def test_exactly_one_refresh_day_per_month(self):
+        """every month has a day on which the image is refreshed, also with the highest configured day"""
+        for refresh_day in ("1", "15", "29", "30", "31"):
+            for month in range(1, 13):
+                days = [datetime(2027, month, day) for day in range(1, calendar_days(2027, month) + 1)]
+                with self.subTest(refresh_day=refresh_day, month=month):
+                    self.assertEqual(1, sum(self._should_refresh_on(refresh_day, today) for today in days))
 
     @patch("docker_volume_backup.container.backup.os.path.getsize", side_effect=FileNotFoundError("no such file"))
     def test_get_backup_file_size_missing_file_is_logged(self, filesize):

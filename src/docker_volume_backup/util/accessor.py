@@ -8,6 +8,8 @@ import docker
 
 logger = logging.getLogger(__name__)
 
+BASE_IMAGE = "busybox:latest"  # image of the helper container for backup and restore
+
 
 def parse_file_mode(value, default: int, name: str) -> int:
     """

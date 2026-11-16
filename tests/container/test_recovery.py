@@ -6,6 +6,7 @@ import tempfile
 from unittest import TestCase, skipIf
 from unittest.mock import patch
 
+from docker_volume_backup.container.backup import Backup
 from docker_volume_backup.container.recovery import Recovery
 
 
@@ -344,3 +345,14 @@ class TestCheckRecovery(TestCase):
 
         self.assertIn("1 of 3 entries", log.output[0])
         self.assertIn("sub/s", log.output[0])
+
+
+class TestRecoveryImage(TestCase):
+
+    @patch("docker_volume_backup.container.recovery.docker.run", return_value="")
+    def test_restore_uses_same_image_as_backup(self, docker_run):
+        recovery = Recovery(backup_file="/backup/foo.tar.gz", docker_volume="foo_data", target_path="/foo/data")
+
+        recovery._exec_docker_run(["find", "/foo/data"])
+
+        self.assertEqual(Backup.BASE_IMAGE, docker_run.call_args.args[0])
