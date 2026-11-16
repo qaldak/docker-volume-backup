@@ -210,18 +210,18 @@ class TestMain(TestCase):
 
     def test_restore_is_run_for_restore_args(self):
         args = MagicMock(backup=False, restore=True, dockervolume="foo_data", targetpath="/foo", backupfile="b.tar.gz",
-                         sourcepath=None)
+                         sourcepath=None, yes=False)
 
         with patch.object(main, "restore_backup", return_value=True) as restore_backup, \
                 patch.object(main, "create_backup") as create_backup:
             self.assertEqual(0, main.main(args))
 
-        restore_backup.assert_called_once_with("foo_data", "/foo", "b.tar.gz", None)
+        restore_backup.assert_called_once_with("foo_data", "/foo", "b.tar.gz", None, False)
         create_backup.assert_not_called()
 
     def test_exit_code_is_one_if_restored_volume_is_incomplete(self):
         args = MagicMock(backup=False, restore=True, dockervolume="foo_data", targetpath="/foo", backupfile="b.tar.gz",
-                         sourcepath=None)
+                         sourcepath=None, yes=False)
 
         with patch.object(main, "restore_backup", return_value=False):
             self.assertEqual(1, main.main(args))
@@ -240,19 +240,33 @@ class TestRestoreBackup(TestCase):
             p.start()
             self.addCleanup(p.stop)
 
+        self.recovery = main.Recovery.return_value
+        self.recovery.check_recovery.return_value = True
+        self.recovery.volume_has_content.return_value = False
+
+        self.volume = main.Volume.return_value
+        self.volume.exists.return_value = True
+        self.volume.containers.side_effect = lambda running_only=False: []
+
+    def _containers(self, running=(), stopped=()):
+        self.volume.containers.side_effect = \
+            lambda running_only=False: list(running) if running_only else list(running) + list(stopped)
+
+    def _stdin(self, tty):
+        patcher = patch.object(main.sys, "stdin", MagicMock(isatty=MagicMock(return_value=tty)))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_source_path_is_checked_before_docker_volume_is_touched(self):
-        main.Recovery.return_value.resolve_source_path.side_effect = ValueError("contains 2 paths")
+        self.recovery.resolve_source_path.side_effect = ValueError("contains 2 paths")
 
         with self.assertRaises(ValueError):
             main.restore_backup("foo_data", "/foo", "b.tar.gz")
 
         main.Volume.assert_not_called()
-        main.Recovery.return_value.restore_volume_backup.assert_not_called()
+        self.recovery.restore_volume_backup.assert_not_called()
 
     def test_restore_passes_source_path_and_works_without_it(self):
-        main.Volume.return_value.exists.return_value = True
-        main.Volume.return_value.in_use.return_value = False
-
         main.restore_backup("foo_data", "/foo", "b.tar.gz")
         main.Recovery.assert_called_with(docker_volume="foo_data", target_path="/foo", backup_file="b.tar.gz",
                                          source_path=None)
@@ -260,17 +274,103 @@ class TestRestoreBackup(TestCase):
         main.restore_backup("foo_data", "/foo", "b.tar.gz", "/foo/data")
         main.Recovery.assert_called_with(docker_volume="foo_data", target_path="/foo", backup_file="b.tar.gz",
                                          source_path="/foo/data")
-        self.assertEqual(2, main.Recovery.return_value.restore_volume_backup.call_count)
+        self.assertEqual(2, self.recovery.restore_volume_backup.call_count)
 
     def test_restore_result_is_result_of_check(self):
-        main.Volume.return_value.exists.return_value = True
-        main.Volume.return_value.in_use.return_value = False
-
-        main.Recovery.return_value.check_recovery.return_value = True
+        self.recovery.check_recovery.return_value = True
         self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
 
-        main.Recovery.return_value.check_recovery.return_value = False
+        self.recovery.check_recovery.return_value = False
         self.assertFalse(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+    def test_new_volume_is_created_and_restored_without_content_check(self):
+        self.volume.exists.return_value = False
+        self.volume.create.return_value = "foo_data"
+
+        self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        self.volume.create.assert_called_once()
+        self.recovery.volume_has_content.assert_not_called()  # would mount (and create) a missing volume
+        self.recovery.restore_volume_backup.assert_called_once()
+
+    def test_existing_empty_volume_is_restored(self):
+        self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        self.volume.create.assert_not_called()
+        self.recovery.restore_volume_backup.assert_called_once()
+
+    def test_volume_of_running_container_is_rejected_with_message(self):
+        self._containers(running=["app", "db"])
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR") as log:
+            self.assertFalse(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        self.assertIn("used by running container(s): app, db", log.output[0])
+        self.assertIn("Nothing was restored", log.output[0])
+        self.recovery.volume_has_content.assert_not_called()
+        self.recovery.restore_volume_backup.assert_not_called()
+
+    def test_volume_of_stopped_container_is_restored_with_warning(self):
+        self._containers(stopped=["app"])
+
+        with self.assertLogs("docker_volume_backup.main", level="WARNING") as log:
+            self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        self.assertIn("used by stopped container(s): app", log.output[0])
+        self.recovery.restore_volume_backup.assert_called_once()
+
+    def test_content_confirmed_in_terminal(self):
+        self.recovery.volume_has_content.return_value = True
+        self._stdin(tty=True)
+
+        for answer in ("y", "Y", " yes "):
+            with self.subTest(answer=answer), patch("builtins.input", return_value=answer) as prompt:
+                self.recovery.restore_volume_backup.reset_mock()
+                self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+                prompt.assert_called_once()
+                self.assertIn("already contains files", prompt.call_args.args[0])
+                self.recovery.restore_volume_backup.assert_called_once()
+
+    def test_content_declined_in_terminal(self):
+        self.recovery.volume_has_content.return_value = True
+        self._stdin(tty=True)
+
+        for answer in ("", "n", "no", "maybe"):
+            with self.subTest(answer=answer), patch("builtins.input", return_value=answer):
+                self.assertFalse(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        self.recovery.restore_volume_backup.assert_not_called()
+
+    def test_content_with_yes_option_is_restored_without_question(self):
+        self.recovery.volume_has_content.return_value = True
+        self._stdin(tty=True)
+
+        with patch("builtins.input", side_effect=AssertionError("no question expected")), \
+                self.assertLogs("docker_volume_backup.main", level="WARNING"):
+            self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz", assume_yes=True))
+
+        self.recovery.restore_volume_backup.assert_called_once()
+
+    def test_content_without_terminal_is_restored_as_before_with_warning(self):
+        self.recovery.volume_has_content.return_value = True
+        self._stdin(tty=False)
+
+        with patch("builtins.input", side_effect=AssertionError("no question expected")), \
+                self.assertLogs("docker_volume_backup.main", level="WARNING") as log:
+            self.assertTrue(main.restore_backup("foo_data", "/foo", "b.tar.gz"))
+
+        self.assertIn("already contains files", log.output[0])
+        self.recovery.restore_volume_backup.assert_called_once()
+
+    def test_never_exits_silently(self):
+        """a rejected restore returns False (exit code 1) instead of ending the process with exit code 0"""
+        self._containers(running=["app"])
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR"):
+            result = main.restore_backup("foo_data", "/foo", "b.tar.gz")
+
+        self.assertIs(False, result)
 
 
 class TestInitEnvironment(TestCase):

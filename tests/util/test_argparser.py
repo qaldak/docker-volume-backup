@@ -113,3 +113,17 @@ class TestArgParser(TestCase):
             ArgParser.parse_cli_args()
 
         self.assertEqual("Parameter --targetpath must not be the root path '/'", str(err.exception))
+
+    def test_parse_restore_yes_defaults_to_false(self):
+        sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/data/foo",
+                    "--volume", "foobarData"]
+
+        self.assertFalse(ArgParser.parse_cli_args().yes)
+
+    def test_parse_restore_yes(self):
+        for option in ("--yes", "-y"):
+            with self.subTest(option=option):
+                sys.argv = ["main.py", "--restore", "--backupfile", "/foo/bar/backup.tar.gz", "-tp", "/data/foo",
+                            "--volume", "foobarData", option]
+
+                self.assertTrue(ArgParser.parse_cli_args().yes)

@@ -28,6 +28,9 @@ class ArgParser:
                                 help="Docker volume to restore backup")
             parser.add_argument("-tp", "--targetpath", dest="targetpath",
                                 help="Target path on Docker volume to restore backup")
+            parser.add_argument("-y", "--yes", action="store_true", dest="yes",
+                                help="Restore into an existing Docker volume with content without asking for "
+                                     "confirmation")
             parser.add_argument("-sp", "--sourcepath", dest="sourcepath",
                                 help="(optional) Path in the backup file to restore, e.g. /foo/data. A backup file "
                                      "contains all mounts of a container. Mandatory if the backup file contains "

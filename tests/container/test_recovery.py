@@ -344,3 +344,20 @@ class TestCheckRecovery(TestCase):
 
         self.assertIn("1 of 3 entries", log.output[0])
         self.assertIn("sub/s", log.output[0])
+
+
+class TestVolumeHasContent(TestCase):
+
+    def _recovery(self):
+        return Recovery(backup_file="/backup/foo.tar.gz", docker_volume="foo_data", target_path="/foo/data")
+
+    def test_volume_with_content(self):
+        with patch.object(Recovery, "_exec_docker_run", return_value="/foo/data/a\n/foo/data/b") as run:
+            self.assertTrue(self._recovery().volume_has_content())
+
+        run.assert_called_once_with(["find", "/foo/data", "-mindepth", "1", "-maxdepth", "1"])
+
+    def test_empty_volume(self):
+        for output in ("", "\n", None):
+            with self.subTest(output=output), patch.object(Recovery, "_exec_docker_run", return_value=output):
+                self.assertFalse(self._recovery().volume_has_content())

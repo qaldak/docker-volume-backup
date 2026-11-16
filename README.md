@@ -76,6 +76,7 @@ __restore backup__
 
 optional parameter:
 
+* "-y" / "--yes" restore into an existing Docker volume that already contains files without asking for confirmation
 * "-sp" / "--sourcepath" path of the mount in the backup file to restore, e.g. "-sp /foo/data". A backup file contains all
   volumes and bindings of the container. If it contains more than one path, the restore is rejected without this
   parameter (the error message lists the available paths), because otherwise the content of all paths would be mixed up
@@ -87,6 +88,15 @@ Restore each path of a container into its own volume, e.g.:
 `python3 -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz --volume foo_data --targetpath /foo/data -sp /foo/data`
 
 `python3 -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz --volume foo_config --targetpath /foo/config -sp /foo/config`
+
+Behaviour for the target Docker volume:
+
+| Docker volume                                            | Restore                                                                                                |
+|:---------------------------------------------------------|:-------------------------------------------------------------------------------------------------------|
+| does not exist                                           | is created                                                                                             |
+| exists, used by a **running** container                  | rejected with an error message and exit code 1, nothing is restored. Stop the container first          |
+| exists, used by stopped containers only                  | restored, a warning names the containers                                                               |
+| exists and contains files                                | in a terminal: asks for confirmation (`-y` skips it). Without a terminal (cron, scripts): restored, with a warning in the log. Files with the same name are overwritten, other files stay |
 
 The content of the source path is restored directly into the root of the volume. Without `--sourcepath` the number of
 path components of `--targetpath` is removed from the paths in the backup file, so it has to match the depth of the
@@ -103,10 +113,10 @@ optional parameter: see Command line
 | Exit code | Meaning                                                                                                   |
 |:----------|:----------------------------------------------------------------------------------------------------------|
 | 0         | Backup: completed successfully (no output on stdout/stderr). <br> Restore: completed, all restored entries found in the volume |
-| 1         | Backup: failed, e.g. Docker daemon/container not available, tar error or container could not be restarted. The error is written to the log file and reported via the configured notifications. <br> Restore: finished, but entries of the backup file are missing in the Docker volume (listed in the error message) |
+| 1         | Backup: failed, e.g. Docker daemon/container not available, tar error or container could not be restarted. The error is written to the log file and reported via the configured notifications. <br> Restore: rejected or canceled (nothing restored), or finished, but entries of the backup file are missing in the Docker volume (listed in the error message) |
 
 Other errors (e.g. invalid `.env` settings or command line parameters) end with a Python error message and a non-zero exit code.
-Known limitation: a restore that is skipped because the Docker volume is in use currently ends without a message and exit code 0.
+A restore that is rejected (Docker volume used by a running container) or canceled ends with exit code 1.
 
 After a restore, every restored entry of the backup file is looked up in the Docker volume. Entries that already existed in the volume and are not part of the backup file are ignored.
 

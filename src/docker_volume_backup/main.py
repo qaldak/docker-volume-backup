@@ -114,7 +114,27 @@ def create_backup(container, path, restart) -> bool:
     return success
 
 
-def restore_backup(docker_volume, target_path, backup_file, source_path=None) -> bool:
+def _confirm_overwrite(docker_volume: str, assume_yes: bool) -> bool:
+    """
+    Ask before files in an existing Docker volume are overwritten. Without a terminal (cron, scripts) nobody can
+    answer: the restore continues as it always did, with a warning.
+
+    :return: True if the restore should continue
+    """
+    warning = f"Docker volume '{docker_volume}' already contains files. Files with the same name are overwritten."
+
+    if assume_yes or not sys.stdin.isatty():
+        logger.warning(warning)
+        print(f"Warning: {warning}")
+        return True
+
+    return input(f"{warning} Continue? (y/N): ").strip().lower() in ("y", "yes")
+
+
+def restore_backup(docker_volume, target_path, backup_file, source_path=None, assume_yes=False) -> bool:
+    """
+    :return: True if the Docker volume was restored completely, False if the restore was not run or is incomplete
+    """
     print(f"Launching recovery process ...")
     logger.info(f"Launching recovery process. Docker volume: {docker_volume}, target path: {target_path}, "
                 f"backup file to restore: {backup_file}, source path: {source_path}")
@@ -129,11 +149,27 @@ def restore_backup(docker_volume, target_path, backup_file, source_path=None) ->
     recovery.resolve_source_path()
 
     volume = Volume(docker_volume)
-    if volume.exists() and volume.in_use():
-        # Todo: input "Override existing volume? Continue: (Y/N)"
-        sys.exit()
+    if volume.exists():
+        running = volume.containers(running_only=True)
+        if running:
+            error_msg = (f"Docker volume '{docker_volume}' is used by running container(s): {', '.join(running)}. "
+                         f"Stop the container(s) before restoring. Nothing was restored.")
+            logger.error(error_msg)
+            print(f"Error: {error_msg}", file=sys.stderr)
+            return False
 
-    elif not volume.exists():
+        stopped = volume.containers()
+        if stopped:
+            warning = f"Docker volume '{docker_volume}' is used by stopped container(s): {', '.join(stopped)}."
+            logger.warning(warning)
+            print(f"Warning: {warning}")
+
+        if recovery.volume_has_content() and not _confirm_overwrite(docker_volume, assume_yes):
+            print("Restore canceled. Nothing was restored.")
+            logger.info("Restore canceled by user.")
+            return False
+
+    else:
         new_volume = volume.create()
         logger.info(f"New Docker volume created: {new_volume}")
 
@@ -173,7 +209,7 @@ def main(args: argparse.Namespace) -> int:
     logger.debug(f"Start volume backup with args '{args}'")
 
     if args.restore:
-        return 0 if restore_backup(args.dockervolume, args.targetpath, args.backupfile, args.sourcepath) else 1
+        return 0 if restore_backup(args.dockervolume, args.targetpath, args.backupfile, args.sourcepath, args.yes) else 1
 
     return 0 if create_backup(Container(args.container), args.path, args.restart) else 1
 
