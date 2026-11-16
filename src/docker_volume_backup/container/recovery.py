@@ -6,7 +6,7 @@ import tarfile
 
 from python_on_whales import DockerException, docker
 
-from docker_volume_backup.util.accessor import Compression, FileExtension
+from docker_volume_backup.util.accessor import Compression, FileExtension, get_base_image
 
 logger = logging.getLogger(__name__)
 
@@ -222,4 +222,4 @@ class Recovery:
         volume_mapping = [{f"{self.docker_volume}:{self.target_path}"}, {f"{self.backup_path}:/backup"}]
         logger.debug(f"volume mapping: {volume_mapping}")
 
-        return docker.run("busybox:latest", cmd, remove=True, volumes=volume_mapping, detach=False)
+        return docker.run(get_base_image(), cmd, remove=True, volumes=volume_mapping, detach=False)
