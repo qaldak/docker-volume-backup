@@ -541,7 +541,7 @@ class TestBackup(TestCase):
         self.assertIsInstance(error.__cause__, DockerException)
 
     def test_verification_can_be_switched_off(self):
-        for value in ("false", "FALSE", "no", "0", " false "):
+        for value in ("false", "FALSE", " false "):
             with self.subTest(value=value):
                 calls, error, _ = self._run_backup_with_failing("none", {"VERIFY_BACKUP": value})
 
@@ -549,18 +549,21 @@ class TestBackup(TestCase):
                 self.assertEqual(["tar", "mv"], calls)
 
     def test_verification_is_on_by_default_and_with_explicit_true(self):
-        for env in ({}, {"VERIFY_BACKUP": ""}, {"VERIFY_BACKUP": "true"}, {"VERIFY_BACKUP": "1"}):
+        for env in ({}, {"VERIFY_BACKUP": ""}, {"VERIFY_BACKUP": "true"}, {"VERIFY_BACKUP": "TRUE"}):
             with self.subTest(env=env):
                 calls, _, _ = self._run_backup_with_failing("none", env)
 
                 self.assertEqual(["tar", "verify", "mv"], calls)
 
     def test_invalid_verify_setting_keeps_verification_on_and_warns(self):
-        with self.assertLogs("docker_volume_backup.container.backup", level="WARNING") as log:
-            calls, _, _ = self._run_backup_with_failing("none", {"VERIFY_BACKUP": "maybe"})
+        for value in ("maybe", "no", "0", "1", "yes"):
+            with self.subTest(value=value):
+                with self.assertLogs("docker_volume_backup.container.backup", level="WARNING") as log:
+                    calls, _, _ = self._run_backup_with_failing("none", {"VERIFY_BACKUP": value})
 
-        self.assertEqual(["tar", "verify", "mv"], calls)
-        self.assertTrue(any("VERIFY_BACKUP not defined properly: 'maybe'" in line for line in log.output), log.output)
+                self.assertEqual(["tar", "verify", "mv"], calls)
+                self.assertTrue(any(f"VERIFY_BACKUP not defined properly: '{value}'" in line for line in log.output),
+                                log.output)
 
     @skipIf(shutil.which("tar") is None or shutil.which("sh") is None, "tar/sh not available")
     def test_verification_command_detects_broken_archives(self):

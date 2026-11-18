@@ -18,7 +18,6 @@ class Backup:
     DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
     TMP_FILE_SUFFIX = ".tmp"  # suffix of the file tar writes to, before it replaces the backup file
     DEFAULT_FILE_PERMS = 0o640  # permissions of the backup file, if BACKUP_FILE_PERMS is undefined or invalid
-    VERIFY_SWITCH_VALUES = {"true": True, "yes": True, "1": True, "false": False, "no": False, "0": False}
 
     def __init__(self, container, backup_dir):
         """
@@ -226,17 +225,14 @@ class Backup:
         """
         :return: False if VERIFY_BACKUP in .env switches the verification of the new archive off (default: on)
         """
-        raw = (os.getenv("VERIFY_BACKUP") or "").strip()
+        raw = (os.getenv("VERIFY_BACKUP") or "true").strip().lower()
 
-        if not raw:
-            return True
-
-        if raw.lower() not in Backup.VERIFY_SWITCH_VALUES:
+        if raw not in ("true", "false"):
             logger.warning(f"VERIFY_BACKUP not defined properly: '{raw}'. 'true' or 'false' expected. "
                            f"Using default: 'true'")
             return True
 
-        return Backup.VERIFY_SWITCH_VALUES[raw.lower()]
+        return raw == "true"
 
     def _verify_backup_file(self):
         """
@@ -259,6 +255,7 @@ class Backup:
                                    tmp_file, cmp_method])
 
         except DockerException as err:
+            # No cleanup here: run_backup() removes the .tmp file after every failing step (tar, verification, mv)
             raise RuntimeError("The new backup file is empty or can not be read completely (verification failed). "
                                "The last backup was not replaced.") from err
 
