@@ -39,6 +39,27 @@ def _restart_container(container):
             cfg.errorMsg = err
 
 
+def _send_notifications(container_name: str):
+    """
+    Send the configured notifications. A failing notification is logged. It must neither stop the other
+    notification nor change the result of the backup.
+    """
+    try:
+        dispatcher = Dispatcher(container_name)
+        notifications = (dispatcher.notify_chat_receiver, dispatcher.notify_mqtt_receiver)
+
+    except Exception as err:
+        logger.exception(f"Notifications could not be prepared: {err}")
+        return
+
+    for notify in notifications:
+        try:
+            notify()
+
+        except Exception as err:
+            logger.exception(f"Notification failed ({getattr(notify, '__name__', 'unknown')}): {err}")
+
+
 def create_backup(container, path, restart) -> bool:
     """
     Run the volume backup of a container and send the configured notifications.
@@ -104,10 +125,7 @@ def create_backup(container, path, restart) -> bool:
         if success:
             logger.info(f"Volume backup for container '{container.name}' completed successfully")
 
-        # send notification
-        dispatcher = Dispatcher(container.name)
-        dispatcher.notify_chat_receiver()
-        dispatcher.notify_mqtt_receiver()
+        _send_notifications(container.name)
 
         logger.info(f"Volume backup done.")
 

@@ -42,5 +42,4 @@ class Slack:
             logger.debug(f"{str(response)[1:66]} ...")
 
         except SlackApiError as err:
-            logger.error(err)
-            cfg.hasError = True
+            logger.error(err)  # the state of the backup (cfg.hasError) is not changed: MQTT reports it afterwards

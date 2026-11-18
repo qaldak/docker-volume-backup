@@ -184,6 +184,81 @@ class TestCreateBackupMissingBackupFile(TestCase):
         self.assertIn("/nonexistent_backup_dir/", str(self.notified["error_msg"]))
 
 
+class TestNotificationErrors(TestCase):
+    """a failing notification must neither stop the other one nor change the result of the backup"""
+
+    def setUp(self):
+        _reset_cfg()
+        self.addCleanup(_reset_cfg)
+
+        self.container = MagicMock()
+        self.container.name = "foo_bar"
+        self.container.exists.return_value = True
+        self.container.is_volume_available.return_value = True
+
+        self.backup = MagicMock()
+        self.backup.should_change_filesettings.return_value = (False, False)
+
+        patches = [
+            patch.object(main.LocalHost, "is_docker_daemon_running", return_value=True),
+            patch.object(main, "BackupDir"),
+            patch.object(main, "Backup", return_value=self.backup),
+            patch.object(main, "Dispatcher"),
+        ]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+        self.dispatcher = main.Dispatcher.return_value
+
+    def test_failing_chat_notification_does_not_skip_mqtt(self):
+        self.dispatcher.notify_chat_receiver.side_effect = ConnectionError("Slack not reachable")
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR") as log:
+            result = main.create_backup(self.container, "/backup", restart=False)
+
+        self.assertTrue(result)
+        self.dispatcher.notify_mqtt_receiver.assert_called_once()
+        self.assertIn("Notification failed", log.output[0])
+        self.assertIn("Slack not reachable", log.output[0])
+
+    def test_failing_mqtt_notification_is_logged_and_does_not_change_result(self):
+        self.dispatcher.notify_mqtt_receiver.side_effect = ValueError("MQTT_TOPIC undefined in .env file")
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR") as log:
+            result = main.create_backup(self.container, "/backup", restart=False)
+
+        self.assertTrue(result)
+        self.dispatcher.notify_chat_receiver.assert_called_once()
+        self.assertIn("MQTT_TOPIC undefined", log.output[0])
+
+    def test_both_notifications_failing_keeps_failed_backup_result(self):
+        self.backup.run_backup.side_effect = RuntimeError("tar failed")
+        self.dispatcher.notify_chat_receiver.side_effect = ConnectionError("down")
+        self.dispatcher.notify_mqtt_receiver.side_effect = ConnectionError("down")
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR"):
+            result = main.create_backup(self.container, "/backup", restart=False)
+
+        self.assertFalse(result)
+        self.assertTrue(cfg.hasError)
+
+    def test_notification_setup_failing_does_not_raise(self):
+        main.Dispatcher.side_effect = RuntimeError("invalid alerting")
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR") as log:
+            self.assertTrue(main.create_backup(self.container, "/backup", restart=False))
+
+        self.assertIn("Notifications could not be prepared", log.output[0])
+
+    def test_container_is_restarted_even_if_notification_fails(self):
+        self.dispatcher.notify_chat_receiver.side_effect = ConnectionError("down")
+
+        with self.assertLogs("docker_volume_backup.main", level="ERROR"):
+            main.create_backup(self.container, "/backup", restart=True)
+
+        self.container.start.assert_called_once()
+
+
 class TestMain(TestCase):
 
     def setUp(self):

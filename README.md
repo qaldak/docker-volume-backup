@@ -106,7 +106,8 @@ Slack receives a short text. MQTT receives JSON on `MQTT_TOPIC`:
  "backupSize": 987654321, "duration": "0:02:13", "hasError": false, "msg": "Docker volume backup successful"}
 ```
 
-`msg` holds the error text on failure. The broker address must be reachable from inside a container (not
+`msg` holds the error text on failure. A notification that fails is only logged, it does not change the result or the
+exit code of the backup and does not stop the other notification. The broker address must be reachable from inside a container (not
 `localhost`). The message is sent through a running container with `mqtt` or `mosquitto` in its name, otherwise through
 a temporary `eclipse-mosquitto` container.
 
