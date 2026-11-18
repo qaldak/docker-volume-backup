@@ -4,7 +4,7 @@ import shutil
 import socket
 import subprocess
 import tempfile
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from unittest.mock import MagicMock, patch
 
 import python_on_whales.exceptions
@@ -214,7 +214,7 @@ class TestContainerState(TestCase):
         """used to fail with 'not (re)started properly' although the container was running at the 2nd check"""
         self._states(False, True)
 
-        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+        with patch.object(Container, "_create_compose_client", return_value=None), \
                 patch("docker_volume_backup.container.container.docker.container.start") as start:
             Container("Foo").start()
 
@@ -224,7 +224,7 @@ class TestContainerState(TestCase):
     def test_start_fails_if_container_never_runs(self):
         self._states(False, False, False, False)
 
-        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+        with patch.object(Container, "_create_compose_client", return_value=None), \
                 patch("docker_volume_backup.container.container.docker.container.start"):
             with self.assertRaises(RuntimeError) as err:
                 Container("Foo").start()
@@ -236,7 +236,7 @@ class TestContainerState(TestCase):
         """used to report 'not stopped properly' although the container was stopped at the 2nd check"""
         self._states(True, False)
 
-        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+        with patch.object(Container, "_create_compose_client", return_value=None), \
                 patch("docker_volume_backup.container.container.docker.container.stop"):
             Container("Foo").stop()
 
@@ -245,7 +245,7 @@ class TestContainerState(TestCase):
     def test_stop_warns_if_container_never_stops(self):
         self._states(True, True, True, True)
 
-        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+        with patch.object(Container, "_create_compose_client", return_value=None), \
                 patch("docker_volume_backup.container.container.docker.container.stop"), \
                 self.assertLogs("docker_volume_backup.container.container", level="WARNING"):
             Container("Foo").stop()
@@ -419,3 +419,111 @@ class TestContainerBindMounts(TestCase):
         paths = tar_cmd[tar_cmd.index("-C") + 2:]
         self.assertEqual(["data", "config.json", "etc/mosquitto/conf.d"], paths)
         self.assertTrue(all(path and path != "/" for path in paths))
+
+
+def _compose_labels(files, project="foo", directory="/docker/foo"):
+    labels = {"com.docker.compose.project": project, "com.docker.compose.project.working_dir": directory,
+              "com.docker.compose.service": "app"}
+    if files is not None:
+        labels["com.docker.compose.project.config_files"] = files
+    return labels
+
+
+def _compose_available():
+    return shutil.which("docker") is not None and subprocess.run(
+        ["docker", "compose", "version"], capture_output=True).returncode == 0
+
+
+class TestContainerCompose(TestCase):
+    """containers started by docker compose: files, project name and directory come from the labels"""
+
+    def _client(self, labels):
+        with patch.object(Container, "_read_compose_labels", return_value=labels):
+            return Container("Foo")._create_compose_client()
+
+    def test_no_compose_client_for_container_without_compose_label(self):
+        self.assertIsNone(self._client(_compose_labels(None)))
+        self.assertIsNone(self._client({}))
+
+    def test_client_for_single_file(self):
+        client = self._client(_compose_labels("/docker/foo/docker-compose.yml"))
+
+        self.assertEqual(["/docker/foo/docker-compose.yml"], [str(f) for f in client.client_config.compose_files])
+        self.assertEqual("foo", client.client_config.compose_project_name)
+        self.assertEqual("/docker/foo", str(client.client_config.compose_project_directory))
+
+    def test_client_for_several_files_gets_one_file_parameter_each(self):
+        """the label separates the files by ',': one parameter 'a,b' is invalid for docker compose"""
+        client = self._client(_compose_labels("/docker/foo/docker-compose.yml,/docker/foo/docker-compose.override.yml"))
+
+        cmd = [str(c) for c in client.compose.docker_compose_cmd]
+        files = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "--file"]
+        self.assertEqual(["/docker/foo/docker-compose.yml", "/docker/foo/docker-compose.override.yml"], files)
+
+    def test_client_uses_project_name_and_directory_of_the_container(self):
+        """a project started with -p or COMPOSE_PROJECT_NAME has another name than the directory of the file"""
+        client = self._client(_compose_labels("/docker/foo/docker-compose.yml", project="mein-stack",
+                                              directory="/srv/stack"))
+
+        cmd = [str(c) for c in client.compose.docker_compose_cmd]
+        self.assertEqual("mein-stack", cmd[cmd.index("--project-name") + 1])
+        self.assertEqual("/srv/stack", cmd[cmd.index("--project-directory") + 1])
+
+    def test_labels_without_project_name_are_accepted(self):
+        client = self._client({"com.docker.compose.project.config_files": "/docker/foo/docker-compose.yml"})
+
+        self.assertIsNone(client.client_config.compose_project_name)
+
+    @patch("docker_volume_backup.container.container.docker_cli.from_env")
+    def test_container_without_labels_is_not_started_by_compose(self, mock_from_env):
+        mock_from_env.return_value.containers.client.inspect_container.return_value = {"Config": {"Labels": None}}
+
+        self.assertEqual((False, None), Container("Foo")._is_container_started_by_compose())
+        self.assertIsNone(Container("Foo")._create_compose_client())
+
+    def test_stop_and_start_of_a_compose_container_use_the_whole_project(self):
+        """unchanged behaviour: docker compose stop/start for the project, not docker stop/start"""
+        compose = MagicMock()
+
+        with patch.object(Container, "_create_compose_client", return_value=compose), \
+                patch.object(Container, "_is_container_stopped", return_value=True), \
+                patch.object(Container, "_is_container_running", return_value=True), \
+                patch("docker_volume_backup.container.container.docker.container.stop") as docker_stop, \
+                patch("docker_volume_backup.container.container.docker.container.start") as docker_start:
+            Container("Foo").stop()
+            Container("Foo").start()
+
+        compose.compose.stop.assert_called_once_with()
+        compose.compose.start.assert_called_once_with()
+        docker_stop.assert_not_called()
+        docker_start.assert_not_called()
+
+    def test_stop_and_start_of_a_normal_container_use_docker(self):
+        with patch.object(Container, "_create_compose_client", return_value=None), \
+                patch.object(Container, "_is_container_stopped", return_value=True), \
+                patch.object(Container, "_is_container_running", return_value=True), \
+                patch("docker_volume_backup.container.container.docker.container.stop") as docker_stop, \
+                patch("docker_volume_backup.container.container.docker.container.start") as docker_start:
+            Container("Foo").stop()
+            Container("Foo").start()
+
+        docker_stop.assert_called_once_with("Foo")
+        docker_start.assert_called_once_with("Foo")
+
+    @skipIf(not _compose_available(), "docker compose not available")
+    def test_real_docker_compose_reads_the_project_from_the_labels(self):
+        """no daemon needed: docker compose config parses the files, so the parameters are valid"""
+        with tempfile.TemporaryDirectory() as directory:
+            main_file = os.path.join(directory, "docker-compose.yml")
+            override_file = os.path.join(directory, "docker-compose.override.yml")
+            with open(main_file, "w") as f:
+                f.write("services:\n  app:\n    image: busybox\n")
+            with open(override_file, "w") as f:
+                f.write("services:\n  app:\n    environment:\n      X: '1'\n")
+
+            client = self._client(_compose_labels(f"{main_file},{override_file}", project="mein-stack",
+                                                  directory=directory))
+            config = client.compose.config(return_json=True)
+
+        self.assertEqual("mein-stack", config["name"])
+        self.assertEqual("1", config["services"]["app"]["environment"]["X"])  # the override file is used
