@@ -42,5 +42,7 @@ class Slack:
             logger.debug(f"{str(response)[1:66]} ...")
 
         except SlackApiError as err:
+            # A failed post is not a backup error: cfg.hasError is the state of the backup and decides the content
+            # of the MQTT message and whether an ON_FAILURE alert is sent. Setting it here would report a successful
+            # backup as failed (hasError=true, empty msg) whenever Slack is not reachable (see #156).
             logger.error(err)
-            cfg.hasError = True

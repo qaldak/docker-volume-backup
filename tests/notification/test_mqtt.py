@@ -30,19 +30,14 @@ class TestMQTT(TestCase):
                         "Sending MQTT with running container failed")
 
     @patch("docker_volume_backup.notification.mqtt.docker.container.run", return_value="Well done")
-    @patch("docker_volume_backup.notification.mqtt.docker.container.remove", return_value=None)
-    @patch("docker_volume_backup.notification.mqtt.docker.container.exists", return_value=True)
     @patch("docker_volume_backup.notification.mqtt.docker.container.list",
            return_value=[MockContainer(uid="abc1", name="foo")])
     @patch.dict("docker_volume_backup.notification.mqtt.os.environ",
                 {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
-    def test_send_msg_create_container(self, mock_container, mock_exists, mock_remove, mock_run):
+    def test_send_msg_create_container(self, mock_container, mock_run):
         '''
         :param mock_container: there is no running mosquitto container available
-        :param mock_exists: mock returns True, so existing container would be removed
-        :param mock_remove: mock returns None (remove successful)
         :param mock_run: mock success
-        :return: True: test successful
         '''
         with self.assertLogs("docker_volume_backup.notification.mqtt", level="DEBUG") as log:
             self.assertTrue(MQTT("testing/topic", "my message from new container").send_msg(),
@@ -51,28 +46,27 @@ class TestMQTT(TestCase):
                               "'my.mqttbroker.home', '-p', '1883', '-t', 'testing/topic', '-m', 'my message "
                               "from new container']",
                               "INFO:docker_volume_backup.notification.mqtt:No running mosquitto container found. Download image and create "
-                              "a temporary container",
-                              "DEBUG:docker_volume_backup.notification.mqtt:Remove existing container 'tmp-mosquitto'."],
+                              "a temporary container"],
                              log.output)
 
-    @patch("docker_volume_backup.notification.mqtt.docker.container.remove", side_effect=DockerException(
-        command_launched=["/usr/bin/docker container run --log-driver none --name tmp-mosquitto eclipse-mosquitto "
-                          "mosquitto_pub -h my.mqttbroker.home -p 1883 -t testing/foo -m error occurred"],
-        return_code=125))
+        self.assertTrue(mock_run.call_args.kwargs["remove"], "temporary container has to be removed by docker")
+        self.assertRegex(mock_run.call_args.kwargs["name"], r"^tmp-mosquitto-[0-9a-f]{8}$")
+
+    @patch("docker_volume_backup.notification.mqtt.docker.container.remove")
     @patch("docker_volume_backup.notification.mqtt.docker.container.exists", return_value=True)
-    @patch("docker_volume_backup.notification.mqtt.docker.container.list",
-           return_value=[MockContainer(uid="abc1", name="foo")])
+    @patch("docker_volume_backup.notification.mqtt.docker.container.run", return_value="")
+    @patch("docker_volume_backup.notification.mqtt.docker.container.list", return_value=[])
     @patch.dict("docker_volume_backup.notification.mqtt.os.environ",
                 {"MQTT_BROKER": "my.mqttbroker.home", "MQTT_PORT": "1883"})
-    def test_send_msg_error_remove_temp_container(self, mock_container, mock_exists, mock_remove):
-        # with self.assertLogs("notification.mqtt", level="DEBUG") as log:
-        with self.assertLogs("docker_volume_backup.notification.mqtt", level="ERROR") as log:
-            self.assertFalse(MQTT("testing/topic", "error occurred").send_msg(), "Error while remove temp container")
-            self.assertIn("ERROR:docker_volume_backup.notification.mqtt:Error occurred while sending MQTT message.",
-                          str(log.output))
-            self.assertIn("/usr/bin/docker container run --log-driver none --name tmp-mosquitto eclipse-mosquitto "
-                          "mosquitto_pub -h my.mqttbroker.home -p 1883 -t testing/foo -m error occurred",
-                          str(log.output))
+    def test_temp_containers_have_unique_names_and_foreign_ones_are_not_removed(self, mock_list, mock_run,
+                                                                               mock_exists, mock_remove):
+        """backups of several containers can send at the same time: one must not remove the container of another"""
+        for _ in range(20):
+            MQTT("testing/topic", "message").send_msg()
+
+        names = [call.kwargs["name"] for call in mock_run.call_args_list]
+        self.assertEqual(20, len(set(names)), names)
+        mock_remove.assert_not_called()
 
     @patch("docker_volume_backup.notification.mqtt.docker.container.run", side_effect=DockerException(
         command_launched=["/usr/bin/docker container run --log-driver none --name tmp-mosquitto eclipse-mosquitto "

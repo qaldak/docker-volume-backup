@@ -4,6 +4,7 @@ from unittest.mock import patch
 from slack_sdk.errors import SlackApiError
 
 from docker_volume_backup.notification.slack import Slack
+from docker_volume_backup.util import cfg
 
 
 class TestSlack(TestCase):
@@ -29,3 +30,15 @@ class TestSlack(TestCase):
                     "ERROR:docker_volume_backup.notification.slack:The request to the Slack API failed.\n"
                     "The server responded with: {'ok': False, 'error': 'channel_not_found'}"],
                 log.output)
+
+    @patch("docker_volume_backup.notification.slack.WebClient.chat_postMessage",
+           side_effect=SlackApiError("The request to the Slack API failed.",
+                                     {'ok': False, 'error': 'channel_not_found'}))
+    def test_post_message_failed_does_not_change_backup_state(self, res):
+        cfg.hasError = False
+        self.addCleanup(setattr, cfg, "hasError", False)
+
+        with self.assertLogs("docker_volume_backup.notification.slack", level="ERROR"):
+            Slack().post_message("Foobar")
+
+        self.assertFalse(cfg.hasError)
