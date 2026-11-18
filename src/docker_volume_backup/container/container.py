@@ -159,10 +159,8 @@ class Container:
     def stop(self):
         logger.debug("Stop docker container")
         try:
-            started_by_compose, compose_file_path = self._is_container_started_by_compose()
-            logger.debug(f"started by compose: {started_by_compose}, docker compose file: {compose_file_path}")
-            if started_by_compose:
-                docker_compose = DockerClient(compose_files=compose_file_path)
+            docker_compose = self._create_compose_client()
+            if docker_compose:
                 docker_compose.compose.stop()
             else:
                 docker.container.stop(str(self.name))
@@ -180,9 +178,8 @@ class Container:
     def start(self):
         logger.debug("Start docker container")
         try:
-            started_by_compose, compose_file_path = self._is_container_started_by_compose()
-            if started_by_compose:
-                docker_compose = DockerClient(compose_files=compose_file_path)
+            docker_compose = self._create_compose_client()
+            if docker_compose:
                 docker_compose.compose.start()
             else:
                 docker.container.start(str(self.name))
@@ -244,7 +241,10 @@ class Container:
             logger.error(f"Error occurred while check {self.name} is {state}. Error: {err}")
             raise
 
-    def _is_container_started_by_compose(self):
+    def _read_compose_labels(self) -> dict:
+        """
+        :return: labels of the container (dict), e.g. com.docker.compose.project
+        """
         try:
             client = docker_cli.from_env()
             response = client.containers.client.inspect_container(container=self.name)
@@ -252,15 +252,7 @@ class Container:
             response_json = json.loads(json.dumps(response))
             logger.debug(f"response_json: {response_json}")
 
-            compose_files = response_json.get("Config").get("Labels").get("com.docker.compose.project.config_files")
-            logger.debug(f"compose_files: {compose_files}")
-
-            if compose_files is None:
-                logger.debug("Container not started by docker compose")
-                return False, compose_files
-
-            logger.debug("Container started by docker compose")
-            return True, compose_files
+            return response_json.get("Config").get("Labels") or {}
 
         except JSONDecodeError as err:
             logger.error(f"Error while decoding json: {err}")
@@ -269,3 +261,42 @@ class Container:
         except Exception as err:
             logger.error(f"Error while inspect container: {err}")
             raise
+
+    def _is_container_started_by_compose(self):
+        compose_files = self._read_compose_labels().get("com.docker.compose.project.config_files")
+        logger.debug(f"compose_files: {compose_files}")
+
+        if compose_files is None:
+            logger.debug("Container not started by docker compose")
+            return False, compose_files
+
+        logger.debug("Container started by docker compose")
+        return True, compose_files
+
+    def _create_compose_client(self) -> DockerClient | None:
+        """
+        Docker Compose client for the project of a container that was started by docker compose. Files, project name
+        and project directory are taken from the labels of the container, so docker compose works with the project the
+        container belongs to:
+        - the label holds several compose files separated by "," (e.g. docker-compose.yml and an override file),
+          each file needs its own --file parameter.
+        - without the project name docker compose derives it from the directory of the compose file. It is another
+          one if the project was started with -p or COMPOSE_PROJECT_NAME: docker compose would find no containers.
+
+        :return: client, None if the container was not started by docker compose
+        """
+        labels = self._read_compose_labels()
+        compose_files = labels.get("com.docker.compose.project.config_files")
+
+        if compose_files is None:
+            logger.debug("Container not started by docker compose")
+            return None
+
+        files = [file for file in compose_files.split(",") if file]
+        project_name = labels.get("com.docker.compose.project")
+        project_directory = labels.get("com.docker.compose.project.working_dir")
+        logger.debug(f"Container started by docker compose. Files: {files}, project: {project_name}, "
+                     f"directory: {project_directory}")
+
+        return DockerClient(compose_files=files, compose_project_name=project_name,
+                            compose_project_directory=project_directory)
