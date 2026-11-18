@@ -1,7 +1,9 @@
 import json
 import logging
 import os.path
+import posixpath
 import re
+import stat
 import subprocess
 import time
 from json import JSONDecodeError
@@ -55,28 +57,95 @@ class Container:
             logger.debug(f"No mounts defined in Docker container.")
             return False
 
+        volumes = []
+        bindings = []
+
         for mount in mounts:
 
             if not mount["RW"]:
                 continue
 
-            if mount["Type"] == "volume" and mount["Destination"] not in self.docker_volumes:
-                self.docker_volumes.append(mount["Destination"].rstrip("/"))
-                self.has_docker_volume = True
+            if mount["Type"] not in ("volume", "bind"):
+                continue
 
-            if mount["Type"] == "bind":
-                regex_pattern = r"[^\/]+?(?=\.\w+$).*"
+            destination = posixpath.normpath(mount["Destination"])
+            if destination in (".", "/"):
+                logger.warning(f"Mount '{mount['Destination']}' is not backed up: not a path of a volume or file")
+                continue
 
-                filename = re.search(regex_pattern, mount["Destination"])
-                if filename is None:
-                    destination_path = mount["Destination"].rstrip("/")
-                else:
-                    destination_path, _ = os.path.split(mount["Destination"])
+            if mount["Type"] == "volume":
+                if destination not in volumes:
+                    volumes.append(destination)
+                continue
 
-                if destination_path not in self.docker_bindings:
-                    self.docker_bindings.append(destination_path)
+            backup_path = self._determine_binding_path(destination, mount.get("Source"))
+            if backup_path and backup_path not in bindings:
+                bindings.append(backup_path)
 
-                self.has_docker_bindings = True
+        self.docker_volumes, self.docker_bindings = self._remove_nested_paths(volumes, bindings)
+        self.has_docker_volume = bool(self.docker_volumes)
+        self.has_docker_bindings = bool(self.docker_bindings)
+
+    @staticmethod
+    def _determine_source_kind(source) -> str | None:
+        """
+        :param source: path of a bind mount on the Docker host (this tool runs on the Docker host)
+        :return: "dir", "file", "special" (socket, FIFO or device) or None if the source can not be looked at
+            (e.g. no permission)
+        """
+        try:
+            mode = os.stat(source).st_mode
+
+        except (OSError, TypeError, ValueError):
+            return None
+
+        if stat.S_ISDIR(mode):
+            return "dir"
+
+        if stat.S_ISREG(mode):
+            return "file"
+
+        return "special"
+
+    @staticmethod
+    def _determine_binding_path(destination: str, source) -> str | None:
+        """
+        Determine the path to back up for a bind mount.
+        - directory: the directory itself, also if its name has a "file extension" (conf.d, v1.2)
+        - file: as always, a name with an extension is a file and its directory is backed up (e.g. the config
+          directory of a config file), a name without extension is backed up itself
+        - socket, FIFO, device (e.g. docker.sock): not backed up, tar can not archive them
+        - file directly below "/" (e.g. /config.json): the file itself, its directory would be the whole file system
+
+        :param destination: path in the container (normalized)
+        :param source: path on the Docker host
+        :return: path to back up, None if nothing is to be backed up
+        """
+        kind = Container._determine_source_kind(source)
+
+        if kind == "special":
+            logger.warning(f"Bind mount '{destination}' ({source}) is a socket, FIFO or device and is not backed up")
+            return None
+
+        has_extension = re.search(r"[^\/]+?(?=\.\w+$).*", destination) is not None
+        path = posixpath.dirname(destination) if has_extension and kind != "dir" else destination
+
+        return path if path != "/" else destination
+
+    @staticmethod
+    def _remove_nested_paths(volumes: list[str], bindings: list[str]) -> tuple[list[str], list[str]]:
+        """
+        A path inside another path to back up is already part of it: tar would archive it twice.
+
+        :return: volumes and bindings without the paths that are inside another path (same order)
+        """
+        paths = volumes + bindings
+        nested = {path for path in paths if any(path != other and path.startswith(f"{other}/") for other in paths)}
+
+        if nested:
+            logger.debug(f"Paths inside another path to back up are not added: {sorted(nested)}")
+
+        return [path for path in volumes if path not in nested], [path for path in bindings if path not in nested]
 
     def is_volume_available(self) -> bool:
         self.determine_volume()

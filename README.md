@@ -64,6 +64,9 @@ python -m docker_volume_backup.main --backup <container> [-p <dir>] [-r] [--debu
 Result: `<dir>/<host>-<container>-volume-backup.tar.gz`. The file is replaced on every run. It is written as
 `.tmp` first, so a failed run does not destroy the last good backup.
 
+Backed up are the writable volumes and bind mounts. Not backed up: read-only mounts and sockets, FIFOs and devices
+(e.g. `docker.sock`). For a bind-mounted file with an extension (`file.conf`) the directory of the file is backed up.
+
 ### Restore
 
 ```bash

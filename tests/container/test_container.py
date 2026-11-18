@@ -1,5 +1,9 @@
 import json
+import os
+import shutil
+import socket
 import subprocess
+import tempfile
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -248,3 +252,170 @@ class TestContainerState(TestCase):
 
         self.assertTrue(cfg.hasWarning)
         self.assertIn("not stopped properly", cfg.warningMsg)
+
+
+class TestContainerBindMounts(TestCase):
+    """which paths are backed up for bind mounts: directories, files, sockets, nested paths"""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.dir)
+
+    def _source(self, kind, name="source"):
+        """create a real source on the host: dir, file, socket or fifo"""
+        path = os.path.join(self.dir, name)
+        if kind == "dir":
+            os.mkdir(path)
+        elif kind == "file":
+            open(path, "w").close()
+        elif kind == "fifo":
+            os.mkfifo(path)
+        elif kind == "socket":
+            sock = socket.socket(socket.AF_UNIX)
+            sock.bind(path)
+            self.addCleanup(sock.close)
+        return path
+
+    @staticmethod
+    def _mount(destination, source="/does/not/exist", mount_type="bind", rw=True):
+        return {"Type": mount_type, "Source": source, "Destination": destination, "RW": rw, "Mode": "", "Name": ""}
+
+    def _determine(self, *mounts):
+        container = Container("Foo")
+        with patch("subprocess.check_output", return_value=json.dumps(list(mounts))):
+            container.determine_volume()
+        return container
+
+    def test_directory_with_extension_like_name_is_backed_up_itself(self):
+        """/etc/mosquitto/conf.d and /data/v1.2 used to be taken for files: their parent directory was backed up"""
+        source = self._source("dir")
+        for destination in ("/etc/mosquitto/conf.d", "/data/v1.2", "/data/backup.d"):
+            with self.subTest(destination=destination):
+                container = self._determine(self._mount(destination, source))
+
+                self.assertEqual([destination], container.docker_bindings)
+                self.assertTrue(container.has_docker_bindings)
+
+    def test_directory_without_extension_is_backed_up_itself(self):
+        container = self._determine(self._mount("/var/log/app/", self._source("dir")))
+
+        self.assertEqual(["/var/log/app"], container.docker_bindings)
+
+    def test_file_with_extension_keeps_backing_up_its_directory(self):
+        """as before: the directory of a file with an extension (e.g. the config directory of a config file)"""
+        container = self._determine(self._mount("/opt/foo/bar/file.conf", self._source("file")))
+
+        self.assertEqual(["/opt/foo/bar"], container.docker_bindings)
+
+    def test_file_without_extension_is_backed_up_itself(self):
+        container = self._determine(self._mount("/etc/hosts_custom", self._source("file")))
+
+        self.assertEqual(["/etc/hosts_custom"], container.docker_bindings)
+
+    def test_file_directly_below_root_is_backed_up_itself(self):
+        """/config.json used to give '/' (and an empty tar argument): the file itself is backed up"""
+        container = self._determine(self._mount("/config.json", self._source("file")))
+
+        self.assertEqual(["/config.json"], container.docker_bindings)
+
+    def test_unknown_source_is_decided_by_the_name_as_before(self):
+        """source not accessible (e.g. no permission): same rule as before"""
+        container = self._determine(self._mount("/opt/foo/bar/file.conf"), self._mount("/var/log"))
+
+        self.assertEqual(["/opt/foo/bar", "/var/log"], container.docker_bindings)
+
+    def test_socket_fifo_and_device_are_not_backed_up(self):
+        for kind in ("socket", "fifo"):
+            with self.subTest(kind=kind):
+                path = self._source(kind, name=f"{kind}.sock")
+
+                with self.assertLogs("docker_volume_backup.container.container", level="WARNING") as log:
+                    container = self._determine(self._mount("/var/run/docker.sock", path))
+
+                self.assertEqual([], container.docker_bindings)
+                self.assertFalse(container.has_docker_bindings)
+                self.assertIn("is a socket, FIFO or device and is not backed up", log.output[0])
+
+        with self.assertLogs("docker_volume_backup.container.container", level="WARNING"):
+            container = self._determine(self._mount("/dev/null", "/dev/null"))
+        self.assertEqual([], container.docker_bindings)
+
+    def test_container_with_only_a_socket_has_nothing_to_back_up(self):
+        socket_path = self._source("socket", name="docker.sock")
+
+        with patch("subprocess.check_output",
+                   return_value=json.dumps([self._mount("/var/run/docker.sock", socket_path)])), \
+                self.assertLogs("docker_volume_backup.container.container", level="WARNING"):
+            self.assertFalse(Container("Foo").is_volume_available())
+
+    def test_other_mounts_are_still_backed_up_next_to_a_socket(self):
+        socket_path = self._source("socket", name="docker.sock")
+
+        with self.assertLogs("docker_volume_backup.container.container", level="WARNING"):
+            container = self._determine(self._mount("/var/run/docker.sock", socket_path),
+                                        self._mount("/data", mount_type="volume"))
+
+        self.assertEqual(["/data"], container.docker_volumes)
+        self.assertEqual([], container.docker_bindings)
+
+    def test_read_only_and_other_mount_types_are_not_backed_up(self):
+        container = self._determine(self._mount("/usr/foo", rw=False), self._mount("/run/tmp", mount_type="tmpfs"),
+                                    self._mount("/data", mount_type="volume", rw=False))
+
+        self.assertEqual(([], []), (container.docker_volumes, container.docker_bindings))
+
+    def test_nested_paths_are_backed_up_once(self):
+        container = self._determine(self._mount("/data", mount_type="volume"),
+                                    self._mount("/data/sub", self._source("dir")),
+                                    self._mount("/data/sub/notes.txt", self._source("file", name="notes")),
+                                    self._mount("/data2", self._source("dir", name="data2")))
+
+        self.assertEqual(["/data"], container.docker_volumes)
+        self.assertEqual(["/data2"], container.docker_bindings)  # /data2 is not inside /data
+
+    def test_nested_volume_is_removed_if_a_binding_contains_it(self):
+        container = self._determine(self._mount("/srv", self._source("dir")),
+                                    self._mount("/srv/db", mount_type="volume"))
+
+        self.assertEqual(([], ["/srv"]), (container.docker_volumes, container.docker_bindings))
+        self.assertFalse(container.has_docker_volume)
+
+    def test_duplicates_with_trailing_slash_are_removed(self):
+        container = self._determine(self._mount("/data/", mount_type="volume"),
+                                    self._mount("/data", mount_type="volume"))
+
+        self.assertEqual(["/data"], container.docker_volumes)
+
+    def test_mount_at_root_is_not_backed_up(self):
+        with self.assertLogs("docker_volume_backup.container.container", level="WARNING") as log:
+            container = self._determine(self._mount("/", mount_type="volume"))
+
+        self.assertEqual([], container.docker_volumes)
+        self.assertIn("is not backed up", log.output[0])
+
+    def test_determine_volume_twice_gives_the_same_result(self):
+        container = Container("Foo")
+        output = json.dumps([self._mount("/data", mount_type="volume"), self._mount("/opt/a/b.conf")])
+
+        with patch("subprocess.check_output", return_value=output):
+            container.determine_volume()
+            container.determine_volume()
+
+        self.assertEqual((["/data"], ["/opt/a"]), (container.docker_volumes, container.docker_bindings))
+
+    def test_no_empty_or_root_path_reaches_the_tar_command(self):
+        """the paths of all kinds of mounts end up in the tar command: none of them may be empty or '/'"""
+        from docker_volume_backup.container.backup import Backup
+
+        container = self._determine(self._mount("/config.json", self._source("file")),
+                                    self._mount("/data/", mount_type="volume"),
+                                    self._mount("/etc/mosquitto/conf.d", self._source("dir", name="d")))
+        backup_dir = MagicMock()
+        backup_dir.path = "/foo/backup"
+
+        with patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="h"):
+            tar_cmd = Backup(container=container, backup_dir=backup_dir)._create_tar_cmd()
+
+        paths = tar_cmd[tar_cmd.index("-C") + 2:]
+        self.assertEqual(["data", "config.json", "etc/mosquitto/conf.d"], paths)
+        self.assertTrue(all(path and path != "/" for path in paths))
