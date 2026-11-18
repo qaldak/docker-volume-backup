@@ -121,7 +121,9 @@ a temporary `eclipse-mosquitto` container.
 
 ## Notes and limitations
 
-- **Consistency:** without `-r` the files are copied while the container runs. Databases may be inconsistent, use `-r`.
+- **Consistency:** without `-r` the files are copied while the container runs. Databases may be inconsistent: use `-r`
+  (the container is stopped for the duration of the backup) or create a dump of the database before the backup. There is
+  no pause or pre/post command function.
 - **Docker Compose:** for containers started with Compose, `-r` stops and starts the whole Compose project (files, project
   name and directory are read from the labels of the container). Services of the project that were stopped before can
   be started as well.
