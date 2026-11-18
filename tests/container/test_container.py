@@ -1,11 +1,12 @@
 import json
 import subprocess
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import python_on_whales.exceptions
 
 from docker_volume_backup.container.container import Container
+from docker_volume_backup.util import cfg
 
 
 class TestContainer(TestCase):
@@ -121,3 +122,129 @@ class TestContainerStateCheckLogging(TestCase):
                 Container("Foo")._is_container_stopped()
 
         self.assertIn("Error occurred while check Foo is stopped. Error: boom", log.output[0])
+
+
+def _inspect_returning(*running_states):
+    """docker.container.inspect that reports the given running states one after the other"""
+    states = iter(running_states)
+
+    def inspect(name):
+        result = MagicMock()
+        result.state.running = next(states)
+        return result
+
+    return inspect
+
+
+class TestContainerState(TestCase):
+    """the state checks retry with a delay and return the result of the last check"""
+
+    def setUp(self):
+        patches = [
+            patch("docker_volume_backup.container.container.time.sleep"),
+            patch("docker_volume_backup.container.container.docker.container.inspect"),
+        ]
+        self.sleep, self.inspect = [p.start() for p in patches]
+        for p in patches:
+            self.addCleanup(p.stop)
+
+        for name in ("hasError", "hasWarning"):
+            self.addCleanup(setattr, cfg, name, False)
+        for name in ("errorMsg", "warningMsg"):
+            self.addCleanup(setattr, cfg, name, "")
+        cfg.hasError = cfg.hasWarning = False
+
+    def _states(self, *running_states):
+        self.inspect.side_effect = _inspect_returning(*running_states)
+
+    def test_running_at_first_check(self):
+        self._states(True)
+
+        self.assertTrue(Container("Foo")._is_container_running())
+        self.assertEqual(1, self.inspect.call_count)
+        self.sleep.assert_not_called()
+
+    def test_running_after_retries(self):
+        for states in ((False, True), (False, False, True), (False, False, False, True)):
+            with self.subTest(states=states):
+                self.sleep.reset_mock()
+                self._states(*states)
+
+                self.assertTrue(Container("Foo")._is_container_running())
+                self.assertEqual(len(states) - 1, self.sleep.call_count)
+
+    def test_never_running(self):
+        self._states(False, False, False, False)
+
+        self.assertFalse(Container("Foo")._is_container_running())
+        self.assertEqual(4, self.inspect.call_count)
+        self.assertEqual(3, self.sleep.call_count)  # no waiting after the last check
+        self.sleep.assert_called_with(3)
+
+    def test_stopped_at_first_check(self):
+        self._states(False)
+
+        self.assertTrue(Container("Foo")._is_container_stopped())
+        self.sleep.assert_not_called()
+
+    def test_stopped_after_retries(self):
+        self._states(True, True, False)
+
+        self.assertTrue(Container("Foo")._is_container_stopped())
+        self.assertEqual(2, self.sleep.call_count)
+
+    def test_never_stopped(self):
+        self._states(True, True, True, True)
+
+        self.assertFalse(Container("Foo")._is_container_stopped())
+        self.assertEqual(4, self.inspect.call_count)
+
+    def test_stopped_check_does_not_use_the_running_check(self):
+        """the retry of the stopped check used to call _is_container_running"""
+        self._states(True, False)
+
+        with patch.object(Container, "_is_container_running", side_effect=AssertionError("wrong check")):
+            self.assertTrue(Container("Foo")._is_container_stopped())
+
+    def test_start_succeeds_if_container_runs_after_a_retry(self):
+        """used to fail with 'not (re)started properly' although the container was running at the 2nd check"""
+        self._states(False, True)
+
+        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+                patch("docker_volume_backup.container.container.docker.container.start") as start:
+            Container("Foo").start()
+
+        start.assert_called_once_with("Foo")
+        self.assertFalse(cfg.hasError)
+
+    def test_start_fails_if_container_never_runs(self):
+        self._states(False, False, False, False)
+
+        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+                patch("docker_volume_backup.container.container.docker.container.start"):
+            with self.assertRaises(RuntimeError) as err:
+                Container("Foo").start()
+
+        self.assertIn("not (re)started properly", str(err.exception))
+        self.assertTrue(cfg.hasError)
+
+    def test_stop_without_warning_if_container_stops_after_a_retry(self):
+        """used to report 'not stopped properly' although the container was stopped at the 2nd check"""
+        self._states(True, False)
+
+        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+                patch("docker_volume_backup.container.container.docker.container.stop"):
+            Container("Foo").stop()
+
+        self.assertFalse(cfg.hasWarning)
+
+    def test_stop_warns_if_container_never_stops(self):
+        self._states(True, True, True, True)
+
+        with patch.object(Container, "_is_container_started_by_compose", return_value=(False, None)), \
+                patch("docker_volume_backup.container.container.docker.container.stop"), \
+                self.assertLogs("docker_volume_backup.container.container", level="WARNING"):
+            Container("Foo").stop()
+
+        self.assertTrue(cfg.hasWarning)
+        self.assertIn("not stopped properly", cfg.warningMsg)

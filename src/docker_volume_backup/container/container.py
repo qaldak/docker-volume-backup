@@ -128,54 +128,51 @@ class Container:
             cfg.errorMsg = error_msg
             raise RuntimeError(error_msg)
 
-    def _is_container_running(self, counter: int = 0):
-        logger.debug(f"Check is container running, attempt: {counter}")
+    def _is_container_running(self) -> bool:
+        """
+        :return: True if the container is running (checked up to 4 times, see _wait_for_container_state)
+        """
+        return self._wait_for_container_state(running=True)
+
+    def _is_container_stopped(self) -> bool:
+        """
+        :return: True if the container is stopped (checked up to 4 times, see _wait_for_container_state)
+        """
+        return self._wait_for_container_state(running=False)
+
+    def _wait_for_container_state(self, running: bool, attempts: int = 4, delay: int = 3) -> bool:
+        """
+        Check whether the container is running (or stopped). The state needs some time after start or stop, so the
+        check is repeated with a delay.
+
+        :param running: expected state: True = running, False = stopped
+        :param attempts: number of checks
+        :param delay: seconds to wait between two checks
+        :return: True if the container has the expected state, False if not after all attempts
+        """
+        state = "running" if running else "stopped"
+
         try:
-            if docker.container.inspect(self.name).state.running:
-                logger.debug("Container is running")
-                return True
+            for attempt in range(attempts):
+                logger.debug(f"Check is container {state}, attempt: {attempt}")
 
-            elif counter > 2:
-                logger.debug(f"Container still not running after {counter} attempts")
-                return False
+                if docker.container.inspect(self.name).state.running == running:
+                    logger.debug(f"Container is {state}")
+                    return True
 
-            else:
-                logger.debug(f"Attempt {counter} not successful. Try again...")
-                counter += 1
-                time.sleep(3)
-                self._is_container_running(counter)
+                if attempt < attempts - 1:
+                    logger.debug(f"Attempt {attempt} not successful. Try again...")
+                    time.sleep(delay)
+
+            logger.debug(f"Container is still not {state} after {attempts} attempts")
+            return False
 
         except python_on_whales.exceptions.NoSuchContainer as err:
             logger.error(f"No such container found: {self.name}. Error: {err}")
             raise
 
         except Exception as err:
-            logger.error(f"Error occurred while check {self.name} is running. Error: {err}")
-            raise
-
-    def _is_container_stopped(self, counter: int = 0):
-        logger.debug(f"Check is container stopped, attempt: {counter}")
-        try:
-            if not docker.container.inspect(self.name).state.running:
-                logger.debug("Container is stopped")
-                return True
-
-            elif counter > 2:
-                logger.debug(f"Container still running after {counter} attempts")
-                return False
-
-            else:
-                logger.debug(f"Attempt {counter} not successful. Try again...")
-                counter += 1
-                time.sleep(3)
-                self._is_container_running(counter)
-
-        except python_on_whales.exceptions.NoSuchContainer as err:
-            logger.error(f"No such container found: {self.name}. Error: {err}")
-            raise
-
-        except Exception as err:
-            logger.error(f"Error occurred while check {self.name} is stopped. Error: {err}")
+            logger.error(f"Error occurred while check {self.name} is {state}. Error: {err}")
             raise
 
     def _is_container_started_by_compose(self):
