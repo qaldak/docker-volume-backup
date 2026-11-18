@@ -41,6 +41,7 @@ e.g. `/var/backups/docker`. `~` is not supported, relative paths depend on the w
 | `BACKUP_FILE_PERMS`, `BACKUP_DIR_PERMS`  | Octal permissions of the backup file / of a created directory         | `640` / `750`            |
 | `COMPRESSION_METHOD`                     | `GZIP` or `BZIP2`                                                     | `GZIP`                   |
 | `BASE_IMAGE`                             | Helper image, needs `sh`, `tar`, `mv`, `rm`, `chown`, `chmod`, `find` | `busybox:latest`         |
+| `VERIFY_BACKUP`                          | `false` skips the check of the new archive (see Backup)               | `true`                   |
 | `IMAGE_REFRESH_DAY`                      | Day of the month on which the helper image is pulled again            | `1`                      |
 | `CHAT_ALERTING`, `MQTT_ALERTING`         | `ALWAYS`, `ON_FAILURE` or `NEVER`                                     | no alerting              |
 | `CHAT_SERVICE`                           | `SLACK`                                                               | -                        |
@@ -62,7 +63,9 @@ python -m docker_volume_backup.main --backup <container> [-p <dir>] [-r] [--debu
 - `--debug` verbose log
 
 Result: `<dir>/<host>-<container>-volume-backup.tar.gz`. The file is replaced on every run. It is written as
-`.tmp` first, so a failed run does not destroy the last good backup.
+`.tmp` first and read back completely (`tar -t`, not empty) before it replaces the last backup. A failed run, or an
+archive that fails this check, is reported as error and does not destroy the last good backup. The check takes about
+as long as the backup itself, `VERIFY_BACKUP=false` switches it off.
 
 Backed up are the writable volumes and bind mounts. Not backed up: read-only mounts and sockets, FIFOs and devices
 (e.g. `docker.sock`). For a bind-mounted file with an extension (`file.conf`) the directory of the file is backed up.

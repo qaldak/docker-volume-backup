@@ -18,6 +18,7 @@ class Backup:
     DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
     TMP_FILE_SUFFIX = ".tmp"  # suffix of the file tar writes to, before it replaces the backup file
     DEFAULT_FILE_PERMS = 0o640  # permissions of the backup file, if BACKUP_FILE_PERMS is undefined or invalid
+    VERIFY_SWITCH_VALUES = {"true": True, "yes": True, "1": True, "false": False, "no": False, "0": False}
 
     def __init__(self, container, backup_dir):
         """
@@ -220,6 +221,49 @@ class Backup:
         """
         return f"{self._get_backup_filepath()}{self.TMP_FILE_SUFFIX}"
 
+    @staticmethod
+    def _is_verification_enabled() -> bool:
+        """
+        :return: False if VERIFY_BACKUP in .env switches the verification of the new archive off (default: on)
+        """
+        raw = (os.getenv("VERIFY_BACKUP") or "").strip()
+
+        if not raw:
+            return True
+
+        if raw.lower() not in Backup.VERIFY_SWITCH_VALUES:
+            logger.warning(f"VERIFY_BACKUP not defined properly: '{raw}'. 'true' or 'false' expected. "
+                           f"Using default: 'true'")
+            return True
+
+        return Backup.VERIFY_SWITCH_VALUES[raw.lower()]
+
+    def _verify_backup_file(self):
+        """
+        Check the temporary file before it replaces the last good backup: it must not be empty and tar has to be
+        able to read the whole archive (a truncated or corrupt gzip/bzip2 stream makes tar -t fail). This reads and
+        decompresses the archive once more, so it takes about as long as the backup itself.
+
+        :raise RuntimeError: if the check fails. run_backup() removes the temporary file, the last backup stays.
+        """
+        if not self._is_verification_enabled():
+            logger.debug("Verification of the backup file is switched off (VERIFY_BACKUP)")
+            return
+
+        cmp_method, _ = self._determine_compression_method()
+        tmp_file = self._get_backup_tmp_filepath()
+        start = time.monotonic()
+
+        try:
+            self._exec_docker_run(["sh", "-c", 'test -s "$1" && tar -t $2 -f "$1" > /dev/null', "sh",
+                                   tmp_file, cmp_method])
+
+        except DockerException as err:
+            raise RuntimeError("The new backup file is empty or can not be read completely (verification failed). "
+                               "The last backup was not replaced.") from err
+
+        logger.debug(f"Backup file verified in {time.monotonic() - start:.1f} s")
+
     def _publish_backup_file(self):
         """
         Replace the backup file by the finished temporary file. Both files are in the same directory,
@@ -330,6 +374,7 @@ class Backup:
 
             tmp = self._exec_docker_run(self._with_umask(tar_cmd))
 
+            self._verify_backup_file()
             self._publish_backup_file()
 
             cfg.backup_size = self._get_backup_file_size()
