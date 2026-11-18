@@ -5,8 +5,8 @@ import tempfile
 from unittest import TestCase
 from unittest.mock import patch
 
-import docker.errors
 from dotenv import load_dotenv
+from python_on_whales import DockerException
 
 from docker_volume_backup.util.accessor import (BackupDir, LocalHost, calc_duration, EnvSettings, parse_file_mode,
                                                 get_base_image, DEFAULT_BASE_IMAGE)
@@ -116,9 +116,9 @@ class TestAccessorLocalhost(TestCase):
         hostname = LocalHost.get_hostname()
         self.assertTrue(hostname.islower())
 
-    @patch("docker_volume_backup.util.accessor.docker.from_env", side_effect=ConnectionError(
+    @patch("docker_volume_backup.util.accessor.docker.version", side_effect=ConnectionError(
         "('Connection aborted.', ConnectionRefusedError(111, 'Connection refused')"))
-    def test_is_docker_daemon_running_exception(self, client):
+    def test_is_docker_daemon_running_exception(self, version):
         with self.assertLogs("docker_volume_backup.util.accessor", level="ERROR") as log:
             self.assertFalse(LocalHost.is_docker_daemon_running())
             self.assertEqual([
@@ -126,15 +126,28 @@ class TestAccessorLocalhost(TestCase):
                 "('Connection aborted.', ConnectionRefusedError(111, 'Connection refused')"],
                 log.output)
 
-    @patch("docker_volume_backup.util.accessor.docker.from_env",
-           return_value="<docker.client.Client object at 0xffff8713be90>")
-    def test_is_docker_daemon_running_docker_exception(self, client):
+    @patch("docker_volume_backup.util.accessor.docker.version", side_effect=DockerException(
+        command_launched=["docker", "version"], return_code=1,
+        stderr=b"failed to connect to the docker API at unix:///var/run/docker.sock"))
+    def test_is_docker_daemon_running_docker_exception(self, version):
+        """daemon not reachable: the DockerException is raised (as before), and logged"""
         with self.assertLogs("docker_volume_backup.util.accessor", level="ERROR") as log:
-            LocalHost.is_docker_daemon_running()
-            self.assertRaises(docker.errors.DockerException)
+            with self.assertRaises(DockerException):
+                LocalHost.is_docker_daemon_running()
 
-    @patch("docker_volume_backup.util.accessor.docker.api.daemon.DaemonApiMixin.ping", return_value="OK")
-    def test_is_docker_daemon_running(self, ping):
+        self.assertIn(f"Docker daemon not running on {LocalHost.get_hostname()}", log.output[0])
+        self.assertIn("failed to connect to the docker API", log.output[0])
+
+    @patch("docker_volume_backup.util.accessor.docker.version")
+    def test_is_docker_daemon_running(self, version):
+        version.return_value.server.version = "29.9.2"
+
+        self.assertTrue(LocalHost.is_docker_daemon_running())
+
+    @patch("docker_volume_backup.util.accessor.docker.version")
+    def test_is_docker_daemon_running_without_server_information(self, version):
+        version.return_value.server = None
+
         self.assertTrue(LocalHost.is_docker_daemon_running())
 
 

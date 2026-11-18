@@ -1,16 +1,55 @@
+import copy
 import json
 import os
 import shutil
 import socket
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from unittest import TestCase, skipIf
 from unittest.mock import MagicMock, patch
 
 import python_on_whales.exceptions
+from python_on_whales import Container as WhalesContainer
+from python_on_whales.client_config import ClientConfig
+from python_on_whales.components.container.models import ContainerInspectResult
 
 from docker_volume_backup.container.container import Container
 from docker_volume_backup.util import cfg
+
+KEEP = object()
+
+
+@contextmanager
+def container_inspect(mounts=None, labels=KEEP):
+    """
+    docker.container.inspect returns a real python-on-whales Container (so its own accessors .mounts and
+    .config.labels are used) with the given inspect data. No Docker daemon is needed.
+
+    :param mounts: mounts in the format of docker inspect (None: those of the fixture)
+    :param labels: labels of the container (KEEP: those of the fixture, with the docker compose labels)
+    """
+    with open("tests/fixtures/docker_inspect_with_compose.json") as file:
+        data = json.load(file)
+    data = copy.deepcopy(data[0] if isinstance(data, list) else data)
+
+    if mounts is not None:
+        data["Mounts"] = mounts
+    if labels is not KEEP:
+        data["Config"]["Labels"] = labels
+
+    result = ContainerInspectResult.model_validate(data)
+    whales_container = WhalesContainer(ClientConfig(), "Foo", is_immutable_id=True)
+
+    with patch.object(WhalesContainer, "_get_inspect_result", return_value=result), \
+            patch("docker_volume_backup.container.container.docker.container.inspect",
+                  return_value=whales_container):
+        yield
+
+
+def _fixture_mounts(name):
+    with open(f"tests/fixtures/{name}") as file:
+        return json.load(file)
 
 
 class TestContainer(TestCase):
@@ -25,19 +64,19 @@ class TestContainer(TestCase):
         container = Container("Foo")
         self.assertFalse(container.exists(), "Container not exist! Expected: 'False'")
 
-    @patch("subprocess.check_output", return_value=open("tests/fixtures/docker_inspect_volume_only.output").read())
-    def test_determine_volumes(self, mock_check_output):
+    def test_determine_volumes(self):
         container = Container("Foo")
-        container.determine_volume()
+        with container_inspect(mounts=_fixture_mounts("docker_inspect_volume_only.output")):
+            container.determine_volume()
         self.assertTrue(container.has_docker_volume, "No volumes found!")
         self.assertEqual(container.docker_volumes, ["/foo/bar/baz/dir"], "Volume destination not correct!")
         self.assertFalse(container.has_docker_bindings, "Unexpected container bindings found!")
         self.assertEqual(container.docker_bindings, [], "Unexpected container bindings found!")
 
-    @patch("subprocess.check_output", return_value=open("tests/fixtures/docker_inspect_multiple_volumes.output").read())
-    def test_determine_multiple_volumes(self, mock_check_output):
+    def test_determine_multiple_volumes(self):
         container = Container("Foo")
-        container.determine_volume()
+        with container_inspect(mounts=_fixture_mounts("docker_inspect_multiple_volumes.output")):
+            container.determine_volume()
         self.assertTrue(container.has_docker_volume, "No volumes found!")
         self.assertEqual(container.docker_volumes, ["/foo/bar/baz/dir", "/foo/bar/baz/log"],
                          "Volume destinations not correct!")
@@ -45,44 +84,44 @@ class TestContainer(TestCase):
         self.assertEqual(container.docker_bindings, ["/opt/foo/bar", "/var/log"],
                          "Binding destinations not correct!")
 
-    @patch("subprocess.check_output", return_value=open("tests/fixtures/docker_inspect_invalid_output.output").read())
-    def test_determine_invalid_output(self, mock_check_output):
+    def test_determine_container_without_mounts(self):
         container = Container("Foo")
-        with self.assertRaises(json.JSONDecodeError) as err:
-            container.determine_volume()
-        self.assertEqual(
-            "Expecting ',' delimiter: line 1 column 159 (char 158)",
-            str(err.exception))
+        with container_inspect(mounts=[]):
+            self.assertIs(False, container.determine_volume())
+
+        self.assertFalse(container.has_docker_volume)
+        self.assertFalse(container.has_docker_bindings)
 
     def test_no_container_found(self):
         container = Container("Foo")
-        with self.assertRaises(subprocess.CalledProcessError) as err:
-            container.determine_volume()
-        self.assertEqual(
-            "Command '['docker', 'inspect', '-f', '{{json .Mounts}}', 'Foo']' returned non-zero exit status 1.",
-            str(err.exception))
+        error = python_on_whales.exceptions.NoSuchContainer(command_launched=["docker container inspect Foo"],
+                                                            return_code=1)
+        with patch("docker_volume_backup.container.container.docker.container.inspect", side_effect=error), \
+                self.assertLogs("docker_volume_backup.container.container", level="ERROR") as log:
+            with self.assertRaises(python_on_whales.exceptions.NoSuchContainer):
+                container.determine_volume()
 
-    @patch("docker_volume_backup.container.container.docker_cli.from_env")
-    def test_is_container_started_by_compose(self, mock_from_env):
-        mock_client = mock_from_env.return_value
-        container = Container("foo")
+        self.assertIn("No such container found: Foo", log.output[0])
 
-        # Mocking the return value
-        with open("tests/fixtures/docker_inspect_with_compose.json") as file:
-            mock_client.containers.client.inspect_container.return_value = json.load(file)
+    def test_inspect_error_is_logged_and_raised(self):
+        container = Container("Foo")
+        with patch("docker_volume_backup.container.container.docker.container.inspect",
+                   side_effect=python_on_whales.exceptions.DockerException(command_launched=["docker inspect"],
+                                                                           return_code=1)), \
+                self.assertLogs("docker_volume_backup.container.container", level="ERROR") as log:
+            with self.assertRaises(python_on_whales.exceptions.DockerException):
+                container.determine_volume()
 
-        self.assertEqual((True, "/docker/foo/docker-compose.yml"), container._is_container_started_by_compose())
+        self.assertIn("Error while determining the mounts of container 'Foo'", log.output[0])
 
-    @patch("docker_volume_backup.container.container.docker_cli.from_env")
-    def test_is_container_started_by_compose_false(self, mock_from_env):
-        mock_client = mock_from_env.return_value
-        container = Container("foo")
+    def test_is_container_started_by_compose(self):
+        with container_inspect():
+            self.assertEqual((True, "/docker/foo/docker-compose.yml"),
+                             Container("foo")._is_container_started_by_compose())
 
-        # Mocking the return value
-        with open("tests/fixtures/docker_inspect_without_compose.json") as file:
-            mock_client.containers.client.inspect_container.return_value = json.load(file)
-
-        self.assertEqual((False, None), container._is_container_started_by_compose())
+    def test_is_container_started_by_compose_false(self):
+        with container_inspect(labels={}):
+            self.assertEqual((False, None), Container("foo")._is_container_started_by_compose())
 
 
 class TestContainerStateCheckLogging(TestCase):
@@ -282,7 +321,7 @@ class TestContainerBindMounts(TestCase):
 
     def _determine(self, *mounts):
         container = Container("Foo")
-        with patch("subprocess.check_output", return_value=json.dumps(list(mounts))):
+        with container_inspect(mounts=list(mounts)):
             container.determine_volume()
         return container
 
@@ -343,8 +382,7 @@ class TestContainerBindMounts(TestCase):
     def test_container_with_only_a_socket_has_nothing_to_back_up(self):
         socket_path = self._source("socket", name="docker.sock")
 
-        with patch("subprocess.check_output",
-                   return_value=json.dumps([self._mount("/var/run/docker.sock", socket_path)])), \
+        with container_inspect(mounts=[self._mount("/var/run/docker.sock", socket_path)]), \
                 self.assertLogs("docker_volume_backup.container.container", level="WARNING"):
             self.assertFalse(Container("Foo").is_volume_available())
 
@@ -395,9 +433,9 @@ class TestContainerBindMounts(TestCase):
 
     def test_determine_volume_twice_gives_the_same_result(self):
         container = Container("Foo")
-        output = json.dumps([self._mount("/data", mount_type="volume"), self._mount("/opt/a/b.conf")])
+        mounts = [self._mount("/data", mount_type="volume"), self._mount("/opt/a/b.conf")]
 
-        with patch("subprocess.check_output", return_value=output):
+        with container_inspect(mounts=mounts):
             container.determine_volume()
             container.determine_volume()
 
@@ -474,12 +512,10 @@ class TestContainerCompose(TestCase):
 
         self.assertIsNone(client.client_config.compose_project_name)
 
-    @patch("docker_volume_backup.container.container.docker_cli.from_env")
-    def test_container_without_labels_is_not_started_by_compose(self, mock_from_env):
-        mock_from_env.return_value.containers.client.inspect_container.return_value = {"Config": {"Labels": None}}
-
-        self.assertEqual((False, None), Container("Foo")._is_container_started_by_compose())
-        self.assertIsNone(Container("Foo")._create_compose_client())
+    def test_container_without_labels_is_not_started_by_compose(self):
+        with container_inspect(labels=None):
+            self.assertEqual((False, None), Container("Foo")._is_container_started_by_compose())
+            self.assertIsNone(Container("Foo")._create_compose_client())
 
     def test_stop_and_start_of_a_compose_container_use_the_whole_project(self):
         """unchanged behaviour: docker compose stop/start for the project, not docker stop/start"""
