@@ -5,6 +5,8 @@ import tempfile
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from python_on_whales import DockerException
+
 from docker_volume_backup import main
 from docker_volume_backup.util import cfg
 
@@ -182,6 +184,85 @@ class TestCreateBackupMissingBackupFile(TestCase):
 
         self.assertTrue(self.notified["has_error"])
         self.assertIn("/nonexistent_backup_dir/", str(self.notified["error_msg"]))
+
+
+class TestVerificationFailureIsReported(TestCase):
+    """
+    Real Backup, Dispatcher and Builder, only the transports (docker, Slack, MQTT) are replaced: a backup file that
+    fails the verification has to end up as error in the result, the exit code, the chat message and the MQTT message.
+    """
+
+    ENV = {"CHAT_ALERTING": "ON_FAILURE", "CHAT_SERVICE": "SLACK", "MQTT_ALERTING": "ON_FAILURE",
+           "MQTT_TOPIC": "backup/{CONTAINER}", "SLACK_AUTH_TOKEN": "x", "SLACK_CHANNEL_ID": "y"}
+
+    def setUp(self):
+        _reset_cfg()
+        self.addCleanup(_reset_cfg)
+
+        self.container = MagicMock()
+        self.container.name = "foo_bar"
+        self.container.exists.return_value = True
+        self.container.is_volume_available.return_value = True
+        self.container.docker_volumes = ["/foo/data"]
+        self.container.docker_bindings = []
+        self.container.has_docker_volume = True
+        self.container.has_docker_bindings = False
+
+        backup_dir = MagicMock()
+        backup_dir.path = "/backup_dir"
+
+        def docker_run(image, cmd, **kwargs):
+            if cmd[:2] == ["sh", "-c"] and "tar -t" in cmd[2]:
+                raise DockerException(command_launched=cmd, return_code=1)
+            return ""
+
+        self.docker_run = patch("docker_volume_backup.container.backup.docker.run", side_effect=docker_run).start()
+        patches = [
+            patch.dict(os.environ, self.ENV, clear=True),
+            patch.object(main.LocalHost, "is_docker_daemon_running", return_value=True),
+            patch.object(main, "BackupDir", return_value=backup_dir),
+            patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False),
+            patch("docker_volume_backup.notification.dispatcher.Slack"),
+            patch("docker_volume_backup.notification.dispatcher.MQTT"),
+        ]
+        for p in patches:
+            p.start()
+        self.addCleanup(patch.stopall)
+        self.slack = sys.modules["docker_volume_backup.notification.dispatcher"].Slack.return_value
+        self.mqtt_class = sys.modules["docker_volume_backup.notification.dispatcher"].MQTT
+
+    def test_failed_verification_is_error_and_is_sent_to_chat_and_mqtt(self):
+        with self.assertLogs("docker_volume_backup", level="ERROR"):
+            result = main.create_backup(self.container, "/backup", restart=False)
+
+        self.assertFalse(result)
+
+        chat_msg = self.slack.post_message.call_args.args[0]
+        self.assertIn("An error occurred while backing up container 'foo_bar'", chat_msg)
+        self.assertIn("verification failed", chat_msg)
+        self.assertIn("The last backup was not replaced", chat_msg)
+
+        topic, mqtt_msg = self.mqtt_class.call_args.args
+        self.assertEqual("backup/foo_bar", topic)
+        self.assertTrue(mqtt_msg["hasError"])
+        self.assertIn("verification failed", mqtt_msg["msg"])
+        self.mqtt_class.return_value.send_msg.assert_called_once()
+
+    def test_failed_verification_removes_tmp_file_and_does_not_replace_backup(self):
+        with self.assertLogs("docker_volume_backup", level="ERROR"):
+            main.create_backup(self.container, "/backup", restart=False)
+
+        commands = [call.args[1] for call in self.docker_run.call_args_list]
+        names = [cmd[4] if cmd[0] == "sh" and cmd[3] == "sh" and cmd[2].startswith("umask") else
+                 ("verify" if cmd[0] == "sh" else cmd[0]) for cmd in commands]
+        self.assertEqual(["tar", "verify", "rm"], names)
+
+    def test_failed_verification_with_restart_still_starts_container(self):
+        with self.assertLogs("docker_volume_backup", level="ERROR"):
+            main.create_backup(self.container, "/backup", restart=True)
+
+        self.container.stop.assert_called_once()
+        self.container.start.assert_called_once()
 
 
 class TestNotificationErrors(TestCase):

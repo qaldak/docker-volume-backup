@@ -38,10 +38,17 @@ def calendar_days(year, month):
 
 def _unwrap(cmd):
     """command of the helper container without the umask wrapper: sh -c 'umask ...; exec "$@"' sh <cmd>"""
-    if cmd[0] == "sh":
+    if cmd[0] == "sh" and "tar -t" not in cmd[2]:  # the verification command runs without the umask wrapper
         assert cmd[1] == "-c" and cmd[2].startswith("umask ") and cmd[3] == "sh", cmd
         return cmd[4:]
     return cmd
+
+
+def _kind(cmd):
+    """name of a command of the helper container: tar, verify (tar -t), mv, rm, ..."""
+    if cmd[0] == "sh" and cmd[1] == "-c" and "tar -t" in cmd[2]:
+        return "verify"
+    return _unwrap(cmd)[0]
 
 
 class TestBackup(TestCase):
@@ -96,11 +103,10 @@ class TestBackup(TestCase):
         self.assertEqual(["sh", "-c", 'umask 0137; exec "$@"', "sh", "tar"], docker_run.call_args_list[0].args[1][:5])
 
         commands = [_unwrap(call.args[1]) for call in docker_run.call_args_list]
-        self.assertEqual(2, len(commands), commands)
-        self.assertEqual("tar", commands[0][0])
+        self.assertEqual(["tar", "sh", "mv"], [command[0] for command in commands], commands)
         self.assertEqual("/backup/groot-foo_bar-volume-backup.tar.gz.tmp", commands[0][commands[0].index("-f") + 1])
         self.assertEqual(["mv", "-f", "/backup/groot-foo_bar-volume-backup.tar.gz.tmp",
-                          "/backup/groot-foo_bar-volume-backup.tar.gz"], commands[1])
+                          "/backup/groot-foo_bar-volume-backup.tar.gz"], commands[2])
 
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
@@ -122,13 +128,13 @@ class TestBackup(TestCase):
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
     @patch("docker_volume_backup.container.backup.docker.run")
     def test_run_backup_failing_replace_removes_tmp_file(self, docker_run, hostname, should_refresh):
-        docker_run.side_effect = ["", DockerException(command_launched=["mv"], return_code=1), ""]
+        docker_run.side_effect = ["", "", DockerException(command_launched=["mv"], return_code=1), ""]
 
         with self.assertRaises(DockerException):
             Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
 
-        commands = [_unwrap(call.args[1])[0] for call in docker_run.call_args_list]
-        self.assertEqual(["tar", "mv", "rm"], commands)
+        commands = [_kind(call.args[1]) for call in docker_run.call_args_list]
+        self.assertEqual(["tar", "verify", "mv", "rm"], commands)
 
     @patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False)
     @patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot")
@@ -334,7 +340,7 @@ class TestBackup(TestCase):
         with self.assertLogs("docker_volume_backup.container.backup", level="WARNING"):
             Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
 
-        self.assertEqual(["tar", "mv"], [_unwrap(call.args[1])[0] for call in docker_run.call_args_list])
+        self.assertEqual(["tar", "verify", "mv"], [_kind(call.args[1]) for call in docker_run.call_args_list])
         image_pull.assert_called_once()
 
     @patch.dict("docker_volume_backup.container.backup.os.environ", {"BASE_IMAGE": "alpine:3.20"}, clear=True)
@@ -487,6 +493,108 @@ class TestBackup(TestCase):
         Backup(container=MockContainer(), backup_dir=MockBackupDir())._exec_docker_run(["tar", "c"])
 
         self.assertEqual(["foo_bar:ro"], docker_run.call_args.kwargs["volumes_from"])
+
+    # --- verification of the new archive before it replaces the last backup (#165) ---
+
+    def _run_backup_with_failing(self, failing: str, env=None):
+        """run_backup with a helper container whose command "failing" (tar, verify, mv) fails: returns the commands"""
+        calls = []
+
+        def docker_run(image, cmd, **kwargs):
+            calls.append(_kind(cmd))
+            if calls[-1] == failing:
+                raise DockerException(command_launched=cmd, return_code=1)
+            return ""
+
+        with patch.dict("docker_volume_backup.container.backup.os.environ", env or {}, clear=True), \
+                patch("docker_volume_backup.container.backup.Backup._should_refresh_image", return_value=False), \
+                patch("docker_volume_backup.container.backup.LocalHost.get_hostname", return_value="groot"), \
+                patch("docker_volume_backup.container.backup.os.path.getsize", return_value=1234), \
+                patch("docker_volume_backup.container.backup.docker.run", side_effect=docker_run) as run:
+            try:
+                Backup(container=MockContainer(), backup_dir=MockBackupDir()).run_backup()
+                error = None
+            except Exception as err:
+                error = err
+        return calls, error, run
+
+    def test_verification_runs_between_tar_and_publish(self):
+        calls, error, run = self._run_backup_with_failing("none")
+
+        self.assertIsNone(error)
+        self.assertEqual(["tar", "verify", "mv"], calls)
+
+    def test_verification_command_checks_size_and_reads_the_archive_with_the_compression_of_the_backup(self):
+        _, _, run = self._run_backup_with_failing("none", {"COMPRESSION_METHOD": "BZIP2"})
+
+        verify = run.call_args_list[1].args[1]
+        self.assertEqual(['sh', '-c', 'test -s "$1" && tar -t $2 -f "$1" > /dev/null', 'sh',
+                          '/backup/groot-foo_bar-volume-backup.tar.bz2.tmp', '-j'], verify)
+
+    def test_failed_verification_keeps_last_backup_and_removes_tmp_file(self):
+        calls, error, run = self._run_backup_with_failing("verify")
+
+        self.assertEqual(["tar", "verify", "rm"], calls)  # no mv: the last backup is not replaced
+        self.assertIsInstance(error, RuntimeError)
+        self.assertIn("verification failed", str(error))
+        self.assertIn("The last backup was not replaced", str(error))
+        self.assertIsInstance(error.__cause__, DockerException)
+
+    def test_verification_can_be_switched_off(self):
+        for value in ("false", "FALSE", " false "):
+            with self.subTest(value=value):
+                calls, error, _ = self._run_backup_with_failing("none", {"VERIFY_BACKUP": value})
+
+                self.assertIsNone(error)
+                self.assertEqual(["tar", "mv"], calls)
+
+    def test_verification_is_on_by_default_and_with_explicit_true(self):
+        for env in ({}, {"VERIFY_BACKUP": ""}, {"VERIFY_BACKUP": "true"}, {"VERIFY_BACKUP": "TRUE"}):
+            with self.subTest(env=env):
+                calls, _, _ = self._run_backup_with_failing("none", env)
+
+                self.assertEqual(["tar", "verify", "mv"], calls)
+
+    def test_invalid_verify_setting_keeps_verification_on_and_warns(self):
+        for value in ("maybe", "no", "0", "1", "yes"):
+            with self.subTest(value=value):
+                with self.assertLogs("docker_volume_backup.container.backup", level="WARNING") as log:
+                    calls, _, _ = self._run_backup_with_failing("none", {"VERIFY_BACKUP": value})
+
+                self.assertEqual(["tar", "verify", "mv"], calls)
+                self.assertTrue(any(f"VERIFY_BACKUP not defined properly: '{value}'" in line for line in log.output),
+                                log.output)
+
+    @skipIf(shutil.which("tar") is None or shutil.which("sh") is None, "tar/sh not available")
+    def test_verification_command_detects_broken_archives(self):
+        """run the verification command of the helper container on the host with real archives"""
+        with tempfile.TemporaryDirectory() as directory:
+            src = os.path.join(directory, "src")
+            os.makedirs(src)
+            with open(os.path.join(src, "f"), "wb") as f:
+                f.write(os.urandom(200000))
+
+            def verify(path, flag):
+                cmd = ["sh", "-c", 'test -s "$1" && tar -t $2 -f "$1" > /dev/null', "sh", path, flag]
+                return subprocess.run(cmd, capture_output=True).returncode
+
+            for flag in ("-z", "-j"):
+                with self.subTest(flag=flag):
+                    good = os.path.join(directory, f"good{flag}.tar")
+                    subprocess.run(["tar", "c", flag, "-f", good, "-C", src, "f"], check=True)
+                    with open(good, "rb") as f:
+                        data = f.read()
+
+                    broken = {"truncated": data[:len(data) - 100], "half": data[:len(data) // 2], "empty": b"",
+                              "no archive": os.urandom(5000)}
+                    self.assertEqual(0, verify(good, flag))
+                    for name, content in broken.items():
+                        path = os.path.join(directory, f"{name}{flag}.tar")
+                        with open(path, "wb") as f:
+                            f.write(content)
+                        self.assertNotEqual(0, verify(path, flag), f"{name} {flag}")
+
+            self.assertNotEqual(0, verify(os.path.join(directory, "missing"), "-z"))
 
     @skipIf(shutil.which("tar") is None or shutil.which("sh") is None, "tar/sh not available")
     @patch.dict("docker_volume_backup.container.backup.os.environ", {}, clear=True)
