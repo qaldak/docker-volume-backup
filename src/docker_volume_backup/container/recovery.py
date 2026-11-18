@@ -154,6 +154,17 @@ class Recovery:
         print(f"Recovery successful. All {len(expected)} entries of the backup file are in the Docker volume.")
         return True
 
+    def volume_has_content(self) -> bool:
+        """
+        Must only be called for an existing volume (docker would create a missing volume when it is mounted).
+
+        :return: True if the Docker volume contains files or directories
+        """
+        output = self._exec_docker_run(["find", f"{self.target_path}", "-mindepth", "1", "-maxdepth", "1"])
+        has_content = bool(str(output or "").strip())
+        logger.debug(f"Docker volume '{self.docker_volume}' has content: {has_content}")
+        return has_content
+
     def _determine_expected_entries(self) -> set[str]:
         """
         Determine the entries that exist in the volume after a restore: the paths of the restored members of the

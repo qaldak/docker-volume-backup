@@ -1,9 +1,15 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from python_on_whales import DockerException
 
 from docker_volume_backup.container.volume import Volume
+
+
+def _container(name):
+    container = MagicMock()
+    container.name = name
+    return container
 
 
 class TestVolume(TestCase):
@@ -48,15 +54,6 @@ class TestVolume(TestCase):
         log = self.assertLogs("container.volume", level="ERROR")
         print(log.logger_name)
 
-    @patch("docker_volume_backup.container.volume.docker.volume.list",
-           return_value=["python_on_whales.Volume(name='foo_data', driver=local)"])
-    def test_docker_volume_in_use(self, mock_volume):
-        self.assertTrue(Volume("foo").in_use(), "Volume not in use, but should.")
-
-    @patch("docker_volume_backup.container.volume.docker.volume.list", return_value=[])
-    def test_docker_volume_not_in_use(self, mock_volume):
-        self.assertFalse(Volume("foo").in_use(), "Volume not in use, but should.")
-
     @patch("docker_volume_backup.container.volume.docker.volume.exists",
            side_effect=DockerException(command_launched=["docker volume inspect foo"], return_code=1))
     def test_exists_error_is_logged_with_message(self, mock_volume):
@@ -67,12 +64,35 @@ class TestVolume(TestCase):
         self.assertIn("Error check volume exists: ", log.output[0])
         self.assertIn("It returned with code 1", log.output[0])
 
-    @patch("docker_volume_backup.container.volume.docker.volume.list",
-           side_effect=DockerException(command_launched=["docker volume ls"], return_code=1))
-    def test_in_use_error_is_logged_with_message(self, mock_volume):
+    @patch("docker_volume_backup.container.volume.docker.volume.exists", return_value=True)
+    @patch("docker_volume_backup.container.volume.docker.volume.create", return_value="foo_data")
+    def test_create_returns_name_of_new_volume(self, mock_create, mock_exists):
+        self.assertEqual("foo_data", Volume("foo_data").create())
+
+    @patch("docker_volume_backup.container.volume.docker.container.list")
+    def test_containers_running_only(self, container_list):
+        container_list.return_value = [_container("b_app"), _container("a_db")]
+
+        self.assertEqual(["a_db", "b_app"], Volume("foo_data").containers(running_only=True))
+        container_list.assert_called_once_with(all=False, filters=[("volume", "foo_data")])
+
+    @patch("docker_volume_backup.container.volume.docker.container.list")
+    def test_containers_including_stopped(self, container_list):
+        container_list.return_value = [_container("app")]
+
+        self.assertEqual(["app"], Volume("foo_data").containers())
+        container_list.assert_called_once_with(all=True, filters=[("volume", "foo_data")])
+
+    @patch("docker_volume_backup.container.volume.docker.container.list", return_value=[])
+    def test_containers_none(self, container_list):
+        self.assertEqual([], Volume("foo_data").containers())
+
+    @patch("docker_volume_backup.container.volume.docker.container.list",
+           side_effect=DockerException(command_launched=["docker ps"], return_code=1))
+    def test_containers_error_is_logged_with_message(self, container_list):
         with self.assertLogs("docker_volume_backup.container.volume", level="ERROR") as log:
             with self.assertRaises(DockerException):
-                Volume("foo").in_use()
+                Volume("foo_data").containers()
 
-        self.assertIn("Error check volume is in use: ", log.output[0])
+        self.assertIn("Error determine containers of volume: ", log.output[0])
         self.assertIn("It returned with code 1", log.output[0])

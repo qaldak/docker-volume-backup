@@ -22,25 +22,30 @@ class Volume:
             logger.error(f"Error check volume exists: {err}")
             raise
 
-    def in_use(self) -> bool:
+    def containers(self, running_only: bool = False) -> list[str]:
+        """
+        :param running_only: only running containers
+        :return: names of the containers that mount the volume (list[str])
+        """
         try:
-            volume_list = docker.volume.list(filters=dict(dangling=0, driver="local", name=str(self.name)))
-            if len(volume_list) > 0:
-                logger.debug(f"Docker volume '{self.name}' in use: {volume_list}")
-                return True
-
-            logger.debug(f"Docker volume '{self.name}' not in use.")
-            return False
+            containers = docker.container.list(all=not running_only, filters=[("volume", str(self.name))])
+            names = sorted(container.name for container in containers)
+            logger.debug(f"Containers using Docker volume '{self.name}' (running only: {running_only}): {names}")
+            return names
 
         except DockerException as err:
-            logger.error(f"Error check volume is in use: {err}")
+            logger.error(f"Error determine containers of volume: {err}")
             raise
 
-    def create(self):
+    def create(self) -> str:
+        """
+        :return: name of the created volume
+        """
         try:
             new_volume = docker.volume.create(volume_name=self.name)
             if docker.volume.exists(str(new_volume)):
                 logger.info(f"Volume '{str(new_volume)}' successfully created.")
+                return str(new_volume)
 
             else:
                 err = f"Error: volume '{str(new_volume)}' created, but not exists."

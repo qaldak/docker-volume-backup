@@ -70,12 +70,13 @@ Backed up are the writable volumes and bind mounts. Not backed up: read-only mou
 ### Restore
 
 ```bash
-python -m docker_volume_backup.main --restore --backupfile <file> --volume <volume> --targetpath <path> [-sp <path>] [--debug]
+python -m docker_volume_backup.main --restore --backupfile <file> --volume <volume> --targetpath <path> [-sp <path>] [-y] [--debug]
 ```
 
 - `--volume` target volume, created if it does not exist
 - `--targetpath` mount path of the volume during the restore. Without `-sp` it needs as many path components as
   the original path
+- `-y` do not ask for confirmation if the volume already contains files
 - `-sp` path inside the backup, e.g. `/foo/data`. Required if the backup holds more than one path (the error message
   lists them). Restore each path into its own volume:
 
@@ -84,7 +85,10 @@ python -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volu
   --volume foo_data --targetpath /foo/data -sp /foo/data
 ```
 
-Existing files with the same name are overwritten. Afterwards every restored file is looked up in the volume.
+Existing files with the same name are overwritten. In a terminal the restore asks first if the volume already contains
+files (`-y` skips the question), without a terminal (cron, scripts) it continues and logs a warning. A volume used by a
+**running** container is rejected, containers that are stopped only give a warning. Afterwards every restored file is
+looked up in the volume.
 
 ### Cron
 
@@ -97,7 +101,8 @@ Cron sends mail only if there is output: a successful backup is silent. `docker`
 
 ### Exit codes
 
-`0` success, `1` backup failed or restored volume incomplete. The reason is in the log and the alert.
+`0` success, `1` backup failed, restore rejected or canceled, or restored volume incomplete. The reason is in the log
+and the alert.
 Invalid settings or parameters end with an error message and a non-zero exit code.
 
 ## Alerting
@@ -121,8 +126,6 @@ a temporary `eclipse-mosquitto` container.
   name and directory are read from the labels of the container). Services of the project that were stopped before can
   be started as well.
 - **No history:** one backup file per container. Copy it elsewhere if you need older versions.
-- **Restore into a volume that a container uses** is skipped without a message (exit code 0). Stop and remove the
-  container first.
 - **Permissions:** backups are `640` and owned by the user who runs the backup, the data is mounted read-only. Others
   that need access: use `BACKUP_FILE_GROUP`, or set `BACKUP_FILE_OWNER=0`, `BACKUP_FILE_GROUP=0`,
   `BACKUP_FILE_PERMS=644` for root-owned, world-readable files as in earlier versions.
