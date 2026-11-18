@@ -1,14 +1,10 @@
-import json
 import logging
 import os.path
 import posixpath
 import re
 import stat
-import subprocess
 import time
-from json import JSONDecodeError
 
-import docker as docker_cli
 import python_on_whales.exceptions
 from python_on_whales import docker, DockerClient
 
@@ -41,16 +37,14 @@ class Container:
     def determine_volume(self):
         logger.debug(f"determining volumes ...")
         try:
-            mounts = json.loads(subprocess.check_output(["docker", "inspect", "-f", "{{json .Mounts}}", self.name],
-                                                        stderr=subprocess.STDOUT))
-        except subprocess.CalledProcessError as err:
-            logger.error(err)
+            mounts = docker.container.inspect(self.name).mounts or []
+
+        except python_on_whales.exceptions.NoSuchContainer as err:
+            logger.error(f"No such container found: {self.name}. Error: {err}")
             raise
-        except TypeError as err:
-            logger.error(err)
-            raise
-        except json.JSONDecodeError as err:
-            logger.error(err)
+
+        except Exception as err:
+            logger.error(f"Error while determining the mounts of container '{self.name}': {err}")
             raise
 
         if len(mounts) == 0:
@@ -62,23 +56,23 @@ class Container:
 
         for mount in mounts:
 
-            if not mount["RW"]:
+            if not mount.rw:
                 continue
 
-            if mount["Type"] not in ("volume", "bind"):
+            if mount.type not in ("volume", "bind"):
                 continue
 
-            destination = posixpath.normpath(mount["Destination"])
+            destination = posixpath.normpath(mount.destination)
             if destination in (".", "/"):
-                logger.warning(f"Mount '{mount['Destination']}' is not backed up: not a path of a volume or file")
+                logger.warning(f"Mount '{mount.destination}' is not backed up: not a path of a volume or file")
                 continue
 
-            if mount["Type"] == "volume":
+            if mount.type == "volume":
                 if destination not in volumes:
                     volumes.append(destination)
                 continue
 
-            backup_path = self._determine_binding_path(destination, mount.get("Source"))
+            backup_path = self._determine_binding_path(destination, mount.source)
             if backup_path and backup_path not in bindings:
                 bindings.append(backup_path)
 
@@ -246,17 +240,9 @@ class Container:
         :return: labels of the container (dict), e.g. com.docker.compose.project
         """
         try:
-            client = docker_cli.from_env()
-            response = client.containers.client.inspect_container(container=self.name)
-
-            response_json = json.loads(json.dumps(response))
-            logger.debug(f"response_json: {response_json}")
-
-            return response_json.get("Config").get("Labels") or {}
-
-        except JSONDecodeError as err:
-            logger.error(f"Error while decoding json: {err}")
-            raise
+            labels = docker.container.inspect(self.name).config.labels or {}
+            logger.debug(f"labels of container '{self.name}': {labels}")
+            return labels
 
         except Exception as err:
             logger.error(f"Error while inspect container: {err}")
