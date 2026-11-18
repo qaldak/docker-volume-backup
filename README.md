@@ -30,7 +30,8 @@ The `.env` file has to be in the project directory (next to `setup.sh`). The wor
 
 ## Configuration
 
-Settings in `.env`, see [.env_example](.env_example). Use absolute paths.
+Settings in `.env`, see [.env_example](.env_example). Use absolute paths (`BACKUP_DIR`, `LOG_DIR`, option `-p`),
+e.g. `/var/backups/docker`. `~` is not supported, relative paths depend on the working directory.
 
 | Setting                                  | Description                                                           | Default                  |
 |:-----------------------------------------|:----------------------------------------------------------------------|:-------------------------|
