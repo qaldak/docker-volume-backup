@@ -2,6 +2,8 @@ import json
 from unittest import TestCase
 from unittest.mock import patch
 
+from slack_sdk.errors import SlackApiError
+
 from docker_volume_backup.notification.dispatcher import Dispatcher
 from docker_volume_backup.util import cfg
 from docker_volume_backup.util.accessor import Alerting, Receiver
@@ -120,3 +122,26 @@ class TestDispatcherMqttPayload(TestCase):
         self.assertIs(True, payload["hasError"])
         self.assertIsNone(payload["backupSize"])
         self.assertIn('/backup/foo "bar".tar.gz', payload["msg"])
+
+    def test_failed_slack_post_does_not_turn_mqtt_message_into_an_error(self):
+        """successful backup, Slack not reachable: MQTT (ON_FAILURE) must not report an error"""
+        env = {"CHAT_ALERTING": "ALWAYS", "CHAT_SERVICE": "SLACK", "SLACK_AUTH_TOKEN": "x", "SLACK_CHANNEL_ID": "C1",
+               "MQTT_ALERTING": "ON_FAILURE", "MQTT_BROKER": "b", "MQTT_PORT": "1883", "MQTT_TOPIC": "t/{CONTAINER}"}
+        cfg.hasError = False
+        cfg.errorMsg = ""
+        cfg.job_start_time, cfg.job_end_time = 1000, 1001
+
+        with patch.dict("docker_volume_backup.notification.dispatcher.os.environ", env, clear=True), \
+                patch.dict("docker_volume_backup.notification.slack.os.environ", env, clear=True), \
+                patch("docker_volume_backup.notification.slack.WebClient") as client, \
+                patch("docker_volume_backup.notification.mqtt.docker.container.run") as run, \
+                patch("docker_volume_backup.notification.mqtt.MQTT.determine_mqtt_container", return_value=""):
+            client.return_value.chat_postMessage.side_effect = SlackApiError("failed", {"ok": False})
+            dispatcher = Dispatcher("foo_bar")
+
+            with self.assertLogs("docker_volume_backup.notification.slack", level="ERROR"):
+                dispatcher.notify_chat_receiver()
+            dispatcher.notify_mqtt_receiver()
+
+        self.assertFalse(cfg.hasError)
+        run.assert_not_called()  # ON_FAILURE and the backup was successful: no MQTT message

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import uuid
 
 from python_on_whales import docker, DockerException
 
@@ -40,12 +41,10 @@ class MQTT:
             else:
                 logger.info("No running mosquitto container found. Download image and create a temporary container")
 
-                if docker.container.exists("tmp-mosquitto"):
-                    logger.debug("Remove existing container 'tmp-mosquitto'.")
-                    docker.container.remove("tmp-mosquitto")
-
-                docker.container.run(image="eclipse-mosquitto", name="tmp-mosquitto", remove=True,
-                                     command=mqtt_cmd, log_driver="none")
+                # unique name: backups of several containers can run at the same time (cron). The container
+                # is removed by docker when it exits.
+                docker.container.run(image="eclipse-mosquitto", name=f"tmp-mosquitto-{uuid.uuid4().hex[:8]}",
+                                     remove=True, command=mqtt_cmd, log_driver="none")
                 return True
 
         except DockerException as err:

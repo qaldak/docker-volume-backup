@@ -1,3 +1,4 @@
+import calendar
 import logging
 import os
 import time
@@ -6,14 +7,14 @@ from datetime import datetime
 from python_on_whales import docker, DockerException
 
 from docker_volume_backup.util import cfg
-from docker_volume_backup.util.accessor import LocalHost, calc_duration, Compression, FileExtension, parse_file_mode
+from docker_volume_backup.util.accessor import (LocalHost, calc_duration, Compression, FileExtension, parse_file_mode,
+                                                get_base_image)
 
 logger = logging.getLogger(__name__)
 
 
 class Backup:
 
-    BASE_IMAGE = "busybox:latest"
     DEFAULT_IMAGE_REFRESH_DAY = 1  # fallback if IMAGE_REFRESH_DAY is undefined or invalid
     TMP_FILE_SUFFIX = ".tmp"  # suffix of the file tar writes to, before it replaces the backup file
     DEFAULT_FILE_PERMS = 0o640  # permissions of the backup file, if BACKUP_FILE_PERMS is undefined or invalid
@@ -31,6 +32,8 @@ class Backup:
         self.new_user_id, self.new_group_id = self._determine_file_owner()
         self.new_file_perms = os.getenv("BACKUP_FILE_PERMS")
         self.volume_mapping = [{f"{self.backup_dir.path}:/backup"}]
+        self.base_image = get_base_image()
+        self._image_refresh_checked = False
 
     @staticmethod
     def _determine_file_owner() -> tuple[str, str]:
@@ -146,23 +149,50 @@ class Backup:
         """
         Limits explicit registry pulls of the base image to the configured day of month, so
         the image stays reasonably up to date without checking the registry on every run.
+        In a month that is shorter than the configured day (e.g. 31 in April), the last day of the month is used.
 
         :return: True if today is the configured refresh day of the month (bool)
         """
-        return datetime.now().day == Backup._get_image_refresh_day()
+        now = datetime.now()
+        last_day_of_month = calendar.monthrange(now.year, now.month)[1]
+        return now.day == min(Backup._get_image_refresh_day(), last_day_of_month)
+
+    def _refresh_image(self):
+        """
+        Pull the base image from the registry, once per run and only on the refresh day. If the registry can not
+        be reached, the backup continues with the cached image (a missing image is pulled by docker run).
+        The pull is quiet: progress output of docker would end up in the mail of a cron job.
+        """
+        if self._image_refresh_checked:
+            return
+
+        self._image_refresh_checked = True
+
+        if not self._should_refresh_image():
+            return
+
+        logger.info(f"Scheduled refresh day: pulling '{self.base_image}' from registry.")
+
+        try:
+            docker.image.pull(self.base_image, quiet=True)
+
+        except DockerException as err:
+            warning_msg = (f"Base image '{self.base_image}' could not be refreshed from the registry. "
+                           f"Continue with the cached image. {err}")
+            cfg.hasWarning = True
+            cfg.warningMsg = warning_msg
+            logger.warning(warning_msg)
 
     def _exec_docker_run(self, cmd: list[str]):
         logger.debug("Execute docker run command")
         logger.debug(cmd)
         logger.debug(self.container.name)
 
-        pull = "always" if self._should_refresh_image() else "missing"
-        if pull == "always":
-            logger.info(f"Scheduled refresh day: pulling '{self.BASE_IMAGE}' from registry before backup run.")
+        self._refresh_image()
 
         # volumes of the container are read-only: a backup must never modify the data
-        return docker.run(self.BASE_IMAGE, cmd, remove=True, volumes_from=[f"{self.container.name}:ro"],
-                          volumes=self.volume_mapping, detach=False, pull=pull)
+        return docker.run(self.base_image, cmd, remove=True, volumes_from=[f"{self.container.name}:ro"],
+                          volumes=self.volume_mapping, detach=False, pull="missing")
 
     def _get_backup_filename(self) -> str:
         """

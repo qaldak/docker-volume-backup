@@ -39,6 +39,34 @@ def _restart_container(container):
             cfg.errorMsg = err
 
 
+def _send_notifications(container_name: str):
+    """
+    Send the configured notifications. A failing notification is logged. It must neither stop the other
+    notification nor change the result of the backup (see #156: an exception of one notification used to leave
+    the finally block of create_backup, so the next notification was skipped and the process ended with a traceback).
+    """
+    try:
+        dispatcher = Dispatcher(container_name)
+
+        # The two methods are only collected here, they are NOT called yet (no parentheses): nothing is sent
+        # at this point. Both return None, the return value is not used.
+        notifications = (dispatcher.notify_chat_receiver, dispatcher.notify_mqtt_receiver)
+
+    except Exception as err:
+        logger.exception(f"Notifications could not be prepared: {err}")
+        return
+
+    # "notify" is the loop variable: it is bound to one of the two methods per pass, notify() sends that message.
+    # Same as calling dispatcher.notify_chat_receiver() and dispatcher.notify_mqtt_receiver() one after the other,
+    # but each call has its own try/except, so a failing chat notification can not skip the MQTT notification.
+    for notify in notifications:
+        try:
+            notify()
+
+        except Exception as err:
+            logger.exception(f"Notification failed ({getattr(notify, '__name__', 'unknown')}): {err}")
+
+
 def create_backup(container, path, restart) -> bool:
     """
     Run the volume backup of a container and send the configured notifications.
@@ -104,10 +132,7 @@ def create_backup(container, path, restart) -> bool:
         if success:
             logger.info(f"Volume backup for container '{container.name}' completed successfully")
 
-        # send notification
-        dispatcher = Dispatcher(container.name)
-        dispatcher.notify_chat_receiver()
-        dispatcher.notify_mqtt_receiver()
+        _send_notifications(container.name)
 
         logger.info(f"Volume backup done.")
 

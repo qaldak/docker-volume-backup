@@ -2,176 +2,142 @@
 
 [![Python unit tests](https://github.com/qaldak/docker-volume-backup/actions/workflows/python-tests.yml/badge.svg)](https://github.com/qaldak/docker-volume-backup/actions/workflows/python-tests.yml)
 
-## Description
+Backs up the volumes and bind mounts of a Docker container to a compressed tar file, restores them into a Docker
+volume and reports the result via Slack and/or MQTT. Meant to run on the Docker host, e.g. as a cron job.
 
-Creates a backup of a Docker volume to a target path.
-If an error occurs, a message is sent to a defined Slack channel and/or MQTT broker. </br>
-With option "--restore", it restores from existing volume backup file to a Docker volume. If Docker volume not already
-exists, new Docker volume will be created (e.g. for restoring on another host).
+- One archive per container with all its writable volumes and bind mounts (gzip or bzip2)
+- Optional stop and start of the container during the backup
+- Restore into a new or existing volume, also on another host
+- Alerting via Slack and MQTT (always or on failure)
+- Runs `tar` in a short-lived helper container, no extra tools needed on the host
+- Safe defaults: restricted file permissions, data mounted read-only, a failed run keeps the last good backup
 
-It is also possible to restore a Docker volume from a backup file.
+## Requirements
 
-## Getting started
+Docker (CLI and daemon on the same host) and Python 3.10+ (tested with 3.10 to 3.14).
 
-### Install
+## Installation
 
-1. Clone code from GitHub https://github.com/qaldak/docker-volume-backup.git (or Download it)
-2. Run **[setup.sh](setup.sh)** to install with venv (recommended)
+```bash
+git clone https://github.com/qaldak/docker-volume-backup.git
+cd docker-volume-backup
+./setup.sh               # creates a venv and installs the package
+cp .env_example .env     # adjust, see Configuration
+chmod 600 .env           # contains the Slack token
+```
 
-### Configuration (.env file)
+The `.env` file has to be in the project directory (next to `setup.sh`). The working directory does not matter.
 
-| Param              | Description                                                                                                                                |
-|:-------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
-| BACKUP_DIR         | Target path to save the backup                                                                                                             |      
-| BACKUP_FILE_OWNER  | (optional) Define owner for created backup file. User id is needed, e.g. 1000 <br> Default (if BACKUP_FILE_OWNER and BACKUP_FILE_GROUP are undefined): the user who runs the backup (the backup file is not owned by root). |
-| BACKUP_FILE_GROUP  | (optional) Define group for created backup file. Group id is needed, e.g. 1000 <br> Default (if BACKUP_FILE_OWNER and BACKUP_FILE_GROUP are undefined): the primary group of the user who runs the backup. |
-| BACKUP_FILE_PERMS  | (optional) Define permissions for created backup file, numeric mode only, e.g. 741 <br> Default: 640 (read/write for the owner, read for the group, nothing for others). The file is created with these permissions, it is never readable by others, not even for a short time. |
-| BACKUP_DIR_PERMS   | (optional) Define permissions for the backup directory, if it is created, numeric mode only, e.g. 700 <br> Default: 750. The permissions of an already existing directory are not changed. |
-| LOG_DIR            | Path for log directory                                                                                                                     |
-| COMPRESSION_METHOD | (optional) Define the compression method for tar file. Possible values are: <br> GZIP (default, if undefined) <br> BZIP2                   |
-| IMAGE_REFRESH_DAY  | (optional) Day of month on which the `busybox` base image is pulled from the registry, e.g. `1`. <br> Default (if undefined or invalid): `1`. On all other days the locally cached image is reused. |
-| CHAT_ALERTING      | Define in which case a message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                                 |
-| CHAT_SERVICE       | Define Chat service for alerting. Possible values are: <br> SLACK                                                                          |
-| SLACK_AUTH_TOKEN   | Required if CHAT_SERVICE=SLACK                                                                                                             |
-| SLACK_CHANNEL_ID   | Required if CHAT_SERVICE=SLACK                                                                                                             |
-| MQTT_ALERTING      | Define in which case a MQTT message should be sent. Possible values are: <br> ALWAYS <br> ON_FAILURE <br> NEVER                            |
-| MQTT_BROKER        | Address of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                                 |
-| MQTT_PORT          | Port of MQTT Broker (Receiver). Mandatory, if MQTT_ALERTING is enabled.                                                                    |
-| MQTT_TOPIC         | Topic for MQTT message. Mandatory, if MQTT_ALERTING is enabled. <br> Wildcards {HOSTNAME} and {CONTAINER} will be replaced at runtime      |
+## Configuration
 
-See example in [.env_example](.env_example)
+Settings in `.env`, see [.env_example](.env_example). Use absolute paths (`BACKUP_DIR`, `LOG_DIR`, option `-p`),
+e.g. `/var/backups/docker`. `~` is not supported, relative paths depend on the working directory.
 
-#### File permissions and security
+| Setting                                  | Description                                                           | Default                  |
+|:-----------------------------------------|:----------------------------------------------------------------------|:-------------------------|
+| `BACKUP_DIR`                             | Directory for the backups (or option `-p`)                            | -                        |
+| `LOG_DIR`                                | Directory for the log files                                           | working directory        |
+| `BACKUP_FILE_OWNER`, `BACKUP_FILE_GROUP` | User and group id of the backup file                                  | user who runs the backup |
+| `BACKUP_FILE_PERMS`, `BACKUP_DIR_PERMS`  | Octal permissions of the backup file / of a created directory         | `640` / `750`            |
+| `COMPRESSION_METHOD`                     | `GZIP` or `BZIP2`                                                     | `GZIP`                   |
+| `BASE_IMAGE`                             | Helper image, needs `sh`, `tar`, `mv`, `rm`, `chown`, `chmod`, `find` | `busybox:latest`         |
+| `IMAGE_REFRESH_DAY`                      | Day of the month on which the helper image is pulled again            | `1`                      |
+| `CHAT_ALERTING`, `MQTT_ALERTING`         | `ALWAYS`, `ON_FAILURE` or `NEVER`                                     | no alerting              |
+| `CHAT_SERVICE`                           | `SLACK`                                                               | -                        |
+| `SLACK_AUTH_TOKEN`, `SLACK_CHANNEL_ID`   | Required for Slack                                                    | -                        |
+| `MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPIC` | Required for MQTT. Topic placeholders: `{HOSTNAME}`, `{CONTAINER}`    | -                        |
 
-Backups usually contain secrets (databases, tokens, certificates), so they are not readable by other users by default:
-the backup file is created with `640`, the backup directory with `750` and the file belongs to the user who runs the backup.
-The volumes of the container are mounted read-only for the backup, so a backup can not modify the data.
+## Usage
 
-* Restrict the permissions of the `.env` file as well, it contains the Slack token: `chmod 600 .env`
-* Other users or services that need to read the backups: add them to the group of the backup file (`BACKUP_FILE_GROUP`)
-  or set `BACKUP_FILE_PERMS`.
-* Behaviour of earlier versions: the backup file was owned by root and readable by everyone (`644`), the directory was created
-  with `777` (reduced by the umask). To get this behaviour back, set `BACKUP_FILE_OWNER=0`, `BACKUP_FILE_GROUP=0`,
-  `BACKUP_FILE_PERMS=644` and `BACKUP_DIR_PERMS=755`. Backup files created by older versions are not changed.
+Run the commands with `venv/bin/python` (or activate the venv with `source venv/bin/activate`).
 
-### Execute
+### Backup
 
-#### Command line
+```bash
+python -m docker_volume_backup.main --backup <container> [-p <dir>] [-r] [--debug]
+```
 
-__create backup__
+- `-p` backup directory (default: `BACKUP_DIR`)
+- `-r` stop the container during the backup and start it afterwards, also if the backup fails
+- `--debug` verbose log
 
-`python3 -m docker_volume_backup.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
+Result: `<dir>/<host>-<container>-volume-backup.tar.gz`. The file is replaced on every run. It is written as
+`.tmp` first, so a failed run does not destroy the last good backup.
 
-optional parameter:
+Backed up are the writable volumes and bind mounts. Not backed up: read-only mounts and sockets, FIFOs and devices
+(e.g. `docker.sock`). For a bind-mounted file with an extension (`file.conf`) the directory of the file is backed up.
 
-* "-p" set backup directory path, e.g. "-p /backup/container/foo"
-* "-r" stops container for backup and restart after work (the container is also restarted if the backup fails)
-* "--debug" set loglevel to DEBUG
+### Restore
 
-The backup is first written to `<backup file>.tmp` and replaces the existing backup file only after `tar` finished successfully. A failed run leaves the last good backup untouched.
+```bash
+python -m docker_volume_backup.main --restore --backupfile <file> --volume <volume> --targetpath <path> [-sp <path>] [-y] [--debug]
+```
 
-__restore backup__
+- `--volume` target volume, created if it does not exist
+- `--targetpath` mount path of the volume during the restore. Without `-sp` it needs as many path components as
+  the original path
+- `-y` do not ask for confirmation if the volume already contains files
+- `-sp` path inside the backup, e.g. `/foo/data`. Required if the backup holds more than one path (the error message
+  lists them). Restore each path into its own volume:
 
-`python3 -m docker_volume_backup.main --restore --backupfile <path to backup file> --volume <Docker volume name> --targetpath <target path in Docker volume> [-sp|--sourcepath <path in backup file>] [--debug]`
+```bash
+python -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz \
+  --volume foo_data --targetpath /foo/data -sp /foo/data
+```
 
-optional parameter:
+Existing files with the same name are overwritten. In a terminal the restore asks first if the volume already contains
+files (`-y` skips the question), without a terminal (cron, scripts) it continues and logs a warning. A volume used by a
+**running** container is rejected, containers that are stopped only give a warning. Afterwards every restored file is
+looked up in the volume.
 
-* "-y" / "--yes" restore into an existing Docker volume that already contains files without asking for confirmation
-* "-sp" / "--sourcepath" path of the mount in the backup file to restore, e.g. "-sp /foo/data". A backup file contains all
-  volumes and bindings of the container. If it contains more than one path, the restore is rejected without this
-  parameter (the error message lists the available paths), because otherwise the content of all paths would be mixed up
-  in one volume. Not needed if the backup file contains only one path.
-* "--debug" set loglevel to DEBUG
+### Cron
 
-Restore each path of a container into its own volume, e.g.:
+```
+PATH=/usr/local/bin:/usr/bin:/bin
+0 2 * * * /opt/docker-volume-backup/venv/bin/python -m docker_volume_backup.main --backup <container>
+```
 
-`python3 -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz --volume foo_data --targetpath /foo/data -sp /foo/data`
+Cron sends mail only if there is output: a successful backup is silent. `docker` has to be in the `PATH`.
 
-`python3 -m docker_volume_backup.main --restore --backupfile /backup/host-foo-volume-backup.tar.gz --volume foo_config --targetpath /foo/config -sp /foo/config`
+### Exit codes
 
-Behaviour for the target Docker volume:
+`0` success, `1` backup failed, restore rejected or canceled, or restored volume incomplete. The reason is in the log
+and the alert.
+Invalid settings or parameters end with an error message and a non-zero exit code.
 
-| Docker volume                                            | Restore                                                                                                |
-|:---------------------------------------------------------|:-------------------------------------------------------------------------------------------------------|
-| does not exist                                           | is created                                                                                             |
-| exists, used by a **running** container                  | rejected with an error message and exit code 1, nothing is restored. Stop the container first          |
-| exists, used by stopped containers only                  | restored, a warning names the containers                                                               |
-| exists and contains files                                | in a terminal: asks for confirmation (`-y` skips it). Without a terminal (cron, scripts): restored, with a warning in the log. Files with the same name are overwritten, other files stay |
+## Alerting
 
-The content of the source path is restored directly into the root of the volume. Without `--sourcepath` the number of
-path components of `--targetpath` is removed from the paths in the backup file, so it has to match the depth of the
-original path.
-
-#### Cronjob
-
-`05 0 * * * cd <PATH> ; python3 -m docker_volume_backup.main --backup <Docker container name> [-p|--path <target path>] [-r|--restart] [--debug]`
-
-optional parameter: see Command line
-
-#### Exit codes
-
-| Exit code | Meaning                                                                                                   |
-|:----------|:----------------------------------------------------------------------------------------------------------|
-| 0         | Backup: completed successfully (no output on stdout/stderr). <br> Restore: completed, all restored entries found in the volume |
-| 1         | Backup: failed, e.g. Docker daemon/container not available, tar error or container could not be restarted. The error is written to the log file and reported via the configured notifications. <br> Restore: rejected or canceled (nothing restored), or finished, but entries of the backup file are missing in the Docker volume (listed in the error message) |
-
-Other errors (e.g. invalid `.env` settings or command line parameters) end with a Python error message and a non-zero exit code.
-A restore that is rejected (Docker volume used by a running container) or canceled ends with exit code 1.
-
-After a restore, every restored entry of the backup file is looked up in the Docker volume. Entries that already existed in the volume and are not part of the backup file are ignored.
-
-#### MQTT message
-
-The message is published to `MQTT_TOPIC` as **JSON**, e.g.:
+Slack receives a short text. MQTT receives JSON on `MQTT_TOPIC`:
 
 ```json
-{"time": 1793000000, "host": "myhost", "container": "foo_bar", "backupFile": "myhost-foo_bar-volume-backup.tar.gz",
+{"time": 1793000000, "host": "myhost", "container": "foo", "backupFile": "myhost-foo-volume-backup.tar.gz",
  "backupSize": 987654321, "duration": "0:02:13", "hasError": false, "msg": "Docker volume backup successful"}
 ```
 
-| Field      | Description                                                                      |
-|:-----------|:---------------------------------------------------------------------------------|
-| time       | Unix time (seconds) when the message was created                                 |
-| host       | Host name (lower case)                                                           |
-| container  | Name of the backed up container                                                  |
-| backupFile | Name of the backup file                                                          |
-| backupSize | Size of the backup file in bytes (`null` if it could not be determined)          |
-| duration   | Duration of the job as `H:MM:SS`                                                 |
-| hasError   | `true` if an error occurred                                                      |
-| msg        | `Docker volume backup successful` or the error message                           |
+`msg` holds the error text on failure. A notification that fails is only logged, it does not change the result or the
+exit code of the backup and does not stop the other notification. The broker address must be reachable from inside a container (not
+`localhost`). The message is sent through a running container with `mqtt` or `mosquitto` in its name, otherwise through
+a temporary `eclipse-mosquitto` container.
 
-Note: older versions sent the message as Python dict text (single quotes, `True`/`False`), which is not valid JSON.
+## Notes and limitations
 
-### Requirements
-
-* Python 3.10 or higher
-* Python modules, see [requirements.txt](requirements.txt)
-
-### Links
-
-#### Python libraries
-
-* [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales)
-
-#### Tools
-
-* [busybox](https://busybox.net/)
-* [eclipse-mosquitto](https://mosquitto.org/)
-* [slack](https://slack.com)
-* [slack api](https://slack.dev)
-
-#### Docker images
-
-there are much more Docker images for the same purpose. This here I used for this project:<br>
-
-* [busybox](https://hub.docker.com/_/busybox) Official Busybox base image by Docker Community
-* [eclipse-mosquitto](https://hub.docker.com/_/eclipse-mosquitto) Official eclipse-mosquitto by Eclipse Foundation
+- **Consistency:** without `-r` the files are copied while the container runs. Databases may be inconsistent, use `-r`.
+- **Docker Compose:** for containers started with Compose, `-r` stops and starts the whole Compose project (files, project
+  name and directory are read from the labels of the container). Services of the project that were stopped before can
+  be started as well.
+- **No history:** one backup file per container. Copy it elsewhere if you need older versions.
+- **Permissions:** backups are `640` and owned by the user who runs the backup, the data is mounted read-only. Others
+  that need access: use `BACKUP_FILE_GROUP`, or set `BACKUP_FILE_OWNER=0`, `BACKUP_FILE_GROUP=0`,
+  `BACKUP_FILE_PERMS=644` for root-owned, world-readable files as in earlier versions.
+- **Logs:** `<LOG_DIR>/<container>-volume-backup.log` (restore: `restore-<volume>-volume-backup.log`), rotated at
+  1 MB, one old file is kept.
 
 ## Contribute
 
-Contributions are welcome!
+Contributions are welcome. Open an issue or a pull request.
 
-## Licence
+## License
 
-Unless otherwise specified, all code is released under the MIT License (MIT).<br>
-for used or linked components the respective license terms apply.
+MIT, see [LICENSE](LICENSE). Uses [python-on-whales](https://github.com/gabrieldemarmiesse/python-on-whales),
+[busybox](https://hub.docker.com/_/busybox), [eclipse-mosquitto](https://hub.docker.com/_/eclipse-mosquitto)
+and the [Slack SDK](https://slack.dev); their license terms apply.
