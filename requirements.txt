@@ -1,4 +1,4 @@
 python-dotenv==1.2.4
 python-on-whales==0.81.0
-slack_sdk==3.47.0
+slack_sdk==3.48.0
 pydantic!=2.0.0.dev,>=2.14.3,<3 # Todo: check https://github.com/gabrieldemarmiesse/python-on-whales/blob/master/requirements.txt
